@@ -13,12 +13,13 @@ Vestige.pkg:
 	mv target/vestige/lib target/vestige_deb/usr/share/vestige
 	mv target/vestige/vestige target/vestige_deb/usr/bin/vestige
 	mv target/vestige/* target/vestige_deb/etc/vestige/
-	cp src/control target/vestige_deb/DEBIAN/
+	sed -e 's/Version: .*/Version: $(VESTIGE_VERSION)/' src/control > target/vestige_deb/DEBIAN/control
 	cp src/conffiles target/vestige_deb/DEBIAN/
 	cp src/vestige.desktop target/vestige_deb/usr/share/applications/
 	cp src/vestige_gtk_launcher.py target/vestige_deb/usr/bin/vestige_gtk_launcher.py
 	cp -r src/hicolor target/vestige_deb/usr/share/icons/
 	chmod +x target/vestige_deb/usr/bin/*
+	-find target -name .svn -exec rm -rf {} \;
 	-ssh -p 2223 root@localhost rm -rf '~/target'
 	scp -r -P 2223 target root@localhost:.
 	ssh -p 2223 root@localhost dpkg -b target/vestige_deb/ target/vestige_$(VESTIGE_VERSION)_all.deb
