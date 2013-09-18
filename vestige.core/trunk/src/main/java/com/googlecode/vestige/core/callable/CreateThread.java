@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-package com.googlecode.vestige.core;
+package com.googlecode.vestige.core.callable;
 
-import java.util.Map;
+import java.util.concurrent.Callable;
 
 /**
  * @author Gael Lalire
  */
-public class VestigeClassNotFoundException extends ClassNotFoundException {
+public class CreateThread implements Callable<Thread> {
 
-    private static final long serialVersionUID = -1308142576374269964L;
+    private String name;
 
-    private Map<String, String> properties;
+    private Runnable runnable;
 
-    public VestigeClassNotFoundException(final String className, final Map<String, String> properties) {
-        super(className);
-        this.properties = properties;
+    public CreateThread(final String name, final Runnable runnable) {
+        this.name = name;
+        this.runnable = runnable;
     }
 
-    public Map<String, String> getProperties() {
-        return properties;
+    public Thread call() {
+        return new Thread(runnable, name);
     }
 
 }

@@ -1,36 +1,60 @@
+/*
+ * Copyright 2013 The Apache Software Foundation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.googlecode.vestige.core;
 
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import com.googlecode.vestige.core.parser.StringParser;
 
 /**
- * @author gaellalire
+ * @author Gael Lalire
  */
 public final class VestigeClassLoader extends URLClassLoader {
 
-    private List<DelegatedSearch> delegatedSearchs = new ArrayList<DelegatedSearch>();
+    private List<List<VestigeClassLoader>> vestigeClassloadersList;
+
+    private StringParser classStringParser;
+
+    private StringParser resourceStringParser;
 
     private Map<String, String> properties = new HashMap<String, String>();
 
-    private Set<VestigeClassLoader> excludes = new HashSet<VestigeClassLoader>();
-
-    public VestigeClassLoader(final ClassLoader parent, final URL... urls) {
+    public VestigeClassLoader(final ClassLoader parent, final List<List<VestigeClassLoader>> vestigeClassloadersList, final StringParser classStringParser, final StringParser resourceStringParser, final URL... urls) {
         super(urls, parent);
+        this.vestigeClassloadersList = vestigeClassloadersList;
+        this.classStringParser = classStringParser;
+        this.resourceStringParser = resourceStringParser;
     }
 
-    public Set<VestigeClassLoader> getExcludes() {
-        return excludes;
+    public StringParser getClassStringParser() {
+        return classStringParser;
+    }
+
+    public StringParser getResourceStringParser() {
+        return resourceStringParser;
     }
 
     public String getProperty(final String name) {
@@ -41,305 +65,72 @@ public final class VestigeClassLoader extends URLClassLoader {
         properties.put(name, value);
     }
 
-    public List<DelegatedSearch> getDelegatedSearchs() {
-        return delegatedSearchs;
+    public Class<?> superLoadClass(final String name) throws ClassNotFoundException {
+        return super.loadClass(name);
     }
 
     @Override
     public Class<?> loadClass(final String name) throws ClassNotFoundException {
-        return loadExcluding(name, excludes);
+        List<VestigeClassLoader> classLoaders = vestigeClassloadersList.get(classStringParser.match(name));
+        if (classLoaders != null) {
+            for (VestigeClassLoader classLoader : classLoaders) {
+                if (classLoader == null) {
+                    try {
+                        return super.loadClass(name);
+                    } catch (ClassNotFoundException e) {
+                        // ignore
+                    }
+                } else {
+                    try {
+                        return classLoader.superLoadClass(name);
+                    } catch (ClassNotFoundException e) {
+                        // ignore
+                    }
+                }
+            }
+        }
+        throw new VestigeClassNotFoundException(name, properties);
+    }
+
+    public URL superGetResource(final String name) {
+        return super.getResource(name);
     }
 
     @Override
     public URL getResource(final String name) {
-        return getResourceExcluding(name, excludes);
+        List<VestigeClassLoader> classLoaders = vestigeClassloadersList.get(resourceStringParser.match(name));
+        if (classLoaders != null) {
+            for (VestigeClassLoader classLoader : classLoaders) {
+                if (classLoader == null) {
+                    URL resource = super.getResource(name);
+                    if (resource != null) {
+                        return resource;
+                    }
+                } else {
+                    URL resource = classLoader.superGetResource(name);
+                    if (resource != null) {
+                        return resource;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public void superGetResources(final String name, final Set<URL> urls) throws IOException {
+        urls.addAll(Collections.list(super.getResources(name)));
     }
 
     @Override
     public Enumeration<URL> getResources(final String name) throws IOException {
-        return Collections.enumeration(getResourcesExcluding(name, excludes));
-    }
-
-    public Class<?> loadExcluding(final String name, final Set<VestigeClassLoader> excludes) throws ClassNotFoundException {
-        boolean superLoadFailed = false;
-        boolean canSuperLoad = !excludes.contains(this) && !this.excludes.contains(this);
-        for (DelegatedSearch classSearch : delegatedSearchs) {
-            if (classSearch == null) {
-                if (canSuperLoad && !superLoadFailed) {
-                    try {
-                        Class<?> loadClass = super.loadClass(name);
-                        if (!excludes.contains(loadClass.getClassLoader())) {
-                            return loadClass;
-                        }
-                    } catch (ClassNotFoundException e) {
-                        // ignore
-                    }
-                    superLoadFailed = true;
-                }
-                continue;
-            }
-            Pattern pattern = classSearch.getClassPattern();
-            if (pattern != null) {
-                Matcher matcher = pattern.matcher(name);
-                if (!matcher.matches()) {
-                    continue;
-                }
-            }
-            // pattern is null or match
-            List<VestigeClassLoader> classLoaders = classSearch.getClassLoaders();
-            if (classLoaders == null) {
-                if (canSuperLoad && !superLoadFailed) {
-                    try {
-                        Class<?> loadClass = super.loadClass(name);
-                        if (!excludes.contains(loadClass.getClassLoader())) {
-                            return loadClass;
-                        }
-                    } catch (ClassNotFoundException e) {
-                        // ignore
-                    }
-                    superLoadFailed = true;
-                }
-            } else {
-                for (VestigeClassLoader classLoader : classLoaders) {
-                    try {
-                        return classLoader.loadExcluding(name, excludes);
-                    } catch (ClassNotFoundException e) {
-                        // ignore
-                    }
-                }
-            }
-        }
-        throw new VestigeClassNotFoundException(name, properties);
-    }
-
-    /**
-     * This method do not try to get resource from delegate, which prevent getting resource from an excluded classloader.
-     */
-    public URL superGetResource(final String name) {
-        ClassLoader parent = getParent();
-        URL resource;
-        if (parent == null) {
-            // ok if the class path do not contains resources
-            resource = ClassLoader.getSystemResource(name);
-        } else {
-            resource = parent.getResource(name);
-        }
-        if (resource != null) {
-            return resource;
-        }
-        return super.findResource(name);
-    }
-
-    public Set<URL> superGetResources(final String name) throws IOException {
-        Set<URL> urls = new HashSet<URL>();
-        ClassLoader parent = getParent();
-        if (parent == null) {
-            // ok if the class path do not contains resources
-            urls.addAll(Collections.list(ClassLoader.getSystemResources(name)));
-        } else {
-            urls.addAll(Collections.list(parent.getResources(name)));
-        }
-        urls.addAll(Collections.list(super.findResources(name)));
-        return urls;
-    }
-
-
-    public URL getResourceExcluding(final String name, final Set<VestigeClassLoader> excludes) {
-        boolean superGetFailed = false;
-        boolean canSuperGet = !excludes.contains(this) && !this.excludes.contains(this);
-        for (DelegatedSearch classSearch : delegatedSearchs) {
-            if (classSearch == null) {
-                if (canSuperGet && !superGetFailed) {
-                    URL resource = superGetResource(name);
-                    if (resource != null) {
-                        return resource;
-                    }
-                    superGetFailed = true;
-                }
-                continue;
-            }
-            Pattern pattern = classSearch.getResourcePattern();
-            if (pattern != null) {
-                Matcher matcher = pattern.matcher(name);
-                if (!matcher.matches()) {
-                    continue;
-                }
-            }
-            // pattern is null or match
-            List<VestigeClassLoader> classLoaders = classSearch.getClassLoaders();
-            if (classLoaders == null) {
-                if (canSuperGet && !superGetFailed) {
-                    URL resource = superGetResource(name);
-                    if (resource != null) {
-                        return resource;
-                    }
-                    superGetFailed = true;
-                }
-            } else {
-                for (VestigeClassLoader classLoader : classLoaders) {
-                    URL resource = classLoader.getResourceExcluding(name, excludes);
-                    if (resource != null) {
-                        return resource;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    public Set<URL> getResourcesExcluding(final String name, final Set<VestigeClassLoader> excludes) throws IOException {
-        Set<URL> urls = new HashSet<URL>();
-        boolean superGetDone = false;
-        boolean canSuperGet = !excludes.contains(this) && !this.excludes.contains(this);
-        for (DelegatedSearch classSearch : delegatedSearchs) {
-            if (classSearch == null) {
-                if (canSuperGet && !superGetDone) {
-                    urls.addAll(superGetResources(name));
-                    superGetDone = true;
-                }
-                continue;
-            }
-            Pattern pattern = classSearch.getResourcePattern();
-            if (pattern != null) {
-                Matcher matcher = pattern.matcher(name);
-                if (!matcher.matches()) {
-                    continue;
-                }
-            }
-            // pattern is null or match
-            List<VestigeClassLoader> classLoaders = classSearch.getClassLoaders();
-            if (classLoaders == null) {
-                if (canSuperGet && !superGetDone) {
-                    urls.addAll(superGetResources(name));
-                    superGetDone = true;
-                }
-            } else {
-                for (VestigeClassLoader classLoader : classLoaders) {
-                    urls.addAll(classLoader.getResourcesExcluding(name, excludes));
-                }
-            }
-        }
-        return urls;
-    }
-
-    @Override
-    public Class<?> findClass(final String name) throws ClassNotFoundException {
-        boolean superFindFailed = false;
-        for (DelegatedSearch classSearch : delegatedSearchs) {
-            if (classSearch == null) {
-                if (!superFindFailed) {
-                    try {
-                        return super.findClass(name);
-                    } catch (ClassNotFoundException e) {
-                        // ignore
-                    }
-                    superFindFailed = true;
-                }
-                continue;
-            }
-            Pattern pattern = classSearch.getClassPattern();
-            if (pattern != null) {
-                Matcher matcher = pattern.matcher(name);
-                if (!matcher.matches()) {
-                    continue;
-                }
-            }
-            // pattern is null or match
-            List<VestigeClassLoader> classLoaders = classSearch.getClassLoaders();
-            if (classLoaders == null) {
-                if (!superFindFailed) {
-                    try {
-                        return super.findClass(name);
-                    } catch (ClassNotFoundException e) {
-                        // ignore
-                    }
-                    superFindFailed = true;
-                }
-            } else {
-                for (VestigeClassLoader classLoader : classLoaders) {
-                    try {
-                        return classLoader.loadExcluding(name, excludes);
-                    } catch (ClassNotFoundException e) {
-                        // ignore
-                    }
-                }
-            }
-        }
-        throw new VestigeClassNotFoundException(name, properties);
-    }
-
-    @Override
-    public URL findResource(final String name) {
-        boolean superFindFailed = false;
-        for (DelegatedSearch classSearch : delegatedSearchs) {
-            if (classSearch == null) {
-                if (!superFindFailed) {
-                    URL resource = super.findResource(name);
-                    if (resource != null) {
-                        return resource;
-                    }
-                    superFindFailed = true;
-                }
-                continue;
-            }
-            Pattern pattern = classSearch.getResourcePattern();
-            if (pattern != null) {
-                Matcher matcher = pattern.matcher(name);
-                if (!matcher.matches()) {
-                    continue;
-                }
-            }
-            // pattern is null or match
-            List<VestigeClassLoader> classLoaders = classSearch.getClassLoaders();
-            if (classLoaders == null) {
-                if (!superFindFailed) {
-                    URL resource = super.findResource(name);
-                    if (resource != null) {
-                        return resource;
-                    }
-                    superFindFailed = true;
-                }
-            } else {
-                for (VestigeClassLoader classLoader : classLoaders) {
-                    URL resource = classLoader.getResourceExcluding(name, excludes);
-                    if (resource != null) {
-                        return resource;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public Enumeration<URL> findResources(final String name) throws IOException {
-        Set<URL> urls = new HashSet<URL>();
-        boolean superFindDone = false;
-        for (DelegatedSearch classSearch : delegatedSearchs) {
-            if (classSearch == null) {
-                if (!superFindDone) {
-                    urls.addAll(Collections.list(super.findResources(name)));
-                    superFindDone = true;
-                }
-                continue;
-            }
-            Pattern pattern = classSearch.getResourcePattern();
-            if (pattern != null) {
-                Matcher matcher = pattern.matcher(name);
-                if (!matcher.matches()) {
-                    continue;
-                }
-            }
-            // pattern is null or match
-            List<VestigeClassLoader> classLoaders = classSearch.getClassLoaders();
-            if (classLoaders == null) {
-                if (!superFindDone) {
-                    urls.addAll(Collections.list(super.findResources(name)));
-                    superFindDone = true;
-                }
-            } else {
-                for (VestigeClassLoader classLoader : classLoaders) {
-                    urls.addAll(classLoader.getResourcesExcluding(name, excludes));
+        Set<URL> urls = new LinkedHashSet<URL>();
+        List<VestigeClassLoader> classLoaders = vestigeClassloadersList.get(resourceStringParser.match(name));
+        if (classLoaders != null) {
+            for (VestigeClassLoader classLoader : classLoaders) {
+                if (classLoader == null) {
+                    urls.addAll(Collections.list(super.getResources(name)));
+                } else {
+                    classLoader.superGetResources(name, urls);
                 }
             }
         }
