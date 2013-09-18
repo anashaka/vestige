@@ -16,24 +16,24 @@
 
 package com.googlecode.vestige.core;
 
-import java.util.Map;
+import java.lang.ref.WeakReference;
 
 /**
- * @author Gael Lalire
+ * @author gaellalire
  */
-public class VestigeClassNotFoundException extends ClassNotFoundException {
+public final class WeakRunnable implements Runnable {
 
-    private static final long serialVersionUID = -1308142576374269964L;
+    private WeakReference<Runnable> weakReference;
 
-    private Map<String, String> properties;
-
-    public VestigeClassNotFoundException(final String className, final Map<String, String> properties) {
-        super(className);
-        this.properties = properties;
+    public WeakRunnable(final Runnable r) {
+        weakReference = new WeakReference<Runnable>(r);
     }
 
-    public Map<String, String> getProperties() {
-        return properties;
+    public void run() {
+        Runnable runnable = weakReference.get();
+        if (runnable != null) {
+            runnable.run();
+        }
     }
 
 }

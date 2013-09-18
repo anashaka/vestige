@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-package com.googlecode.vestige.core;
+package com.googlecode.vestige.core.parser;
 
-import java.util.Map;
+import java.io.Serializable;
+
 
 /**
- * @author Gael Lalire
+ * @author gaellalire
  */
-public class VestigeClassNotFoundException extends ClassNotFoundException {
+public class NoStateStringParser implements StringParser, Serializable {
 
-    private static final long serialVersionUID = -1308142576374269964L;
+    private static final long serialVersionUID = -6990234647843162301L;
 
-    private Map<String, String> properties;
+    private int defaultValue;
 
-    public VestigeClassNotFoundException(final String className, final Map<String, String> properties) {
-        super(className);
-        this.properties = properties;
+    public NoStateStringParser(final int defaultValue) {
+        this.defaultValue = defaultValue;
     }
 
-    public Map<String, String> getProperties() {
-        return properties;
+    public int match(final CharSequence sequence) {
+        return defaultValue;
     }
 
 }

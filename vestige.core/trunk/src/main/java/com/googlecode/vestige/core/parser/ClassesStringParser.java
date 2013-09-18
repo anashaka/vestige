@@ -14,26 +14,22 @@
  * limitations under the License.
  */
 
-package com.googlecode.vestige.core;
-
-import java.util.Map;
+package com.googlecode.vestige.core.parser;
 
 /**
- * @author Gael Lalire
+ * @author gaellalire
  */
-public class VestigeClassNotFoundException extends ClassNotFoundException {
+public class ClassesStringParser implements StringParser {
 
-    private static final long serialVersionUID = -1308142576374269964L;
+    private StringParser resourcesStringParser;
 
-    private Map<String, String> properties;
-
-    public VestigeClassNotFoundException(final String className, final Map<String, String> properties) {
-        super(className);
-        this.properties = properties;
+    public ClassesStringParser(final StringParser resourcesStringParser) {
+        this.resourcesStringParser = resourcesStringParser;
     }
 
-    public Map<String, String> getProperties() {
-        return properties;
+    public int match(final CharSequence sequence) {
+        String path = sequence.toString().replace('.', '/').concat(".class");
+        return resourcesStringParser.match(path);
     }
 
 }

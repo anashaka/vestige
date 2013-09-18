@@ -16,24 +16,30 @@
 
 package com.googlecode.vestige.core;
 
-import java.util.Map;
 
 /**
+ * Utility class for JVM wide handler like :
+ * <ul>
+ * <li> {@link java.net.ProxySelector}</li>
+ * <li> {@link java.net.ResponseCache}</li>
+ * <li> {@link java.net.CookieHandler}</li>
+ * <li> {@link java.util.Locale}</li>
+ * <li> {@link java.util.TimeZone}</li>
+ * </ul>
+ * <p>
+ * If handler keeper does not have a getDefault method you can use
+ * {@link StackedHandlerUtils#getDefaultHandler(Class)} and
+ * {@link StackedHandlerUtils#setDefaultHandler(Class, Object)} </p>
+ * Handler examples
+ * <ul>
+ * <li> {@link java.net.Authenticator} </li>
+ * </ul>
  * @author Gael Lalire
  */
-public class VestigeClassNotFoundException extends ClassNotFoundException {
+public interface StackedHandler<E> {
 
-    private static final long serialVersionUID = -1308142576374269964L;
+    E getNextHandler();
 
-    private Map<String, String> properties;
-
-    public VestigeClassNotFoundException(final String className, final Map<String, String> properties) {
-        super(className);
-        this.properties = properties;
-    }
-
-    public Map<String, String> getProperties() {
-        return properties;
-    }
+    void setNextHandler(E nextHandler);
 
 }

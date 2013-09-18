@@ -16,24 +16,28 @@
 
 package com.googlecode.vestige.core;
 
-import java.util.Map;
+import java.lang.ref.WeakReference;
+import java.util.TimerTask;
 
 /**
- * @author Gael Lalire
+ * @author gaellalire
  */
-public class VestigeClassNotFoundException extends ClassNotFoundException {
+public final class WeakTimerTask extends TimerTask {
 
-    private static final long serialVersionUID = -1308142576374269964L;
+    private WeakReference<Runnable> weakReference;
 
-    private Map<String, String> properties;
-
-    public VestigeClassNotFoundException(final String className, final Map<String, String> properties) {
-        super(className);
-        this.properties = properties;
+    public WeakTimerTask(final Runnable r) {
+        weakReference = new WeakReference<Runnable>(r);
     }
 
-    public Map<String, String> getProperties() {
-        return properties;
+    @Override
+    public void run() {
+        Runnable runnable = weakReference.get();
+        if (runnable == null) {
+            cancel();
+        } else {
+            runnable.run();
+        }
     }
 
 }
