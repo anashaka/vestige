@@ -20,7 +20,7 @@ import java.lang.ref.WeakReference;
 import java.util.TimerTask;
 
 /**
- * @author gaellalire
+ * @author Gael Lalire
  */
 public final class WeakTimerTask extends TimerTask {
 

@@ -19,7 +19,7 @@ package com.googlecode.vestige.core.parser;
 import java.io.Serializable;
 
 /**
- * @author gaellalire
+ * @author Gael Lalire
  */
 public class ShortStateStringParser implements StringParser, Serializable {
 

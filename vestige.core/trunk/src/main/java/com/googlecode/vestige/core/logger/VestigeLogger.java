@@ -20,7 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
 /**
- * @author gaellalire
+ * @author Gael Lalire
  */
 public interface VestigeLogger {
 

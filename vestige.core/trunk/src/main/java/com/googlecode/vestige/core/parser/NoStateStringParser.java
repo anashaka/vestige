@@ -20,7 +20,7 @@ import java.io.Serializable;
 
 
 /**
- * @author gaellalire
+ * @author Gael Lalire
  */
 public class NoStateStringParser implements StringParser, Serializable {
 
