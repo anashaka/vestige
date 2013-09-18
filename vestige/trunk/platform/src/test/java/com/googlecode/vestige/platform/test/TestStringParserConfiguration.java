@@ -34,6 +34,7 @@ import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.googlecode.vestige.core.parser.StringParser;
@@ -284,6 +285,7 @@ public class TestStringParserConfiguration {
         }
     }
 
+    @Ignore
     @Test
     public void testFast() throws Exception {
         AbstractStringParserFactory fastStringParserFactory = new MinimalStringParserFactory();
@@ -320,6 +322,7 @@ public class TestStringParserConfiguration {
     }
 
     @Test
+    @Ignore
     public void testMap() throws Exception {
         long time, ttime;
         URL[] urls = new URL[1];
