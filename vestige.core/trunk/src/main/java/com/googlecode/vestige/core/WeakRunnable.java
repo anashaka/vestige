@@ -19,7 +19,7 @@ package com.googlecode.vestige.core;
 import java.lang.ref.WeakReference;
 
 /**
- * @author gaellalire
+ * @author Gael Lalire
  */
 public final class WeakRunnable implements Runnable {
 

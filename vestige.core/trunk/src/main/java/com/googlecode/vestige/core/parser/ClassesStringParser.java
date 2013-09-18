@@ -17,7 +17,7 @@
 package com.googlecode.vestige.core.parser;
 
 /**
- * @author gaellalire
+ * @author Gael Lalire
  */
 public class ClassesStringParser implements StringParser {
 
