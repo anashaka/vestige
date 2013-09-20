@@ -24,9 +24,9 @@ SolidCompression=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "F:\checkJava.bat"; Flags: dontcopy
-Source: "F:\CheckJava.class"; Flags: dontcopy
-Source: "F:\vestige\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\target\checkJava.bat"; Flags: dontcopy
+Source: "C:\target\CheckJava.class"; Flags: dontcopy
+Source: "C:\target\vestige\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
