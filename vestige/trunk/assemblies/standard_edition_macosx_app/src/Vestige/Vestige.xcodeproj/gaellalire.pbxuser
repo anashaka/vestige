@@ -2,7 +2,7 @@
 {
 	089C165DFE840E0CC02AAC07 /* English */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {659, 436}}";
+			sepNavIntBoundsRect = "{{0, 0}, {659, 431}}";
 			sepNavSelRange = "{0, 0}";
 			sepNavVisRange = "{0, 45}";
 		};
@@ -17,15 +17,15 @@
 	};
 	256AC3D90F4B6AC300CF3369 /* VestigeAppDelegate.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {852, 520}}";
-			sepNavSelRange = "{508, 0}";
-			sepNavVisRange = "{0, 965}";
-			sepNavWindowFrame = "{{149, -49}, {1025, 804}}";
+			sepNavIntBoundsRect = "{{0, 0}, {1092, 554}}";
+			sepNavSelRange = "{317, 13}";
+			sepNavVisRange = "{0, 1063}";
+			sepNavWindowFrame = "{{343, 74}, {1025, 804}}";
 		};
 	};
 	256AC3F00F4B6AF500CF3369 /* Vestige_Prefix.pch */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {659, 436}}";
+			sepNavIntBoundsRect = "{{0, 0}, {659, 431}}";
 			sepNavSelRange = "{145, 0}";
 			sepNavVisRange = "{0, 145}";
 		};
@@ -61,7 +61,7 @@
 				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
 				PBXFileTableDataSourceColumnWidthsKey = (
 					20,
-					481,
+					914,
 					20,
 					48,
 					43,
@@ -100,20 +100,20 @@
 					PBXFileDataSource_Warnings_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 388522695;
-			PBXWorkspaceStateSaveDate = 388522695;
+			PBXPerProjectTemplateStateSaveDate = 401275036;
+			PBXWorkspaceStateSaveDate = 401275036;
 		};
 		perUserProjectItems = {
 			300A7CB6171E0BDA00A079E3 /* PBXTextBookmark */ = 300A7CB6171E0BDA00A079E3 /* PBXTextBookmark */;
-			300A7D4A171EFDB400A079E3 /* PBXBookmark */ = 300A7D4A171EFDB400A079E3 /* PBXBookmark */;
-			302D6D86172862DC003B69D7 /* PBXTextBookmark */ = 302D6D86172862DC003B69D7 /* PBXTextBookmark */;
-			302D6D8E17286347003B69D7 /* PBXTextBookmark */ = 302D6D8E17286347003B69D7 /* PBXTextBookmark */;
 			302D6D8F17286347003B69D7 /* PBXTextBookmark */ = 302D6D8F17286347003B69D7 /* PBXTextBookmark */;
-			302D6D9017286347003B69D7 /* PBXTextBookmark */ = 302D6D9017286347003B69D7 /* PBXTextBookmark */;
-			302D6D9117286347003B69D7 /* PBXTextBookmark */ = 302D6D9117286347003B69D7 /* PBXTextBookmark */;
-			3084DAE2171F4CD900D7D1D6 /* PBXBookmark */ = 3084DAE2171F4CD900D7D1D6 /* PBXBookmark */;
-			3084DAE5171F4CD900D7D1D6 /* PBXTextBookmark */ = 3084DAE5171F4CD900D7D1D6 /* PBXTextBookmark */;
-			3084DAE7171F4CD900D7D1D6 /* PlistBookmark */ = 3084DAE7171F4CD900D7D1D6 /* PlistBookmark */;
+			30F9082A17EB128700395BA7 /* PBXTextBookmark */ = 30F9082A17EB128700395BA7 /* PBXTextBookmark */;
+			30F9082B17EB128700395BA7 /* PlistBookmark */ = 30F9082B17EB128700395BA7 /* PlistBookmark */;
+			30F9082C17EB128700395BA7 /* PBXBookmark */ = 30F9082C17EB128700395BA7 /* PBXBookmark */;
+			30F9082D17EB128700395BA7 /* PBXBookmark */ = 30F9082D17EB128700395BA7 /* PBXBookmark */;
+			30F9082E17EB128700395BA7 /* PBXTextBookmark */ = 30F9082E17EB128700395BA7 /* PBXTextBookmark */;
+			30F9082F17EB128700395BA7 /* PBXTextBookmark */ = 30F9082F17EB128700395BA7 /* PBXTextBookmark */;
+			30F9083017EB128700395BA7 /* PBXTextBookmark */ = 30F9083017EB128700395BA7 /* PBXTextBookmark */;
+			30F9083117EB128700395BA7 /* PBXTextBookmark */ = 30F9083117EB128700395BA7 /* PBXTextBookmark */;
 		};
 		sourceControlManager = 300A7BFD171DB73900A079E3 /* Source Control */;
 		userBuildSettings = {
@@ -121,7 +121,7 @@
 	};
 	29B97316FDCFA39411CA2CEA /* main.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {659, 436}}";
+			sepNavIntBoundsRect = "{{0, 0}, {659, 431}}";
 			sepNavSelRange = "{0, 0}";
 			sepNavVisRange = "{0, 121}";
 			sepNavWindowFrame = "{{15, 69}, {1025, 804}}";
@@ -188,30 +188,6 @@
 		path = /Users/gaellalire/workspaces/homeWorkspace/vestige/assemblies/standard_edition_windows_setup/src/runbat/runbat.c;
 		sourceTree = "<absolute>";
 	};
-	300A7D4A171EFDB400A079E3 /* PBXBookmark */ = {
-		isa = PBXBookmark;
-		fRef = 300A7D42171EF89C00A079E3 /* vestige.png */;
-	};
-	302D6D86172862DC003B69D7 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 089C165DFE840E0CC02AAC07 /* English */;
-		name = "InfoPlist.strings: 1";
-		rLen = 0;
-		rLoc = 0;
-		rType = 0;
-		vrLen = 45;
-		vrLoc = 0;
-	};
-	302D6D8E17286347003B69D7 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 256AC3D90F4B6AC300CF3369 /* VestigeAppDelegate.m */;
-		name = "VestigeAppDelegate.m: 18";
-		rLen = 0;
-		rLoc = 508;
-		rType = 0;
-		vrLen = 965;
-		vrLoc = 0;
-	};
 	302D6D8F17286347003B69D7 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
 		fRef = 256AC3D80F4B6AC300CF3369 /* VestigeAppDelegate.h */;
@@ -222,7 +198,36 @@
 		vrLen = 312;
 		vrLoc = 0;
 	};
-	302D6D9017286347003B69D7 /* PBXTextBookmark */ = {
+	30F9082A17EB128700395BA7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 089C165DFE840E0CC02AAC07 /* English */;
+		name = "InfoPlist.strings: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 45;
+		vrLoc = 0;
+	};
+	30F9082B17EB128700395BA7 /* PlistBookmark */ = {
+		isa = PlistBookmark;
+		fRef = 8D1107310486CEB800E47090 /* Vestige-Info.plist */;
+		fallbackIsa = PBXBookmark;
+		isK = 0;
+		kPath = (
+		);
+		name = "/Users/gaellalire/workspaces/homeWorkspace/vestige/assemblies/standard_edition_macosx_app/src/Vestige/Vestige-Info.plist";
+		rLen = 0;
+		rLoc = 9223372036854775807;
+	};
+	30F9082C17EB128700395BA7 /* PBXBookmark */ = {
+		isa = PBXBookmark;
+		fRef = 300A7D42171EF89C00A079E3 /* vestige.png */;
+	};
+	30F9082D17EB128700395BA7 /* PBXBookmark */ = {
+		isa = PBXBookmark;
+		fRef = 300A7D55171F1A2F00A079E3 /* vestige.icns */;
+	};
+	30F9082E17EB128700395BA7 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
 		fRef = 29B97316FDCFA39411CA2CEA /* main.m */;
 		name = "main.m: 1";
@@ -232,7 +237,7 @@
 		vrLen = 121;
 		vrLoc = 0;
 	};
-	302D6D9117286347003B69D7 /* PBXTextBookmark */ = {
+	30F9082F17EB128700395BA7 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
 		fRef = 256AC3F00F4B6AF500CF3369 /* Vestige_Prefix.pch */;
 		name = "Vestige_Prefix.pch: 8";
@@ -242,30 +247,25 @@
 		vrLen = 145;
 		vrLoc = 0;
 	};
-	3084DAE2171F4CD900D7D1D6 /* PBXBookmark */ = {
-		isa = PBXBookmark;
-		fRef = 300A7D55171F1A2F00A079E3 /* vestige.icns */;
-	};
-	3084DAE5171F4CD900D7D1D6 /* PBXTextBookmark */ = {
+	30F9083017EB128700395BA7 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
-		fRef = 256AC3F00F4B6AF500CF3369 /* Vestige_Prefix.pch */;
-		name = "Vestige_Prefix.pch: 1";
+		fRef = 256AC3D90F4B6AC300CF3369 /* VestigeAppDelegate.m */;
+		name = "VestigeAppDelegate.m: 18";
 		rLen = 0;
-		rLoc = 0;
+		rLoc = 508;
 		rType = 0;
-		vrLen = 145;
+		vrLen = 965;
 		vrLoc = 0;
 	};
-	3084DAE7171F4CD900D7D1D6 /* PlistBookmark */ = {
-		isa = PlistBookmark;
-		fRef = 8D1107310486CEB800E47090 /* Vestige-Info.plist */;
-		fallbackIsa = PBXBookmark;
-		isK = 0;
-		kPath = (
-		);
-		name = "/Users/gaellalire/Documents/Vestige/Vestige-Info.plist";
-		rLen = 0;
-		rLoc = 9223372036854775808;
+	30F9083117EB128700395BA7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 256AC3D90F4B6AC300CF3369 /* VestigeAppDelegate.m */;
+		name = "VestigeAppDelegate.m: 10";
+		rLen = 13;
+		rLoc = 317;
+		rType = 0;
+		vrLen = 1063;
+		vrLoc = 0;
 	};
 	8D1107260486CEB800E47090 /* Vestige */ = {
 		activeExec = 0;

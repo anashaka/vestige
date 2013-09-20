@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DIRNAME=`dirname $0`
+DIRNAME=`dirname "$0"`
 if [ "$DIRNAME" = "." ]; then
   DIRNAME="$PWD"
 fi
