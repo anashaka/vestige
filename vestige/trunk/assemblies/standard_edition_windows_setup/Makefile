@@ -13,6 +13,6 @@ vestige-setup:
 	-ssh -p 2225 root@localhost 'rmdir /S /Q C:\target'
 	scp -r -P 2225 target/ root@localhost:C:/
 	ssh -p 2225 root@localhost '"C:\Program Files\Inno Setup 5\iscc.exe" C:\target\vestige.iss'
-	scp -P 2225 root@localhost:C:/target/Output/vestige-setup.exe target/vestige-setup.exe
+	scp -P 2225 root@localhost:C:/target/Output/vestige-setup.exe target/vestige-$(VESTIGE_VERSION)-setup.exe
 clean:
 	$(RM) -r target
