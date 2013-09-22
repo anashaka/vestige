@@ -13,7 +13,7 @@ Vestige.pkg:
 	cp -r src/vestige_gtk_launcher.py target/vestige-$(VESTIGE_RPM_VERSION)/
 	chmod +x target/vestige-$(VESTIGE_RPM_VERSION)/vestige_gtk_launcher.py
 	cp -r src/vestige.desktop target/vestige-$(VESTIGE_RPM_VERSION)/
-	-find target -name .svn -o -name .DS_Store -exec rm -rf {} \;
+	-find target \( -name .svn -o -name .DS_Store \) -exec rm -rf {} \;
 	pushd target && tar -czf vestige.tar.gz vestige-$(VESTIGE_RPM_VERSION) && popd
 	scp -P 2224 target/vestige.tar.gz builder@localhost:rpmbuild/SOURCES/vestige.tar.gz
 	scp -P 2224 target/vestige.spec builder@localhost:rpmbuild/SPECS/vestige.spec

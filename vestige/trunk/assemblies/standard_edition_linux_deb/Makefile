@@ -19,7 +19,7 @@ Vestige.pkg:
 	cp src/vestige_gtk_launcher.py target/vestige_deb/usr/bin/vestige_gtk_launcher.py
 	cp -r src/hicolor target/vestige_deb/usr/share/icons/
 	chmod +x target/vestige_deb/usr/bin/*
-	-find target -name .svn -o -name .DS_Store -exec rm -rf {} \;
+	-find target \( -name .svn -o -name .DS_Store \) -exec rm -rf {} \;
 	-ssh -p 2223 root@localhost rm -rf '~/target'
 	scp -r -P 2223 target root@localhost:.
 	ssh -p 2223 root@localhost dpkg -b target/vestige_deb/ target/vestige_$(VESTIGE_VERSION)_all.deb

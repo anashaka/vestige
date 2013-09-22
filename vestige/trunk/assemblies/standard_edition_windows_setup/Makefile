@@ -9,7 +9,7 @@ vestige-setup:
 	cp src/vestige.iss target
 	cp src/CheckJava.class target
 	cp src/checkJava.bat target
-	-find target -name .svn -o -name .DS_Store -exec rm -rf {} \;
+	-find target \( -name .svn -o -name .DS_Store \) -exec rm -rf {} \;
 	-ssh -p 2225 root@localhost 'rmdir /S /Q C:\target'
 	scp -r -P 2225 target/ root@localhost:C:/
 	ssh -p 2225 root@localhost '"C:\Program Files\Inno Setup 5\iscc.exe" C:\target\vestige.iss'
