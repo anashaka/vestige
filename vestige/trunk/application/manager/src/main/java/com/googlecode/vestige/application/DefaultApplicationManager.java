@@ -64,6 +64,8 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
 
     private transient ApplicationDescriptorFactory applicationDescriptorFactory;
 
+    private transient VestigeProperties vestigeProperties;
+
     private File repoFile;
 
     public DefaultApplicationManager(final File repoFile) {
@@ -574,6 +576,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                 @Override
                 public void run() {
                     MDC.put(VESTIGE_APP_NAME, applicationContext.getName());
+                    vestigeProperties.pushApplication(new HashMap<String, String>());
                     try {
                         runnable.run();
                     } finally {
@@ -586,6 +589,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                         applicationContext.setThread(null);
                         // allow external start to run
                         applicationContext.setStarted(false);
+                        vestigeProperties.popApplication();
                         MDC.remove(VESTIGE_APP_NAME);
                     }
                 }
@@ -636,9 +640,10 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         this.applicationDescriptorFactory = null;
     }
 
-    public void powerOn(final VestigePlatform vestigePlatform, final ApplicationDescriptorFactory applicationDescriptorFactory) {
+    public void powerOn(final VestigePlatform vestigePlatform, final ApplicationDescriptorFactory applicationDescriptorFactory, final VestigeProperties vestigeProperties) {
         this.vestigePlatform = vestigePlatform;
         this.applicationDescriptorFactory = applicationDescriptorFactory;
+        this.vestigeProperties = vestigeProperties;
         for (Entry<String, Map<String, Map<List<Integer>, ApplicationContext>>> entry : applicationContextByVersionByNameByRepo
                 .entrySet()) {
             for (Entry<String, Map<List<Integer>, ApplicationContext>> entry2 : entry.getValue().entrySet()) {
