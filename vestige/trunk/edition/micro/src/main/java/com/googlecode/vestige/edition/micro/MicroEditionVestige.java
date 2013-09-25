@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ import com.googlecode.vestige.admin.command.VestigeCommandExecutor;
 import com.googlecode.vestige.admin.telnet.TelnetServer;
 import com.googlecode.vestige.application.ApplicationDescriptorFactory;
 import com.googlecode.vestige.application.DefaultApplicationManager;
+import com.googlecode.vestige.application.VestigeProperties;
 import com.googlecode.vestige.application.descriptor.xml.PropertiesApplicationDescriptorFactory;
 import com.googlecode.vestige.core.VestigeExecutor;
 import com.googlecode.vestige.core.logger.VestigeLoggerFactory;
@@ -58,12 +60,15 @@ public class MicroEditionVestige {
 
     private Thread workerThread;
 
+    private VestigeProperties vestigeProperties;
+
     private ApplicationDescriptorFactory applicationDescriptorFactory;
 
-    public MicroEditionVestige(final File homeFile, final VestigeExecutor vestigeExecutor, final VestigePlatform vestigePlatform)
+    public MicroEditionVestige(final File homeFile, final VestigeExecutor vestigeExecutor, final VestigePlatform vestigePlatform, final VestigeProperties vestigeProperties)
             throws IOException {
         this.vestigeExecutor = vestigeExecutor;
         this.vestigePlatform = vestigePlatform;
+        this.vestigeProperties = vestigeProperties;
 
         File appHome = new File(homeFile, "app");
 
@@ -96,7 +101,7 @@ public class MicroEditionVestige {
             throw new Exception("Vestige ME already started");
         }
         workerThread = vestigeExecutor.createWorker("me-worker", true, 0);
-        defaultApplicationManager.powerOn(vestigePlatform, applicationDescriptorFactory);
+        defaultApplicationManager.powerOn(vestigePlatform, applicationDescriptorFactory, vestigeProperties);
         server.start();
     }
 
@@ -138,6 +143,8 @@ public class MicroEditionVestige {
                 factory.setNextHandler(VestigeLoggerFactory.getVestigeLoggerFactory());
                 VestigeLoggerFactory.setVestigeLoggerFactory(factory);
             }
+            // FIXME simple logger must not be intercepted
+            // avoid direct log
             synchronized (System.class) {
                 SLF4JPrintStream out = new SLF4JPrintStream(true);
                 out.setNextHandler(System.out);
@@ -146,6 +153,10 @@ public class MicroEditionVestige {
                 err.setNextHandler(System.err);
                 System.setErr(err);
             }
+
+            Properties properties = System.getProperties();
+            VestigeProperties vestigeProperties = new VestigeProperties(properties);
+            System.setProperties(vestigeProperties);
 
             VestigeExecutor vestigeExecutor = new VestigeExecutor();
             VestigePlatform vestigePlatform = new DefaultVestigePlatform(vestigeExecutor);
@@ -157,7 +168,7 @@ public class MicroEditionVestige {
                 }
             }
             LOGGER.info("Use {} for home file", homeFile);
-            final MicroEditionVestige microEditionVestige = new MicroEditionVestige(homeFile, vestigeExecutor, vestigePlatform);
+            final MicroEditionVestige microEditionVestige = new MicroEditionVestige(homeFile, vestigeExecutor, vestigePlatform, vestigeProperties);
             Runtime.getRuntime().addShutdownHook(new Thread("me-shutdown") {
                 @Override
                 public void run() {
@@ -185,6 +196,7 @@ public class MicroEditionVestige {
             } catch (Exception e) {
                 LOGGER.error("Unable to stop micro vestige edition", e);
             }
+            System.setProperties(properties);
             LOGGER.info("Vestige ME stopped");
         } catch (Throwable e) {
             LOGGER.error("Unable to start vestige ME", e);

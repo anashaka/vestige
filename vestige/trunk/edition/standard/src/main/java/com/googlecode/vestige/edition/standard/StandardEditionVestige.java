@@ -23,7 +23,9 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Field;
 import java.net.URL;
+import java.util.Properties;
 import java.util.concurrent.Future;
 
 import javax.xml.bind.JAXBContext;
@@ -38,10 +40,18 @@ import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.classic.util.ContextInitializer;
+import ch.qos.logback.core.joran.spi.ConsoleTarget;
+import ch.qos.logback.core.joran.spi.JoranException;
+import ch.qos.logback.core.util.StatusPrinter;
+
 import com.googlecode.vestige.application.ApplicationDescriptorFactory;
 import com.googlecode.vestige.application.ApplicationException;
 import com.googlecode.vestige.application.DefaultApplicationManager;
 import com.googlecode.vestige.application.SynchronizedApplicationManager;
+import com.googlecode.vestige.application.VestigeProperties;
 import com.googlecode.vestige.application.descriptor.xml.XMLApplicationDescriptorFactory;
 import com.googlecode.vestige.core.VestigeExecutor;
 import com.googlecode.vestige.core.logger.VestigeLoggerFactory;
@@ -77,13 +87,16 @@ public class StandardEditionVestige {
 
     private ApplicationDescriptorFactory applicationDescriptorFactory;
 
+    private VestigeProperties vestigeProperties;
+
     private File resolverFile;
 
     @SuppressWarnings("unchecked")
     public StandardEditionVestige(final File homeFile, final File baseFile, final VestigeExecutor vestigeExecutor,
-            final VestigePlatform vestigePlatform) throws Exception {
+            final VestigePlatform vestigePlatform, final VestigeProperties vestigeProperties) throws Exception {
         this.vestigeExecutor = vestigeExecutor;
         this.vestigePlatform = vestigePlatform;
+        this.vestigeProperties = vestigeProperties;
 
         File settingsFile = new File(baseFile, "settings.xml");
         if (!settingsFile.exists()) {
@@ -135,7 +148,6 @@ public class StandardEditionVestige {
             LOGGER.warn("Unable to restore application manager", e);
         }
 
-
         File appHomeFile = new File(appFile, "home");
         if (!appHomeFile.exists()) {
             appHomeFile.mkdir();
@@ -164,7 +176,8 @@ public class StandardEditionVestige {
             vestigeExecutor.createWorker("ssh-factory-worker", true, 1);
             File sshBase = new File(baseFile, "ssh");
             File sshHome = new File(homeFile, "ssh");
-            futureSshServer = vestigeExecutor.submit(new SSHServerFactory(sshBase, sshHome, ssh, appHomeFile, synchronizedApplicationManager, vestigePlatform));
+            futureSshServer = vestigeExecutor.submit(new SSHServerFactory(sshBase, sshHome, ssh, appHomeFile,
+                    synchronizedApplicationManager, vestigePlatform));
         }
 
         Future<Server> futureServer = null;
@@ -188,7 +201,7 @@ public class StandardEditionVestige {
         }
         workerThread = vestigeExecutor.createWorker("se-worker", true, 0);
         try {
-            defaultApplicationManager.powerOn(vestigePlatform, applicationDescriptorFactory);
+            defaultApplicationManager.powerOn(vestigePlatform, applicationDescriptorFactory, vestigeProperties);
             if (sshServer != null) {
                 sshServer.start();
             }
@@ -248,6 +261,10 @@ public class StandardEditionVestige {
                 factory.setNextHandler(VestigeLoggerFactory.getVestigeLoggerFactory());
                 VestigeLoggerFactory.setVestigeLoggerFactory(factory);
             }
+            // logback can use system stream directly
+            giveDirectStreamAccessToLogback();
+
+            // avoid direct log
             synchronized (System.class) {
                 SLF4JPrintStream out = new SLF4JPrintStream(true);
                 out.setNextHandler(System.out);
@@ -256,6 +273,10 @@ public class StandardEditionVestige {
                 err.setNextHandler(System.err);
                 System.setErr(err);
             }
+
+            Properties properties = System.getProperties();
+            VestigeProperties vestigeProperties = new VestigeProperties(properties);
+            System.setProperties(vestigeProperties);
 
             String home = args[0];
             String base = args[1];
@@ -268,7 +289,7 @@ public class StandardEditionVestige {
             }
             LOGGER.info("Use {} for home file", homeFile);
             final StandardEditionVestige standardEditionVestige = new StandardEditionVestige(homeFile, baseFile, vestigeExecutor,
-                    vestigePlatform);
+                    vestigePlatform, vestigeProperties);
             Runtime.getRuntime().addShutdownHook(new Thread("se-shutdown") {
                 @Override
                 public void run() {
@@ -285,7 +306,8 @@ public class StandardEditionVestige {
             if (LOGGER.isInfoEnabled()) {
                 long currentTimeMillis = System.currentTimeMillis();
                 long jvmStartTime = ManagementFactory.getRuntimeMXBean().getStartTime();
-                LOGGER.info("Vestige SE started in {} ms ({} ms since JVM started)", currentTimeMillis - startTimeMillis, currentTimeMillis - jvmStartTime);
+                LOGGER.info("Vestige SE started in {} ms ({} ms since JVM started)", currentTimeMillis - startTimeMillis,
+                        currentTimeMillis - jvmStartTime);
             }
             synchronized (standardEditionVestige) {
                 try {
@@ -305,9 +327,37 @@ public class StandardEditionVestige {
             } catch (Exception e) {
                 LOGGER.error("Unable to stop standard vestige edition", e);
             }
+            System.setProperties(properties);
             LOGGER.info("Vestige SE stopped");
         } catch (Throwable e) {
             LOGGER.error("Unable to start vestige SE", e);
+        }
+    }
+
+    public static void giveDirectStreamAccessToLogback() {
+        try {
+            Field streamField = ConsoleTarget.class.getDeclaredField("stream");
+            streamField.setAccessible(true);
+            streamField.set(ConsoleTarget.SystemOut, System.out);
+            streamField.set(ConsoleTarget.SystemErr, System.err);
+            streamField.setAccessible(false);
+
+            LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+            ContextInitializer ci = new ContextInitializer(loggerContext);
+            URL url = ci.findURLOfDefaultConfigurationFile(true);
+            try {
+                JoranConfigurator configurator = new JoranConfigurator();
+                configurator.setContext(loggerContext);
+                loggerContext.reset();
+                configurator.doConfigure(url);
+            } catch (JoranException je) {
+                // StatusPrinter will handle this
+            }
+            StatusPrinter.printInCaseOfErrorsOrWarnings(loggerContext);
+        } catch (NoSuchFieldException e) {
+            LOGGER.error("Logback appender changes", e);
+        } catch (IllegalAccessException e) {
+            LOGGER.error("Logback appender changes", e);
         }
     }
 
