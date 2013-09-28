@@ -37,50 +37,48 @@ public class SLF4JLoggerAdapter implements VestigeLogger {
 
     private void doLog(final Level level, final String msg) {
         int levelValue = level.intValue();
-        if (levelValue == Level.OFF.intValue()) {
-            return;
-        }
-        if (levelValue >= Level.SEVERE.intValue()) {
-            logger.error(msg);
-            return;
-        }
-        if (levelValue >= Level.WARNING.intValue()) {
-            logger.warn(msg);
-            return;
-        }
         if (levelValue >= Level.INFO.intValue()) {
-            logger.info(msg);
-            return;
+            if (levelValue >= Level.SEVERE.intValue()) {
+                if (levelValue != Level.OFF.intValue()) {
+                    logger.error(msg);
+                }
+            } else {
+                if (levelValue >= Level.WARNING.intValue()) {
+                    logger.warn(msg);
+                } else {
+                    logger.info(msg);
+                }
+            }
+        } else {
+            if (levelValue >= Level.FINE.intValue()) {
+                logger.debug(msg);
+            } else {
+                logger.trace(msg);
+            }
         }
-        if (levelValue >= Level.FINE.intValue()) {
-            logger.debug(msg);
-            return;
-        }
-        logger.trace(msg);
     }
 
     private void doLog(final Level level, final String msg, final Throwable throwable) {
         int levelValue = level.intValue();
-        if (levelValue == Level.OFF.intValue()) {
-            return;
-        }
-        if (levelValue >= Level.SEVERE.intValue()) {
-            logger.error(msg, throwable);
-            return;
-        }
-        if (levelValue >= Level.WARNING.intValue()) {
-            logger.warn(msg, throwable);
-            return;
-        }
         if (levelValue >= Level.INFO.intValue()) {
-            logger.info(msg, throwable);
-            return;
+            if (levelValue >= Level.SEVERE.intValue()) {
+                if (levelValue != Level.OFF.intValue()) {
+                    logger.error(msg, throwable);
+                }
+            } else {
+                if (levelValue >= Level.WARNING.intValue()) {
+                    logger.warn(msg, throwable);
+                } else {
+                    logger.info(msg, throwable);
+                }
+            }
+        } else {
+            if (levelValue >= Level.FINE.intValue()) {
+                logger.debug(msg, throwable);
+            } else {
+                logger.trace(msg, throwable);
+            }
         }
-        if (levelValue >= Level.FINE.intValue()) {
-            logger.debug(msg, throwable);
-            return;
-        }
-        logger.trace(msg, throwable);
     }
 
     public void log(final LogRecord record) {
@@ -224,30 +222,46 @@ public class SLF4JLoggerAdapter implements VestigeLogger {
     }
 
     public Level getLevel() {
-        if (logger.isTraceEnabled()) {
-            return Level.ALL;
-        }
-        if (logger.isDebugEnabled()) {
-            return Level.FINE;
-        }
-        if (logger.isInfoEnabled()) {
-            return Level.INFO;
-        }
-        if (logger.isWarnEnabled()) {
-            return Level.WARNING;
-        }
-        if (logger.isErrorEnabled()) {
+        if (!logger.isWarnEnabled()) {
+            if (!logger.isErrorEnabled()) {
+                return Level.OFF;
+            }
             return Level.SEVERE;
+        } else {
+            if (!logger.isDebugEnabled()) {
+                if (!logger.isInfoEnabled()) {
+                    return Level.WARNING;
+                }
+                return Level.INFO;
+            } else {
+                if (!logger.isTraceEnabled()) {
+                    return Level.FINE;
+                }
+                return Level.ALL;
+            }
         }
-        return Level.OFF;
     }
 
     public boolean isLoggable(final Level level) {
-        int levelValue = getLevel().intValue();
-        if (level.intValue() < levelValue || levelValue == Level.OFF.intValue()) {
-            return false;
+        int levelValue = level.intValue();
+        if (levelValue >= Level.INFO.intValue()) {
+            if (levelValue >= Level.SEVERE.intValue()) {
+                if (levelValue == Level.OFF.intValue()) {
+                    return false;
+                }
+                return logger.isErrorEnabled();
+            } else {
+                if (levelValue >= Level.WARNING.intValue()) {
+                    return logger.isWarnEnabled();
+                }
+                return logger.isInfoEnabled();
+            }
+        } else {
+            if (levelValue >= Level.FINE.intValue()) {
+                return logger.isDebugEnabled();
+            }
+            return logger.isTraceEnabled();
         }
-        return true;
     }
 
 }
