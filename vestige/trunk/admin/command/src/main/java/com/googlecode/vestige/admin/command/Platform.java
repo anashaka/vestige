@@ -18,6 +18,8 @@
 package com.googlecode.vestige.admin.command;
 
 import java.io.PrintWriter;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -88,6 +90,21 @@ public class Platform implements Command {
         for (Entry<Integer, Integer> entry : classloadersByCount.entrySet()) {
             out.println("  " + entry.getValue() + " classloader(s) are shared by " + entry.getKey() + " attachment(s)");
         }
+
+        List<AttachedVestigeClassLoader> unattached = new ArrayList<AttachedVestigeClassLoader>();
+        for(Serializable classLoaderKey : vestigePlatform.getClassLoaderKeys()) {
+            AttachedVestigeClassLoader attachedVestigeClassLoaderByKey = vestigePlatform.getAttachedVestigeClassLoaderByKey(classLoaderKey);
+            if (attachedVestigeClassLoaderByKey != null && !map.containsKey(attachedVestigeClassLoaderByKey)) {
+                unattached.add(attachedVestigeClassLoaderByKey);
+            }
+        }
+        if (unattached.size() != 0) {
+            out.println("Platform has " + unattached.size() + " classloader(s) without attachment:");
+            for (AttachedVestigeClassLoader attachedVestigeClassLoader : unattached) {
+                out.println("  " + attachedVestigeClassLoader);
+            }
+        }
+
     }
 
 }

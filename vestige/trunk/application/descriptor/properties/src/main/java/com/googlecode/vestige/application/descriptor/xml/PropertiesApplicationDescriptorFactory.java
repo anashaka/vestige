@@ -29,7 +29,7 @@ import com.googlecode.vestige.application.ApplicationException;
  */
 public class PropertiesApplicationDescriptorFactory implements ApplicationDescriptorFactory {
 
-    public ApplicationDescriptor createApplicationDescriptor(final URL context, final String appName, final List<Integer> version)
+    public ApplicationDescriptor createApplicationDescriptor(final URL context, final String repoName, final String appName, final List<Integer> version)
             throws ApplicationException {
         return new PropertiesApplicationDescriptor();
     }

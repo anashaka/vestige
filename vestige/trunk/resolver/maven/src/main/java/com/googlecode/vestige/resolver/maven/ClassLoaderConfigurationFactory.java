@@ -42,6 +42,8 @@ public class ClassLoaderConfigurationFactory {
 
     private MavenClassLoaderConfigurationKey classLoaderConfigurationKey;
 
+    private String appName;
+
     private URL[] urls;
 
     private List<Integer> paths;
@@ -70,9 +72,10 @@ public class ClassLoaderConfigurationFactory {
         return urls;
     }
 
-    public ClassLoaderConfigurationFactory(final MavenClassLoaderConfigurationKey classLoaderConfigurationKey, final Scope scope, final URL[] urls,
+    public ClassLoaderConfigurationFactory(final String appName, final MavenClassLoaderConfigurationKey classLoaderConfigurationKey, final Scope scope, final URL[] urls,
             final List<ClassLoaderConfigurationFactory> dependencies) {
         TreeMap<String, List<Integer>> pathsByResourceName = new TreeMap<String, List<Integer>>();
+        this.appName = appName;
         this.urls = urls;
         this.classLoaderConfigurationKey = classLoaderConfigurationKey;
         this.scope = scope;
@@ -145,13 +148,16 @@ public class ClassLoaderConfigurationFactory {
             }
             StringParser pathsByResourceName = stringParserFactory.createStringParser(this.pathsByResourceName,
                     0);
+            String name;
             MavenClassLoaderConfigurationKey key;
             if (scope == Scope.PLATFORM) {
                 key = classLoaderConfigurationKey;
+                name = key.getArtifacts().toString();
             } else {
                 key = new MavenClassLoaderConfigurationKey(classLoaderConfigurationKey.getArtifacts(), classLoaderConfigurationKey.getDependencies(), false);
+                name = key.getArtifacts().toString() + " of " + appName;
             }
-            cachedClassLoaderConfiguration = new ClassLoaderConfiguration(key, scope == Scope.ATTACHMENT, urls, dependencies, paths, pathIdsList,
+            cachedClassLoaderConfiguration = new ClassLoaderConfiguration(key, name, scope == Scope.ATTACHMENT, urls, dependencies, paths, pathIdsList,
                     pathsByResourceName);
         }
         return cachedClassLoaderConfiguration;

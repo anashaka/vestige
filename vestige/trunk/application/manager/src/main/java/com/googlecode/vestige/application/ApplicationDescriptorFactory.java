@@ -25,7 +25,7 @@ import java.util.List;
  */
 public interface ApplicationDescriptorFactory {
 
-    ApplicationDescriptor createApplicationDescriptor(final URL context, final String appName, final List<Integer> version)
+    ApplicationDescriptor createApplicationDescriptor(final URL context, String repoName, final String appName, final List<Integer> version)
             throws ApplicationException;
 
 }

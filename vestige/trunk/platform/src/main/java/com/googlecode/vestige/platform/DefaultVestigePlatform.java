@@ -145,7 +145,11 @@ public class DefaultVestigePlatform implements VestigePlatform {
     }
 
     public AttachedVestigeClassLoader getAttachedVestigeClassLoaderByKey(final Serializable key) {
-        return map.get(key).get();
+        WeakReference<AttachedVestigeClassLoader> weakReference = map.get(key);
+        if (weakReference == null) {
+            return null;
+        }
+        return weakReference.get();
     }
 
     public Set<Integer> getAttachments() {
@@ -281,6 +285,7 @@ public class DefaultVestigePlatform implements VestigePlatform {
             // search inside jar after dependencies
             // classLoaderDependencies.add(null);
             URL[] urls = classLoaderConfiguration.getUrls();
+            String name = classLoaderConfiguration.getName();
 
             // for vestige class loader : null == current classloader
             AttachedVestigeClassLoader attachedVestigeClassLoader = new AttachedVestigeClassLoader(classLoaderDependencies);
@@ -338,7 +343,10 @@ public class DefaultVestigePlatform implements VestigePlatform {
                     LOGGER.warn("META-INF/MANIFEST.MF issue", e);
                 }
             }
-            attachedVestigeClassLoader = new AttachedVestigeClassLoader(vestigeClassLoader, classLoaderDependencies, Arrays.toString(urls), classes);
+            if (classLoaderConfiguration.isAttachmentScoped()) {
+                name = name + " @ " + Integer.toHexString(vestigeClassLoader.hashCode());
+            }
+            attachedVestigeClassLoader = new AttachedVestigeClassLoader(vestigeClassLoader, classLoaderDependencies, Arrays.toString(urls), classes, name);
             vestigeClassLoader.setData(attachedVestigeClassLoader);
             if (classLoaderConfiguration.isAttachmentScoped()) {
                 attachmentMap.put(key, vestigeClassLoader);

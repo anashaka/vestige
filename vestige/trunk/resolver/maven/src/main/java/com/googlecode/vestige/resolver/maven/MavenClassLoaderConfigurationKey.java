@@ -90,6 +90,9 @@ public class MavenClassLoaderConfigurationKey implements Serializable {
             return false;
         }
         MavenClassLoaderConfigurationKey other = (MavenClassLoaderConfigurationKey) obj;
+        if (!other.shared) {
+            return false;
+        }
         if (!artifacts.equals(other.artifacts)) {
             return false;
         }

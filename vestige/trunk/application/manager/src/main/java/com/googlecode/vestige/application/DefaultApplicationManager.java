@@ -172,7 +172,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
             throw new ApplicationException("repo not found");
         }
 
-        ApplicationDescriptor applicationDescriptor = applicationDescriptorFactory.createApplicationDescriptor(context, appName, version);
+        ApplicationDescriptor applicationDescriptor = applicationDescriptorFactory.createApplicationDescriptor(context, repoName, appName, version);
 
         File file = new File(repoFile, repoName + File.separator
                 + appName + File.separator + VersionUtils.toString(version));

@@ -44,8 +44,11 @@ public class ClassLoaderConfiguration implements Serializable {
 
     private boolean attachmentScoped;
 
-    public ClassLoaderConfiguration(final Serializable key, final boolean attachmentScoped, final URL[] urls, final List<ClassLoaderConfiguration> dependencies, final List<Integer> paths, final List<List<Integer>> pathIdsList, final StringParser pathIdsPositionByResourceName) {
+    private String name;
+
+    public ClassLoaderConfiguration(final Serializable key, final String name, final boolean attachmentScoped, final URL[] urls, final List<ClassLoaderConfiguration> dependencies, final List<Integer> paths, final List<List<Integer>> pathIdsList, final StringParser pathIdsPositionByResourceName) {
         this.key = key;
+        this.name = name;
         this.attachmentScoped = attachmentScoped;
         this.urls = urls;
         this.dependencies = dependencies;
@@ -64,6 +67,10 @@ public class ClassLoaderConfiguration implements Serializable {
 
     public Serializable getKey() {
         return key;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public URL[] getUrls() {
