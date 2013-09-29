@@ -46,8 +46,8 @@ public final class Vestige {
         Class.forName(VestigeExecutor.class.getName(), true, ClassLoader.getSystemClassLoader());
 
         StringParser stringParser = new NoStateStringParser(0);
-        VestigeClassLoader vestigeClassLoader = new VestigeClassLoader(ClassLoader.getSystemClassLoader(),
-                Collections.singletonList(Collections.<VestigeClassLoader> singletonList(null)), stringParser, stringParser, urls);
+        VestigeClassLoader<Void> vestigeClassLoader = new VestigeClassLoader<Void>(ClassLoader.getSystemClassLoader(), Collections.singletonList(Collections
+                .<VestigeClassLoader<Void>> singletonList(null)), stringParser, stringParser, urls);
         runMain(vestigeClassLoader, mainclass, dargs);
     }
 

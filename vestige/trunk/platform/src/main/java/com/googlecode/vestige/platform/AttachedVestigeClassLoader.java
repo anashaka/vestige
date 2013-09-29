@@ -26,21 +26,54 @@ import com.googlecode.vestige.core.VestigeClassLoader;
  */
 public class AttachedVestigeClassLoader {
 
-    private VestigeClassLoader vestigeClassLoader;
+    private VestigeClassLoader<AttachedVestigeClassLoader> vestigeClassLoader;
 
     private List<AttachedVestigeClassLoader> dependencies;
 
-    public AttachedVestigeClassLoader(final VestigeClassLoader vestigeClassLoader, final List<AttachedVestigeClassLoader> dependencies) {
-        this.vestigeClassLoader = vestigeClassLoader;
+    private int attachments;
+
+    private String urls;
+
+    private List<String> startStopClasses;
+
+    public AttachedVestigeClassLoader(final List<AttachedVestigeClassLoader> dependencies) {
         this.dependencies = dependencies;
     }
 
-    public VestigeClassLoader getVestigeClassLoader() {
+    public AttachedVestigeClassLoader(final VestigeClassLoader<AttachedVestigeClassLoader> vestigeClassLoader, final List<AttachedVestigeClassLoader> dependencies, final String urls, final List<String> startStopClasses) {
+        this.vestigeClassLoader = vestigeClassLoader;
+        this.dependencies = dependencies;
+        this.urls = urls;
+        this.startStopClasses = startStopClasses;
+    }
+
+    public VestigeClassLoader<AttachedVestigeClassLoader> getVestigeClassLoader() {
         return vestigeClassLoader;
     }
 
     public List<AttachedVestigeClassLoader> getDependencies() {
         return dependencies;
+    }
+
+    public int getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(final int attachments) {
+        this.attachments = attachments;
+    }
+
+    public String getUrls() {
+        return urls;
+    }
+
+    public List<String> getStartStopClasses() {
+        return startStopClasses;
+    }
+
+    @Override
+    public String toString() {
+        return urls.toString();
     }
 
 }
