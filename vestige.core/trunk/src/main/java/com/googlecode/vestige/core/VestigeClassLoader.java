@@ -21,10 +21,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.googlecode.vestige.core.parser.StringParser;
@@ -32,17 +30,18 @@ import com.googlecode.vestige.core.parser.StringParser;
 /**
  * @author Gael Lalire
  */
-public final class VestigeClassLoader extends URLClassLoader {
+public final class VestigeClassLoader<E> extends URLClassLoader {
 
-    private List<List<VestigeClassLoader>> vestigeClassloadersList;
+    private List<? extends List<? extends VestigeClassLoader<?>>> vestigeClassloadersList;
 
     private StringParser classStringParser;
 
     private StringParser resourceStringParser;
 
-    private Map<String, String> properties = new HashMap<String, String>();
+    private E data;
 
-    public VestigeClassLoader(final ClassLoader parent, final List<List<VestigeClassLoader>> vestigeClassloadersList, final StringParser classStringParser, final StringParser resourceStringParser, final URL... urls) {
+    public VestigeClassLoader(final ClassLoader parent, final List<? extends List<? extends VestigeClassLoader<?>>> vestigeClassloadersList,
+            final StringParser classStringParser, final StringParser resourceStringParser, final URL... urls) {
         super(urls, parent);
         this.vestigeClassloadersList = vestigeClassloadersList;
         this.classStringParser = classStringParser;
@@ -57,12 +56,12 @@ public final class VestigeClassLoader extends URLClassLoader {
         return resourceStringParser;
     }
 
-    public String getProperty(final String name) {
-        return properties.get(name);
+    public E getData() {
+        return data;
     }
 
-    public void setProperty(final String name, final String value) {
-        properties.put(name, value);
+    public void setData(final E data) {
+        this.data = data;
     }
 
     public Class<?> superLoadClass(final String name) throws ClassNotFoundException {
@@ -71,9 +70,9 @@ public final class VestigeClassLoader extends URLClassLoader {
 
     @Override
     public Class<?> loadClass(final String name) throws ClassNotFoundException {
-        List<VestigeClassLoader> classLoaders = vestigeClassloadersList.get(classStringParser.match(name));
+        List<? extends VestigeClassLoader<?>> classLoaders = vestigeClassloadersList.get(classStringParser.match(name));
         if (classLoaders != null) {
-            for (VestigeClassLoader classLoader : classLoaders) {
+            for (VestigeClassLoader<?> classLoader : classLoaders) {
                 if (classLoader == null) {
                     try {
                         return super.loadClass(name);
@@ -89,7 +88,7 @@ public final class VestigeClassLoader extends URLClassLoader {
                 }
             }
         }
-        throw new VestigeClassNotFoundException(name, properties);
+        throw new VestigeClassNotFoundException(name, toString());
     }
 
     public URL superGetResource(final String name) {
@@ -98,9 +97,9 @@ public final class VestigeClassLoader extends URLClassLoader {
 
     @Override
     public URL getResource(final String name) {
-        List<VestigeClassLoader> classLoaders = vestigeClassloadersList.get(resourceStringParser.match(name));
+        List<? extends VestigeClassLoader<?>> classLoaders = vestigeClassloadersList.get(resourceStringParser.match(name));
         if (classLoaders != null) {
-            for (VestigeClassLoader classLoader : classLoaders) {
+            for (VestigeClassLoader<?> classLoader : classLoaders) {
                 if (classLoader == null) {
                     URL resource = super.getResource(name);
                     if (resource != null) {
@@ -124,9 +123,9 @@ public final class VestigeClassLoader extends URLClassLoader {
     @Override
     public Enumeration<URL> getResources(final String name) throws IOException {
         Set<URL> urls = new LinkedHashSet<URL>();
-        List<VestigeClassLoader> classLoaders = vestigeClassloadersList.get(resourceStringParser.match(name));
+        List<? extends VestigeClassLoader<?>> classLoaders = vestigeClassloadersList.get(resourceStringParser.match(name));
         if (classLoaders != null) {
-            for (VestigeClassLoader classLoader : classLoaders) {
+            for (VestigeClassLoader<?> classLoader : classLoaders) {
                 if (classLoader == null) {
                     urls.addAll(Collections.list(super.getResources(name)));
                 } else {
@@ -135,6 +134,14 @@ public final class VestigeClassLoader extends URLClassLoader {
             }
         }
         return Collections.enumeration(urls);
+    }
+
+    @Override
+    public String toString() {
+        if (data != null) {
+            return data.toString();
+        }
+        return super.toString();
     }
 
 }

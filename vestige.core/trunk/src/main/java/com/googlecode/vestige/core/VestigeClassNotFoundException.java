@@ -16,7 +16,6 @@
 
 package com.googlecode.vestige.core;
 
-import java.util.Map;
 
 /**
  * @author Gael Lalire
@@ -25,15 +24,22 @@ public class VestigeClassNotFoundException extends ClassNotFoundException {
 
     private static final long serialVersionUID = -1308142576374269964L;
 
-    private Map<String, String> properties;
+    private String className;
 
-    public VestigeClassNotFoundException(final String className, final Map<String, String> properties) {
-        super(className);
-        this.properties = properties;
+    private String location;
+
+    public VestigeClassNotFoundException(final String className, final String location) {
+        super(className + " in " + location.toString());
+        this.className = className;
+        this.location = location;
     }
 
-    public Map<String, String> getProperties() {
-        return properties;
+    public String getClassName() {
+        return className;
+    }
+
+    public String getLocation() {
+        return location;
     }
 
 }

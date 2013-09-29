@@ -248,7 +248,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                 int installerAttach = vestigePlatform.attach(installerResolve);
                 try {
                     vestigePlatform.start(installerAttach);
-                    VestigeClassLoader installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
+                    VestigeClassLoader<?> installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
                     Method installerMethod = installerClassLoader.loadClass(applicationContext.getInstallerClassName())
                             .getMethod("install", File.class, List.class);
                     Thread currentThread = Thread.currentThread();
@@ -286,7 +286,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                 int installerAttach = vestigePlatform.attach(installerResolve);
                 try {
                     vestigePlatform.start(installerAttach);
-                    VestigeClassLoader installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
+                    VestigeClassLoader<?> installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
                     Method installerMethod = installerClassLoader.loadClass(applicationContext.getInstallerClassName())
                             .getMethod("uninstall", File.class, List.class);
                     Thread currentThread = Thread.currentThread();
@@ -387,7 +387,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                     int installerAttach = vestigePlatform.attach(installerResolve);
                     try {
                         vestigePlatform.start(installerAttach);
-                        VestigeClassLoader installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
+                        VestigeClassLoader<?> installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
 
                         Method installerMethod = installerClassLoader.loadClass(applicationContext.getInstallerClassName())
                                 .getMethod("uninterruptedMigrate", File.class, List.class, Runnable.class, File.class,
@@ -453,7 +453,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                     int installerAttach = vestigePlatform.attach(installerResolve);
                     try {
                         vestigePlatform.start(installerAttach);
-                        VestigeClassLoader installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
+                        VestigeClassLoader<?> installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
 
                         Method installerMethod = installerClassLoader.loadClass(applicationContext.getInstallerClassName())
                                 .getMethod("migrate", File.class, List.class, File.class, List.class);
@@ -557,7 +557,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         try {
             applicationContext.setAttach(vestigePlatform.attach(applicationContext.getResolve()));
             vestigePlatform.start(applicationContext.getAttach());
-            VestigeClassLoader classLoader = vestigePlatform.getClassLoader(applicationContext.getAttach());
+            VestigeClassLoader<?> classLoader = vestigePlatform.getClassLoader(applicationContext.getAttach());
             Class<?> loadClass = classLoader.loadClass(applicationContext.getClassName());
             Constructor<?> declaredConstructor = null;
             final Runnable runnable;

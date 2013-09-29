@@ -26,19 +26,19 @@ import com.googlecode.vestige.core.parser.StringParser;
 /**
  * @author Gael Lalire
  */
-public class CreateVestigeClassLoader implements Callable<VestigeClassLoader> {
+public class CreateVestigeClassLoader<E> implements Callable<VestigeClassLoader<E>> {
 
     private ClassLoader parent;
 
     private URL[] urls;
 
-    private List<List<VestigeClassLoader>> vestigeClassloadersList;
+    private List<List<VestigeClassLoader<?>>> vestigeClassloadersList;
 
     private StringParser classStringParser;
 
     private StringParser resourceStringParser;
 
-    public CreateVestigeClassLoader(final ClassLoader parent, final List<List<VestigeClassLoader>> vestigeClassloadersList, final StringParser classStringParser, final StringParser resourceStringParser, final URL[] urls) {
+    public CreateVestigeClassLoader(final ClassLoader parent, final List<List<VestigeClassLoader<?>>> vestigeClassloadersList, final StringParser classStringParser, final StringParser resourceStringParser, final URL[] urls) {
         this.parent = parent;
         this.urls = urls;
         this.vestigeClassloadersList = vestigeClassloadersList;
@@ -46,8 +46,8 @@ public class CreateVestigeClassLoader implements Callable<VestigeClassLoader> {
         this.resourceStringParser = resourceStringParser;
     }
 
-    public VestigeClassLoader call() {
-        return new VestigeClassLoader(parent, vestigeClassloadersList, classStringParser, resourceStringParser, urls);
+    public VestigeClassLoader<E> call() {
+        return new VestigeClassLoader<E>(parent, vestigeClassloadersList, classStringParser, resourceStringParser, urls);
     }
 
 }

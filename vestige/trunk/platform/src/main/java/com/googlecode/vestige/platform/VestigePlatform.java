@@ -40,11 +40,11 @@ public interface VestigePlatform {
 
     List<Serializable> getClassLoaderKeys();
 
-    AttachedVestigeClassLoader getAttachedVestigeClassLoader(Serializable key);
+    AttachedVestigeClassLoader getAttachedVestigeClassLoaderByKey(Serializable key);
 
     Set<Integer> getAttachments();
 
-    VestigeClassLoader getClassLoader(int id);
+    VestigeClassLoader<?> getClassLoader(int id);
 
     AttachedVestigeClassLoader getAttachedVestigeClassLoader(int id);
 
