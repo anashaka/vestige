@@ -52,6 +52,8 @@ public class XMLApplicationDescriptor implements ApplicationDescriptor {
 
     private MavenArtifactResolver mavenArtifactResolver;
 
+    private String appName;
+
     private List<Integer> version;
 
     private Application application;
@@ -60,9 +62,10 @@ public class XMLApplicationDescriptor implements ApplicationDescriptor {
 
     private DefaultDependencyModifier defaultDependencyModifier;
 
-    public XMLApplicationDescriptor(final MavenArtifactResolver mavenArtifactResolver, final List<Integer> version, final Application application,
+    public XMLApplicationDescriptor(final MavenArtifactResolver mavenArtifactResolver, final String appName, final List<Integer> version, final Application application,
             final List<MavenRepository> additionalRepositories, final DefaultDependencyModifier defaultDependencyModifier) {
         this.mavenArtifactResolver = mavenArtifactResolver;
+        this.appName = appName;
         this.version = version;
         this.application = application;
         this.additionalRepositories = additionalRepositories;
@@ -154,6 +157,7 @@ public class XMLApplicationDescriptor implements ApplicationDescriptor {
         if (installer == null) {
             return null;
         }
+        String appName = this.appName + "-installer";
         URLsClassType urlsInstaller = installer.getUrlsInstaller();
         if (urlsInstaller != null) {
             List<String> url = urlsInstaller.getUrl();
@@ -168,11 +172,11 @@ public class XMLApplicationDescriptor implements ApplicationDescriptor {
                 i++;
             }
             return new ClassLoaderConfiguration(new URLClassLoaderConfigurationKey(
-                    urlsInstaller.getScope() == com.googlecode.vestige.application.descriptor.xml.schema.Scope.PLATFORM, urls),
+                    urlsInstaller.getScope() == com.googlecode.vestige.application.descriptor.xml.schema.Scope.PLATFORM, urls), appName,
                     urlsInstaller.getScope() == com.googlecode.vestige.application.descriptor.xml.schema.Scope.ATTACHMENT, urls,
                     Collections.<ClassLoaderConfiguration> emptyList(), null, null, null);
         }
-        return resolve(installer.getMavenInstaller(), defaultDependencyModifier, additionalRepositories);
+        return resolve(appName, installer.getMavenInstaller(), defaultDependencyModifier, additionalRepositories);
     }
 
     public String getLauncherClassName() throws ApplicationException {
@@ -204,14 +208,14 @@ public class XMLApplicationDescriptor implements ApplicationDescriptor {
                 i++;
             }
             return new ClassLoaderConfiguration(new URLClassLoaderConfigurationKey(
-                    urlsLauncher.getScope() == com.googlecode.vestige.application.descriptor.xml.schema.Scope.PLATFORM, urls),
-                    urlsLauncher.getScope() == com.googlecode.vestige.application.descriptor.xml.schema.Scope.ATTACHMENT, urls,
-                    Collections.<ClassLoaderConfiguration> emptyList(), null, null, null);
+                    urlsLauncher.getScope() == com.googlecode.vestige.application.descriptor.xml.schema.Scope.PLATFORM, urls), appName,
+                    urlsLauncher.getScope() == com.googlecode.vestige.application.descriptor.xml.schema.Scope.ATTACHMENT, urls, Collections.<ClassLoaderConfiguration> emptyList(),
+                    null, null, null);
         }
-        return resolve(launcher.getMavenLauncher(), defaultDependencyModifier, additionalRepositories);
+        return resolve(appName, launcher.getMavenLauncher(), defaultDependencyModifier, additionalRepositories);
     }
 
-    public ClassLoaderConfiguration resolve(final MavenClassType mavenClassType,
+    public ClassLoaderConfiguration resolve(final String appName, final MavenClassType mavenClassType,
             final DefaultDependencyModifier defaultDependencyModifier, final List<MavenRepository> additionalRepositories) throws ApplicationException {
         ResolveMode resolveMode;
         Mode mode = mavenClassType.getMode();
@@ -243,7 +247,7 @@ public class XMLApplicationDescriptor implements ApplicationDescriptor {
         }
 
         try {
-            return mavenArtifactResolver.resolve(mavenClassType.getGroupId(), mavenClassType.getArtifactId(),
+            return mavenArtifactResolver.resolve(appName, mavenClassType.getGroupId(), mavenClassType.getArtifactId(),
                     mavenClassType.getVersion(), additionalRepositories, defaultDependencyModifier, resolveMode, mavenScope);
         } catch (Exception e) {
             throw new ApplicationException("Unable to resolve", e);

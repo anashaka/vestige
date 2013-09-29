@@ -36,15 +36,19 @@ public class AttachedVestigeClassLoader {
 
     private List<String> startStopClasses;
 
+    private String name;
+
     public AttachedVestigeClassLoader(final List<AttachedVestigeClassLoader> dependencies) {
         this.dependencies = dependencies;
     }
 
-    public AttachedVestigeClassLoader(final VestigeClassLoader<AttachedVestigeClassLoader> vestigeClassLoader, final List<AttachedVestigeClassLoader> dependencies, final String urls, final List<String> startStopClasses) {
+    public AttachedVestigeClassLoader(final VestigeClassLoader<AttachedVestigeClassLoader> vestigeClassLoader, final List<AttachedVestigeClassLoader> dependencies,
+            final String urls, final List<String> startStopClasses, final String name) {
         this.vestigeClassLoader = vestigeClassLoader;
         this.dependencies = dependencies;
         this.urls = urls;
         this.startStopClasses = startStopClasses;
+        this.name = name;
     }
 
     public VestigeClassLoader<AttachedVestigeClassLoader> getVestigeClassLoader() {
@@ -53,6 +57,10 @@ public class AttachedVestigeClassLoader {
 
     public List<AttachedVestigeClassLoader> getDependencies() {
         return dependencies;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public int getAttachments() {
@@ -73,7 +81,10 @@ public class AttachedVestigeClassLoader {
 
     @Override
     public String toString() {
-        return urls.toString();
+        if (name != null) {
+            return name.toString();
+        }
+        return super.toString();
     }
 
 }

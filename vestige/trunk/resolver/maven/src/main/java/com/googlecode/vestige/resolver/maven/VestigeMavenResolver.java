@@ -78,8 +78,7 @@ public class VestigeMavenResolver {
     private static final Logger LOGGER = LoggerFactory.getLogger(VestigeMavenResolver.class);
 
     @SuppressWarnings("unchecked")
-    public static void runVestigeMain(final File mavenLauncherFile, final File mavenSettingsFile,
-            final File mavenResolverCacheFile, final String[] dargs) throws Exception {
+    public static void runVestigeMain(final File mavenLauncherFile, final File mavenSettingsFile, final File mavenResolverCacheFile, final String[] dargs) throws Exception {
         final VestigeExecutor vestigeExecutor = new VestigeExecutor();
         Thread thread = vestigeExecutor.createWorker("resolver-maven-worker", true, 0);
         VestigePlatform vestigePlatform = new DefaultVestigePlatform(vestigeExecutor);
@@ -118,18 +117,17 @@ public class VestigeMavenResolver {
                         List<AddDependency> addDependencies = modifyDependency.getAddDependency();
                         List<Dependency> dependencies = new ArrayList<Dependency>(addDependencies.size());
                         for (AddDependency addDependency : addDependencies) {
-                            dependencies.add(new Dependency(new DefaultArtifact(addDependency.getGroupId(), addDependency
-                                    .getArtifactId(), "jar", addDependency.getVersion()), "runtime"));
+                            dependencies.add(new Dependency(new DefaultArtifact(addDependency.getGroupId(), addDependency.getArtifactId(), "jar", addDependency.getVersion()),
+                                    "runtime"));
                         }
-                        defaultDependencyModifier.add(modifyDependency.getGroupId(), modifyDependency.getArtifactId(),
-                                dependencies);
+                        defaultDependencyModifier.add(modifyDependency.getGroupId(), modifyDependency.getArtifactId(), dependencies);
                     } else if (object instanceof ReplaceDependency) {
                         ReplaceDependency replaceDependency = (ReplaceDependency) object;
                         List<AddDependency> addDependencies = replaceDependency.getAddDependency();
                         List<Dependency> dependencies = new ArrayList<Dependency>(addDependencies.size());
                         for (AddDependency addDependency : addDependencies) {
-                            dependencies.add(new Dependency(new DefaultArtifact(addDependency.getGroupId(), addDependency
-                                    .getArtifactId(), "jar", addDependency.getVersion()), "runtime"));
+                            dependencies.add(new Dependency(new DefaultArtifact(addDependency.getGroupId(), addDependency.getArtifactId(), "jar", addDependency.getVersion()),
+                                    "runtime"));
                         }
                         Map<String, Set<String>> exceptsMap = null;
                         List<Except> excepts = replaceDependency.getExcept();
@@ -144,17 +142,16 @@ public class VestigeMavenResolver {
                                 set.add(except.getArtifactId());
                             }
                         }
-                        defaultDependencyModifier.replace(replaceDependency.getGroupId(), replaceDependency.getArtifactId(),
-                                dependencies, exceptsMap);
+                        defaultDependencyModifier.replace(replaceDependency.getGroupId(), replaceDependency.getArtifactId(), dependencies, exceptsMap);
                     } else if (object instanceof AdditionalRepository) {
                         AdditionalRepository additionalRepository = (AdditionalRepository) object;
-                        additionalRepositories.add(new MavenRepository(additionalRepository.getId(), additionalRepository
-                                .getLayout(), additionalRepository.getUrl()));
+                        additionalRepositories.add(new MavenRepository(additionalRepository.getId(), additionalRepository.getLayout(), additionalRepository.getUrl()));
                     }
                 }
             }
             MavenArtifactResolver mavenArtifactResolver = new MavenArtifactResolver(mavenSettingsFile);
             List<ClassLoaderConfiguration> launchCaches = new ArrayList<ClassLoaderConfiguration>();
+            int attachCount = 0;
             for (MavenAttachType mavenClassType : mavenLauncher.getAttach()) {
                 ResolveMode resolveMode;
                 switch (mavenClassType.getMode()) {
@@ -186,10 +183,10 @@ public class VestigeMavenResolver {
                     break;
                 }
 
-                ClassLoaderConfiguration classLoaderConfiguration = mavenArtifactResolver.resolve(mavenClassType.getGroupId(),
-                        mavenClassType.getArtifactId(), mavenClassType.getVersion(), additionalRepositories,
-                        defaultDependencyModifier, resolveMode, mavenScope);
+                ClassLoaderConfiguration classLoaderConfiguration = mavenArtifactResolver.resolve("vestige-attach-" + attachCount, mavenClassType.getGroupId(),
+                        mavenClassType.getArtifactId(), mavenClassType.getVersion(), additionalRepositories, defaultDependencyModifier, resolveMode, mavenScope);
                 launchCaches.add(classLoaderConfiguration);
+                attachCount++;
             }
 
             MavenClassType mavenClassType = mavenLauncher.getLaunch();
@@ -221,12 +218,10 @@ public class VestigeMavenResolver {
                 mavenScope = Scope.PLATFORM;
                 break;
             }
-            ClassLoaderConfiguration classLoaderConfiguration = mavenArtifactResolver.resolve(mavenClassType.getGroupId(),
-                    mavenClassType.getArtifactId(), mavenClassType.getVersion(), additionalRepositories,
-                    defaultDependencyModifier, resolveMode, mavenScope);
+            ClassLoaderConfiguration classLoaderConfiguration = mavenArtifactResolver.resolve("vestige", mavenClassType.getGroupId(), mavenClassType.getArtifactId(),
+                    mavenClassType.getVersion(), additionalRepositories, defaultDependencyModifier, resolveMode, mavenScope);
 
-            mavenResolverCache = new MavenResolverCache(launchCaches, mavenClassType.getClazz(), classLoaderConfiguration,
-                    lastModified);
+            mavenResolverCache = new MavenResolverCache(launchCaches, mavenClassType.getClazz(), classLoaderConfiguration, lastModified);
             try {
                 File parentFile = mavenResolverCacheFile.getParentFile();
                 if (!parentFile.isDirectory()) {
@@ -259,8 +254,8 @@ public class VestigeMavenResolver {
 
         String className = mavenResolverCache.getClassName();
         Class<?> vestigeMainClass = Class.forName(className, true, mavenResolverClassLoader);
-        final Method vestigeMain = vestigeMainClass.getMethod("vestigeMain", VestigeExecutor.class,
-                Class.forName(VestigePlatform.class.getName(), true, mavenResolverClassLoader), String[].class);
+        final Method vestigeMain = vestigeMainClass.getMethod("vestigeMain", VestigeExecutor.class, Class.forName(VestigePlatform.class.getName(), true, mavenResolverClassLoader),
+                String[].class);
 
         // convert
         Object loadedVestigePlatform = convertVestigePlatform(mavenResolverClassLoader, vestigePlatform, vestigeExecutor);
@@ -271,8 +266,7 @@ public class VestigeMavenResolver {
         // start a new thread to allow this classloader to be GC even if the
         // vestigeMain method does not return
         vestigeExecutor.createWorker("resolver-maven-main", false, 1);
-        vestigeExecutor.submit(new InvokeMethod(mavenResolverClassLoader, vestigeMain, null, new Object[] {vestigeExecutor,
-                loadedVestigePlatform, dargs}));
+        vestigeExecutor.submit(new InvokeMethod(mavenResolverClassLoader, vestigeMain, null, new Object[] {vestigeExecutor, loadedVestigePlatform, dargs}));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -289,7 +283,8 @@ public class VestigeMavenResolver {
         for (AttachedVestigeClassLoader dependency : dependencies) {
             list.add(convertAttachedVestigeClassLoader(attachedVestigeClassLoaderConstructor, attachedVestigeClassLoaderAttachment, dependency));
         }
-        Object convertedAttachedVestigeClassLoader = attachedVestigeClassLoaderConstructor.newInstance(attachedVestigeClassLoader.getVestigeClassLoader(), list, attachedVestigeClassLoader.getUrls(), attachedVestigeClassLoader.getStartStopClasses());
+        Object convertedAttachedVestigeClassLoader = attachedVestigeClassLoaderConstructor.newInstance(attachedVestigeClassLoader.getVestigeClassLoader(), list,
+                attachedVestigeClassLoader.getUrls(), attachedVestigeClassLoader.getStartStopClasses(), attachedVestigeClassLoader.getName());
         attachedVestigeClassLoaderAttachment.set(convertedAttachedVestigeClassLoader, attachedVestigeClassLoader.getAttachments());
 
         uncheckedVestigeClassLoader.setData(convertedAttachedVestigeClassLoader);
@@ -297,11 +292,11 @@ public class VestigeMavenResolver {
     }
 
     @SuppressWarnings("unchecked")
-    public static Object convertVestigePlatform(final VestigeClassLoader<?> mavenResolverClassLoader, final VestigePlatform vestigePlatform, final VestigeExecutor vestigeExecutor) throws Exception {
+    public static Object convertVestigePlatform(final VestigeClassLoader<?> mavenResolverClassLoader, final VestigePlatform vestigePlatform, final VestigeExecutor vestigeExecutor)
+            throws Exception {
         // create new instance
         Class<?> vestigePlatformClass = Class.forName(DefaultVestigePlatform.class.getName(), false, mavenResolverClassLoader);
-        final Object loadedVestigePlatform = vestigePlatformClass.getConstructor(VestigeExecutor.class).newInstance(
-                vestigeExecutor);
+        final Object loadedVestigePlatform = vestigePlatformClass.getConstructor(VestigeExecutor.class).newInstance(vestigeExecutor);
 
         // fetch fields
         Field attachedField = vestigePlatformClass.getDeclaredField("attached");
@@ -320,15 +315,16 @@ public class VestigeMavenResolver {
         mapField.setAccessible(false);
 
         Class<?> attachedVestigeClassLoaderClass = Class.forName(AttachedVestigeClassLoader.class.getName(), false, mavenResolverClassLoader);
-        Constructor<?> attachedVestigeClassLoaderConstructor = attachedVestigeClassLoaderClass.getConstructor(VestigeClassLoader.class, List.class, String.class, List.class);
+        Constructor<?> attachedVestigeClassLoaderConstructor = attachedVestigeClassLoaderClass.getConstructor(VestigeClassLoader.class, List.class, String.class, List.class, String.class);
         Field attachedVestigeClassLoaderAttachment = attachedVestigeClassLoaderClass.getDeclaredField("attachments");
         attachedVestigeClassLoaderAttachment.setAccessible(true);
 
         // fill fields
         Set<Integer> attachments = vestigePlatform.getAttachments();
         for (Integer id : attachments) {
-            attached.add(convertAttachedVestigeClassLoader(attachedVestigeClassLoaderConstructor, attachedVestigeClassLoaderAttachment, vestigePlatform.getAttachedVestigeClassLoader(id.intValue())));
-            if(vestigePlatform.isStarted(id.intValue())) {
+            attached.add(convertAttachedVestigeClassLoader(attachedVestigeClassLoaderConstructor, attachedVestigeClassLoaderAttachment,
+                    vestigePlatform.getAttachedVestigeClassLoader(id.intValue())));
+            if (vestigePlatform.isStarted(id.intValue())) {
                 started.add(Boolean.TRUE);
             } else {
                 started.add(Boolean.FALSE);
@@ -342,7 +338,8 @@ public class VestigeMavenResolver {
         for (Serializable mavenArtifact : loadedArtifact) {
             AttachedVestigeClassLoader attachedVestigeClassLoader = vestigePlatform.getAttachedVestigeClassLoaderByKey(mavenArtifact);
             if (attachedVestigeClassLoader != null) {
-                attachedVestigeClassLoaders.add(convertAttachedVestigeClassLoader(attachedVestigeClassLoaderConstructor, attachedVestigeClassLoaderAttachment, attachedVestigeClassLoader));
+                attachedVestigeClassLoaders.add(convertAttachedVestigeClassLoader(attachedVestigeClassLoaderConstructor, attachedVestigeClassLoaderAttachment,
+                        attachedVestigeClassLoader));
                 objectOutputStream.writeObject(mavenArtifact);
             }
         }
@@ -364,8 +361,7 @@ public class VestigeMavenResolver {
     public static void main(final String[] args) throws Exception {
         try {
             if (args.length < 3) {
-                throw new IllegalArgumentException(
-                        "expected at least 3 arguments (maven launcher, maven settings, maven resolver cache)");
+                throw new IllegalArgumentException("expected at least 3 arguments (maven launcher, maven settings, maven resolver cache)");
             }
             long currentTimeMillis = 0;
             if (LOGGER.isInfoEnabled()) {

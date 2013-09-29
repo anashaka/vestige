@@ -65,7 +65,7 @@ public class XMLApplicationDescriptorFactory implements ApplicationDescriptorFac
     }
 
     @SuppressWarnings("unchecked")
-    public ApplicationDescriptor createApplicationDescriptor(final URL context, final String appName, final List<Integer> version)
+    public ApplicationDescriptor createApplicationDescriptor(final URL context, final String repoName, final String appName, final List<Integer> version)
             throws ApplicationException {
         URL url;
         try {
@@ -102,7 +102,7 @@ public class XMLApplicationDescriptorFactory implements ApplicationDescriptorFac
                 setMavenConfig(configurations.getMavenConfig(), defaultDependencyModifier, additionalRepositories);
             }
         }
-        return new XMLApplicationDescriptor(mavenArtifactResolver, version, application, additionalRepositories,
+        return new XMLApplicationDescriptor(mavenArtifactResolver, repoName + "-" + appName + "-" + VersionUtils.toString(version), version, application, additionalRepositories,
                 defaultDependencyModifier);
     }
 

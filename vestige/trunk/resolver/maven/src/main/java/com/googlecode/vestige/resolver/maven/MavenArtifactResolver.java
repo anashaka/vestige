@@ -203,7 +203,7 @@ public class MavenArtifactResolver {
         return null;
     }
 
-    public ClassLoaderConfiguration resolve(final String groupId, final String artifactId, final String version, final List<MavenRepository> additionalRepositories, final DependencyModifier dependencyModifier, final ResolveMode resolveMode, final Scope scope) throws Exception {
+    public ClassLoaderConfiguration resolve(final String appName, final String groupId, final String artifactId, final String version, final List<MavenRepository> additionalRepositories, final DependencyModifier dependencyModifier, final ResolveMode resolveMode, final Scope scope) throws Exception {
 
         Map<String, Map<String, MavenArtifact>> runtimeDependencies = new HashMap<String, Map<String, MavenArtifact>>();
 
@@ -243,7 +243,7 @@ public class MavenArtifactResolver {
                 i++;
             }
             MavenClassLoaderConfigurationKey key = new MavenClassLoaderConfigurationKey(mavenArtifacts, Collections.<MavenClassLoaderConfigurationKey> emptyList(), scope == Scope.PLATFORM);
-            return new ClassLoaderConfiguration(key, scope == Scope.ATTACHMENT, urls, Collections.<ClassLoaderConfiguration> emptyList(), null, null, null);
+            return new ClassLoaderConfiguration(key, appName, scope == Scope.ATTACHMENT, urls, Collections.<ClassLoaderConfiguration> emptyList(), null, null, null);
         case FIXED_DEPENDENCIES:
             Map<MavenArtifact, URL> urlByKey = new HashMap<MavenArtifact, URL>();
             for (Artifact artifact : artifacts) {
@@ -258,7 +258,7 @@ public class MavenArtifactResolver {
                 urlByKey.put(mavenArtifact, artifact.getFile().toURI().toURL());
             }
 
-            ClassLoaderConfigurationGraphHelper classLoaderConfigurationGraphHelper = new ClassLoaderConfigurationGraphHelper(urlByKey, modifiedDependencyCollector, collectRequest, session, dependencyModifier, runtimeDependencies, scope);
+            ClassLoaderConfigurationGraphHelper classLoaderConfigurationGraphHelper = new ClassLoaderConfigurationGraphHelper(appName, urlByKey, modifiedDependencyCollector, collectRequest, session, dependencyModifier, runtimeDependencies, scope);
 
             GraphCycleRemover<DependencyNode, MavenArtifact, ClassLoaderConfigurationFactory> graphCycleRemover = new GraphCycleRemover<DependencyNode, MavenArtifact, ClassLoaderConfigurationFactory>(classLoaderConfigurationGraphHelper);
             return graphCycleRemover.removeCycle(node).create(stringParserFactory);

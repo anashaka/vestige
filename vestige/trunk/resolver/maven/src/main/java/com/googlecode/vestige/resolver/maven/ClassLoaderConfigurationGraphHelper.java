@@ -36,6 +36,8 @@ import org.sonatype.aether.impl.internal.ModifiedDependencyCollector;
  */
 public class ClassLoaderConfigurationGraphHelper implements GraphHelper<DependencyNode, MavenArtifact, ClassLoaderConfigurationFactory> {
 
+    private String appName;
+
     private Map<MavenClassLoaderConfigurationKey, ClassLoaderConfigurationFactory> cachedClassLoaderConfigurationFactory;
 
     private Map<MavenArtifact, URL> urlByKey;
@@ -52,11 +54,12 @@ public class ClassLoaderConfigurationGraphHelper implements GraphHelper<Dependen
 
     private Scope scope;
 
-    public ClassLoaderConfigurationGraphHelper(final Map<MavenArtifact, URL> urlByKey,
+    public ClassLoaderConfigurationGraphHelper(final String appName, final Map<MavenArtifact, URL> urlByKey,
             final ModifiedDependencyCollector modifiedDependencyCollector, final CollectRequest collectRequest,
             final MavenRepositorySystemSession session, final DependencyModifier dependencyModifier,
             final Map<String, Map<String, MavenArtifact>> runtimeDependencies, final Scope scope) {
         cachedClassLoaderConfigurationFactory = new HashMap<MavenClassLoaderConfigurationKey, ClassLoaderConfigurationFactory>();
+        this.appName = appName;
         this.urlByKey = urlByKey;
         this.modifiedDependencyCollector = modifiedDependencyCollector;
         this.collectRequest = collectRequest;
@@ -83,7 +86,7 @@ public class ClassLoaderConfigurationGraphHelper implements GraphHelper<Dependen
                 urls[i] = urlByKey.get(artifact);
                 i++;
             }
-            classLoaderConfigurationFactory = new ClassLoaderConfigurationFactory(key, scope, urls, nexts);
+            classLoaderConfigurationFactory = new ClassLoaderConfigurationFactory(appName, key, scope, urls, nexts);
             cachedClassLoaderConfigurationFactory.put(key, classLoaderConfigurationFactory);
         }
         return classLoaderConfigurationFactory;
