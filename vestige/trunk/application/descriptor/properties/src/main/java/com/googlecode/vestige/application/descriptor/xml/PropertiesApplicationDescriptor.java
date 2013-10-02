@@ -59,4 +59,10 @@ public class PropertiesApplicationDescriptor implements ApplicationDescriptor {
         return null;
     }
 
+    @Override
+    public boolean isLauncherPrivateSystem() throws ApplicationException {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
 }

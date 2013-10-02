@@ -56,6 +56,7 @@
       <xs:element name="mavenLauncher" type="MavenClassType" />
       <xs:element name="urlsLauncher" type="URLsClassType" />
     </xs:choice>
+    <xs:attribute name="privateSystem" type="xs:boolean" use="optional" default="false" />
   </xs:complexType>
 
   <xs:complexType name="URLsClassType">

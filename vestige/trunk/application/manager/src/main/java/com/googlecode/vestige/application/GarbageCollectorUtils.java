@@ -40,6 +40,7 @@ public class GarbageCollectorUtils {
      */
     public static boolean forceSoftReferenceGC() {
         Runtime runtime = Runtime.getRuntime();
+        runtime.gc();
         long maxMemory = runtime.maxMemory();
         long totalMemory = runtime.totalMemory();
         long freeMemory = runtime.freeMemory() + maxMemory - totalMemory;
@@ -68,8 +69,9 @@ public class GarbageCollectorUtils {
             }
             sr.clear();
             sr = null;
-            System.gc();
+            runtime.gc();
         } catch (OutOfMemoryError e) {
+            runtime.gc();
             LOGGER.trace("Error", e);
         }
         return done;

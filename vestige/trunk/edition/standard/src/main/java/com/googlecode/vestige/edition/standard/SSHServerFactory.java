@@ -30,8 +30,6 @@ import org.apache.sshd.common.keyprovider.FileKeyPairProvider;
 import org.apache.sshd.server.Command;
 import org.apache.sshd.server.CommandFactory;
 import org.apache.sshd.server.ServerFactoryManager;
-import org.apache.sshd.server.UserAuth;
-import org.apache.sshd.server.auth.UserAuthNone;
 import org.apache.sshd.server.command.ScpCommandFactory;
 import org.apache.sshd.server.sftp.SftpSubsystem;
 import org.slf4j.Logger;
@@ -108,8 +106,6 @@ public class SSHServerFactory implements Callable<SshServer> {
                 return new SSHExecCommand(vestigeCommandExecutor, command);
             }
         }));
-
-        sshServer.setUserAuthFactories(Collections.<NamedFactory<UserAuth>> singletonList(new UserAuthNone.Factory()));
 
         sshServer.setSubsystemFactories(Collections.<NamedFactory<Command>> singletonList(new SftpSubsystem.Factory()));
 
