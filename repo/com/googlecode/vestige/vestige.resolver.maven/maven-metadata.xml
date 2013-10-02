@@ -4,11 +4,12 @@
   <artifactId>vestige.resolver.maven</artifactId>
   <version>1.0.3</version>
   <versioning>
-    <release>1.0.4</release>
+    <release>1.0.5</release>
     <versions>
       <version>1.0.3</version>
       <version>1.0.4</version>
+      <version>1.0.5</version>
     </versions>
-    <lastUpdated>20130929151724</lastUpdated>
+    <lastUpdated>20131002225313</lastUpdated>
   </versioning>
 </metadata>
