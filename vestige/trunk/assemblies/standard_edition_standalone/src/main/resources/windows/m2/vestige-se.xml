@@ -22,6 +22,9 @@
     <replaceDependency artifactId="commons-logging" groupId="commons-logging">
       <addDependency artifactId="jcl-over-slf4j" groupId="org.slf4j" version="${slf4j.version}" />
     </replaceDependency>
+    <modifyDependency artifactId="sshd-core" groupId="org.apache.sshd">
+      <addDependency artifactId="vestige.admin.ssh" groupId="com.googlecode.vestige" version="${project.version}" />
+    </modifyDependency>
     <additionalRepository id="vestige-repo" url="http://vestige.googlecode.com/svn/repo/" />
   </config>
 </mavenLauncher>

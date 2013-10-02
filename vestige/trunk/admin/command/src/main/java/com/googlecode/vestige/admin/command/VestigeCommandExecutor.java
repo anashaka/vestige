@@ -37,7 +37,7 @@ public class VestigeCommandExecutor {
     private Map<String, Command> commandByNames;
 
     public VestigeCommandExecutor(final ApplicationManager applicationManager, final VestigePlatform vestigePlatform) {
-        List<Command> commands = Arrays.asList(new Memory(), new Install(applicationManager), new MakeRepo(applicationManager),
+        List<Command> commands = Arrays.asList(new Memory(), new GC(), new ForceGC(), new Install(applicationManager), new MakeRepo(applicationManager),
                 new RemoveRepo(applicationManager), new Start(applicationManager), new Stop(applicationManager), new Uninstall(
                         applicationManager), new ListCommand(applicationManager), new AutoMigrate(applicationManager),
                 new AutoMigrateLevel(applicationManager), new Migrate(applicationManager), new ClassLoaders(applicationManager), new Platform(vestigePlatform));

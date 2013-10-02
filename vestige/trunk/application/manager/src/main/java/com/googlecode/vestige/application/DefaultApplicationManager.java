@@ -19,12 +19,16 @@ package com.googlecode.vestige.application;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLStreamHandlerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -44,6 +49,7 @@ import com.googlecode.vestige.application.util.FileUtils;
 import com.googlecode.vestige.core.VestigeClassLoader;
 import com.googlecode.vestige.platform.ClassLoaderConfiguration;
 import com.googlecode.vestige.platform.VestigePlatform;
+import com.googlecode.vestige.platform.system.VestigeSystem;
 
 /**
  * @author Gael Lalire
@@ -63,8 +69,6 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
     private Map<String, URL> urlByRepo = new TreeMap<String, URL>();
 
     private transient ApplicationDescriptorFactory applicationDescriptorFactory;
-
-    private transient VestigeProperties vestigeProperties;
 
     private File repoFile;
 
@@ -189,6 +193,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         applicationContext.setInstallerClassName(applicationDescriptor.getInstallerClassName());
         applicationContext.setInstallerResolve(applicationDescriptor.getInstallerClassLoaderConfiguration());
         applicationContext.setClassName(applicationDescriptor.getLauncherClassName());
+        applicationContext.setPrivateSystem(applicationDescriptor.isLauncherPrivateSystem());
         applicationContext.setResolve(applicationDescriptor.getLauncherClassLoaderConfiguration());
 
         applicationContext.setHome(file);
@@ -553,6 +558,39 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         }
     }
 
+    public static <E> E getFieldValue(final Object o, final Class<E> clazz, final String fieldName) {
+        Field declaredField;
+        try {
+            declaredField = o.getClass().getDeclaredField(fieldName);
+        } catch (SecurityException e) {
+            LOGGER.trace("SecurityException", e);
+            return null;
+        } catch (NoSuchFieldException e) {
+            LOGGER.trace("SecurityException", e);
+            return null;
+        }
+        if (!clazz.isAssignableFrom(declaredField.getType())) {
+            return null;
+        }
+        boolean accessible = true;
+        if (!declaredField.isAccessible()) {
+            accessible = false;
+            declaredField.setAccessible(true);
+        }
+        try {
+            return clazz.cast(declaredField.get(o));
+        } catch (IllegalArgumentException e) {
+            LOGGER.trace("IllegalArgumentException", e);
+        } catch (IllegalAccessException e) {
+            LOGGER.trace("IllegalAccessException", e);
+        } finally {
+            if (!accessible) {
+                declaredField.setAccessible(false);
+            }
+        }
+        return null;
+    }
+
     public Thread prepareThreadStart(final ApplicationContext applicationContext) throws ApplicationException {
         try {
             applicationContext.setAttach(vestigePlatform.attach(applicationContext.getResolve()));
@@ -571,12 +609,40 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
             } else {
                 runnable = (Runnable) declaredConstructor.newInstance(applicationContext.getHome());
             }
+            final VestigeSystem vestigeSystem;
+            if (applicationContext.isPrivateSystem()) {
+                vestigeSystem = new VestigeSystem(VestigeSystem.getSystem());
+                PrintStream out = getFieldValue(runnable, PrintStream.class, "out");
+                if (out != null) {
+                    vestigeSystem.setOut(out);
+                }
+                PrintStream err = getFieldValue(runnable, PrintStream.class, "err");
+                if (err != null) {
+                    vestigeSystem.setErr(err);
+                }
+                InputStream in = getFieldValue(runnable, InputStream.class, "in");
+                if (in != null) {
+                    vestigeSystem.setIn(in);
+                }
+                Properties properties = getFieldValue(runnable, Properties.class, "properties");
+                if (properties != null) {
+                    vestigeSystem.setProperties(properties);
+                }
+                URLStreamHandlerFactory urlStreamHandlerFactory = getFieldValue(runnable, URLStreamHandlerFactory.class, "urlStreamHandlerFactory");
+                if (urlStreamHandlerFactory != null) {
+                    vestigeSystem.setUrlStreamHandlerFactory(urlStreamHandlerFactory);
+                }
+            } else {
+                vestigeSystem = null;
+            }
             applicationContext.setRunnable(runnable);
             Thread thread = new Thread("main") {
                 @Override
                 public void run() {
                     MDC.put(VESTIGE_APP_NAME, applicationContext.getName());
-                    vestigeProperties.pushApplication(new HashMap<String, String>());
+                    if (vestigeSystem != null) {
+                        VestigeSystem.pushSystem(vestigeSystem);
+                    }
                     try {
                         runnable.run();
                     } finally {
@@ -589,7 +655,9 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                         applicationContext.setThread(null);
                         // allow external start to run
                         applicationContext.setStarted(false);
-                        vestigeProperties.popApplication();
+                        if (vestigeSystem != null) {
+                            VestigeSystem.popSystem();
+                        }
                         MDC.remove(VESTIGE_APP_NAME);
                     }
                 }
@@ -640,10 +708,9 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         this.applicationDescriptorFactory = null;
     }
 
-    public void powerOn(final VestigePlatform vestigePlatform, final ApplicationDescriptorFactory applicationDescriptorFactory, final VestigeProperties vestigeProperties) {
+    public void powerOn(final VestigePlatform vestigePlatform, final ApplicationDescriptorFactory applicationDescriptorFactory) {
         this.vestigePlatform = vestigePlatform;
         this.applicationDescriptorFactory = applicationDescriptorFactory;
-        this.vestigeProperties = vestigeProperties;
         for (Entry<String, Map<String, Map<List<Integer>, ApplicationContext>>> entry : applicationContextByVersionByNameByRepo
                 .entrySet()) {
             for (Entry<String, Map<List<Integer>, ApplicationContext>> entry2 : entry.getValue().entrySet()) {

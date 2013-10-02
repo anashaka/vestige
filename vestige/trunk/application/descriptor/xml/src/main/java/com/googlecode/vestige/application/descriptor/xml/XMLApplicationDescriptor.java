@@ -192,6 +192,11 @@ public class XMLApplicationDescriptor implements ApplicationDescriptor {
         throw new ApplicationException("missing child");
     }
 
+    public boolean isLauncherPrivateSystem() throws ApplicationException {
+        Launcher launcher = application.getLauncher();
+        return launcher.isPrivateSystem();
+    }
+
     public ClassLoaderConfiguration getLauncherClassLoaderConfiguration() throws ApplicationException {
         Launcher launcher = application.getLauncher();
         URLsClassType urlsLauncher = launcher.getUrlsLauncher();

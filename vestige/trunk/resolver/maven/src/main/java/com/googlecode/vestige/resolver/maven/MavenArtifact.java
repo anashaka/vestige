@@ -104,7 +104,7 @@ public class MavenArtifact implements Serializable {
 
     @Override
     public String toString() {
-        return groupId + ":" + artifactId + ":" + version;
+        return "mvn:" + groupId + "/" + artifactId + "/" + version;
     }
 
 }

@@ -48,6 +48,8 @@ public class ApplicationContext implements Serializable {
 
     private boolean started;
 
+    private boolean privateSystem;
+
     private Set<List<Integer>> supportedMigrationVersion;
 
     private Set<List<Integer>> uninterruptedMigrationVersion;
@@ -160,6 +162,14 @@ public class ApplicationContext implements Serializable {
 
     public void setUninterruptedMigrationVersion(final Set<List<Integer>> uninterruptedMigrationVersion) {
         this.uninterruptedMigrationVersion = uninterruptedMigrationVersion;
+    }
+
+    public boolean isPrivateSystem() {
+        return privateSystem;
+    }
+
+    public void setPrivateSystem(final boolean privateSystem) {
+        this.privateSystem = privateSystem;
     }
 
 }

@@ -21,7 +21,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.HashSet;
 import java.util.Set;
@@ -42,8 +41,6 @@ public class DefaultPublickeyAuthenticator implements PublickeyAuthenticator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultPublickeyAuthenticator.class);
 
-    private PublicKey publicKey;
-
     private Set<PublicKey> authorizedKeys;
 
     private File authorizedKeysFile;
@@ -52,14 +49,12 @@ public class DefaultPublickeyAuthenticator implements PublickeyAuthenticator {
 
     public DefaultPublickeyAuthenticator(final KeyPairProvider hostKeyProvider, final File authorizedKeysFile) {
         authorizedKeys = new HashSet<PublicKey>();
-        final KeyPair pair = hostKeyProvider.loadKey(KeyPairProvider.SSH_RSA);
-        publicKey = pair.getPublic();
         this.authorizedKeysFile = authorizedKeysFile;
     }
 
     public boolean authenticate(final String username, final PublicKey suppliedKey, final ServerSession session) {
         if (username.equals("admin")) {
-            if (publicKey.equals(suppliedKey) || getAuthorizedKeys().contains(suppliedKey)) {
+            if (getAuthorizedKeys().contains(suppliedKey)) {
                 return true;
             }
         }

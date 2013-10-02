@@ -15,19 +15,32 @@
  * along with Vestige.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.googlecode.vestige.admin.ssh;
+package com.googlecode.vestige.platform.system;
 
-import java.io.File;
+import java.net.URLStreamHandler;
+import java.net.URLStreamHandlerFactory;
 
-import org.apache.sshd.common.file.nativefs.NativeSshFile;
+import com.googlecode.vestige.core.StackedHandler;
 
 /**
  * @author Gael Lalire
  */
-public class RootedSshFile extends NativeSshFile {
+public class VestigeURLStreamHandlerFactory implements URLStreamHandlerFactory, StackedHandler<URLStreamHandlerFactory> {
 
-    public RootedSshFile(final RootedFileSystemView rootedFileSystemView, final String fileName, final File file, final String userName) {
-        super(rootedFileSystemView, fileName, file, userName);
+    private URLStreamHandlerFactory nextHandler;
+
+    public URLStreamHandler createURLStreamHandler(final String protocol) {
+        return null;
+    }
+
+    @Override
+    public URLStreamHandlerFactory getNextHandler() {
+        return nextHandler;
+    }
+
+    @Override
+    public void setNextHandler(final URLStreamHandlerFactory nextHandler) {
+        this.nextHandler = nextHandler;
     }
 
 }

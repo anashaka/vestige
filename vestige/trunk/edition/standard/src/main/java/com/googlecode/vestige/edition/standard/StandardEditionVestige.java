@@ -25,7 +25,9 @@ import java.io.ObjectOutputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.net.URL;
-import java.util.Properties;
+import java.net.URLStreamHandler;
+import java.net.URLStreamHandlerFactory;
+import java.util.Hashtable;
 import java.util.concurrent.Future;
 
 import javax.xml.bind.JAXBContext;
@@ -51,8 +53,8 @@ import com.googlecode.vestige.application.ApplicationDescriptorFactory;
 import com.googlecode.vestige.application.ApplicationException;
 import com.googlecode.vestige.application.DefaultApplicationManager;
 import com.googlecode.vestige.application.SynchronizedApplicationManager;
-import com.googlecode.vestige.application.VestigeProperties;
 import com.googlecode.vestige.application.descriptor.xml.XMLApplicationDescriptorFactory;
+import com.googlecode.vestige.core.StackedHandlerUtils;
 import com.googlecode.vestige.core.VestigeExecutor;
 import com.googlecode.vestige.core.logger.VestigeLoggerFactory;
 import com.googlecode.vestige.edition.standard.schema.Admin;
@@ -64,6 +66,9 @@ import com.googlecode.vestige.platform.DefaultVestigePlatform;
 import com.googlecode.vestige.platform.VestigePlatform;
 import com.googlecode.vestige.platform.logger.SLF4JLoggerFactoryAdapter;
 import com.googlecode.vestige.platform.logger.SLF4JPrintStream;
+import com.googlecode.vestige.platform.system.VestigeProperties;
+import com.googlecode.vestige.platform.system.VestigeURLHandlersHashTable;
+import com.googlecode.vestige.platform.system.VestigeURLStreamHandlerFactory;
 import com.googlecode.vestige.resolver.maven.MavenArtifactResolver;
 
 /**
@@ -87,16 +92,13 @@ public class StandardEditionVestige {
 
     private ApplicationDescriptorFactory applicationDescriptorFactory;
 
-    private VestigeProperties vestigeProperties;
-
     private File resolverFile;
 
     @SuppressWarnings("unchecked")
     public StandardEditionVestige(final File homeFile, final File baseFile, final VestigeExecutor vestigeExecutor,
-            final VestigePlatform vestigePlatform, final VestigeProperties vestigeProperties) throws Exception {
+            final VestigePlatform vestigePlatform) throws Exception {
         this.vestigeExecutor = vestigeExecutor;
         this.vestigePlatform = vestigePlatform;
-        this.vestigeProperties = vestigeProperties;
 
         File settingsFile = new File(baseFile, "settings.xml");
         if (!settingsFile.exists()) {
@@ -201,7 +203,7 @@ public class StandardEditionVestige {
         }
         workerThread = vestigeExecutor.createWorker("se-worker", true, 0);
         try {
-            defaultApplicationManager.powerOn(vestigePlatform, applicationDescriptorFactory, vestigeProperties);
+            defaultApplicationManager.powerOn(vestigePlatform, applicationDescriptorFactory);
             if (sshServer != null) {
                 sshServer.start();
             }
@@ -244,6 +246,7 @@ public class StandardEditionVestige {
         workerThread = null;
     }
 
+    @SuppressWarnings("unchecked")
     public static void vestigeMain(final VestigeExecutor vestigeExecutor, final VestigePlatform vestigePlatform,
             final String[] args) {
         try {
@@ -264,19 +267,38 @@ public class StandardEditionVestige {
             // logback can use system stream directly
             giveDirectStreamAccessToLogback();
 
+            Field factoryField = URL.class.getDeclaredField("factory");
+            Field handlersField = URL.class.getDeclaredField("handlers");
+
+            VestigeProperties vestigeProperties;
+            SLF4JPrintStream out;
+            SLF4JPrintStream err;
             // avoid direct log
             synchronized (System.class) {
-                SLF4JPrintStream out = new SLF4JPrintStream(true);
+                out = new SLF4JPrintStream(true);
                 out.setNextHandler(System.out);
                 System.setOut(out);
-                SLF4JPrintStream err = new SLF4JPrintStream(false);
+                err = new SLF4JPrintStream(false);
                 err.setNextHandler(System.err);
                 System.setErr(err);
+                vestigeProperties = new VestigeProperties(System.getProperties());
+                System.setProperties(vestigeProperties);
             }
+            VestigeURLStreamHandlerFactory vestigeURLStreamHandlerFactory;
+            VestigeURLHandlersHashTable vestigeURLHandlersHashTable;
+            factoryField.setAccessible(true);
+            handlersField.setAccessible(true);
+            synchronized (URL.class) {
+                vestigeURLStreamHandlerFactory = new VestigeURLStreamHandlerFactory();
+                vestigeURLStreamHandlerFactory.setNextHandler((URLStreamHandlerFactory) factoryField.get(null));
+                factoryField.set(null, vestigeURLStreamHandlerFactory);
+                vestigeURLHandlersHashTable = new VestigeURLHandlersHashTable();
+                vestigeURLHandlersHashTable.setNextHandler((Hashtable<String, URLStreamHandler>) handlersField.get(null));
+                handlersField.set(null, vestigeURLHandlersHashTable);
+            }
+            factoryField.setAccessible(false);
+            handlersField.setAccessible(false);
 
-            Properties properties = System.getProperties();
-            VestigeProperties vestigeProperties = new VestigeProperties(properties);
-            System.setProperties(vestigeProperties);
 
             String home = args[0];
             String base = args[1];
@@ -289,7 +311,7 @@ public class StandardEditionVestige {
             }
             LOGGER.info("Use {} for home file", homeFile);
             final StandardEditionVestige standardEditionVestige = new StandardEditionVestige(homeFile, baseFile, vestigeExecutor,
-                    vestigePlatform, vestigeProperties);
+                    vestigePlatform);
             Runtime.getRuntime().addShutdownHook(new Thread("se-shutdown") {
                 @Override
                 public void run() {
@@ -327,7 +349,19 @@ public class StandardEditionVestige {
             } catch (Exception e) {
                 LOGGER.error("Unable to stop standard vestige edition", e);
             }
-            System.setProperties(properties);
+            factoryField.setAccessible(true);
+            handlersField.setAccessible(true);
+            synchronized (URL.class) {
+                factoryField.set(null, StackedHandlerUtils.uninstallStackedHandler(vestigeURLStreamHandlerFactory, (URLStreamHandlerFactory) factoryField.get(null)));
+                handlersField.set(null, StackedHandlerUtils.uninstallStackedHandler(vestigeURLHandlersHashTable, (Hashtable<String, URLStreamHandler>) handlersField.get(null)));
+            }
+            factoryField.setAccessible(false);
+            handlersField.setAccessible(false);
+            synchronized (System.class) {
+                System.setProperties(StackedHandlerUtils.uninstallStackedHandler(vestigeProperties, System.getProperties()));
+                System.setOut(StackedHandlerUtils.uninstallStackedHandler(out, System.out));
+                System.setErr(StackedHandlerUtils.uninstallStackedHandler(err, System.err));
+            }
             LOGGER.info("Vestige SE stopped");
         } catch (Throwable e) {
             LOGGER.error("Unable to start vestige SE", e);

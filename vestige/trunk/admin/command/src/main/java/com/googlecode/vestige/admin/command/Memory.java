@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.googlecode.vestige.admin.command.argument.Argument;
-import com.googlecode.vestige.application.GarbageCollectorUtils;
 
 /**
  * @author Gael Lalire
@@ -56,12 +55,6 @@ public class Memory implements Command {
 
     public void execute(final PrintWriter out) {
         Runtime runtime = Runtime.getRuntime();
-        GarbageCollectorUtils.forceSoftReferenceGC();
-        /*
-        for (int i = 0; i < 5; i++) {
-            runtime.gc();
-        }
-        */
         long totalMemory = runtime.totalMemory();
         long freeMemory = runtime.freeMemory();
         out.println(memory(totalMemory - freeMemory) + " / " + memory(totalMemory) + " (max "

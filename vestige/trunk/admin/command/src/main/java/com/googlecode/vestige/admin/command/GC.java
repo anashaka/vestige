@@ -15,30 +15,34 @@
  * along with Vestige.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.googlecode.vestige.application;
+package com.googlecode.vestige.admin.command;
 
+import java.io.PrintWriter;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
-import com.googlecode.vestige.platform.ClassLoaderConfiguration;
+import com.googlecode.vestige.admin.command.argument.Argument;
 
 /**
  * @author Gael Lalire
  */
-public interface ApplicationDescriptor {
+public class GC implements Command {
 
-    Set<List<Integer>> getSupportedMigrationVersions() throws ApplicationException;
 
-    Set<List<Integer>> getUninterruptedMigrationVersions() throws ApplicationException;
+    public String getName() {
+        return "gc";
+    }
 
-    String getInstallerClassName() throws ApplicationException;
+    public List<Argument> getArguments() {
+        return Collections.emptyList();
+    }
 
-    ClassLoaderConfiguration getInstallerClassLoaderConfiguration() throws ApplicationException;
+    public String getDesc() {
+        return "Run garbage collector";
+    }
 
-    String getLauncherClassName() throws ApplicationException;
-
-    boolean isLauncherPrivateSystem() throws ApplicationException;
-
-    ClassLoaderConfiguration getLauncherClassLoaderConfiguration() throws ApplicationException;
+    public void execute(final PrintWriter out) {
+        System.gc();
+    }
 
 }

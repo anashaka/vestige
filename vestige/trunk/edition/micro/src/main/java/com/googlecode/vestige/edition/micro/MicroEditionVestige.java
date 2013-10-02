@@ -32,7 +32,6 @@ import com.googlecode.vestige.admin.command.VestigeCommandExecutor;
 import com.googlecode.vestige.admin.telnet.TelnetServer;
 import com.googlecode.vestige.application.ApplicationDescriptorFactory;
 import com.googlecode.vestige.application.DefaultApplicationManager;
-import com.googlecode.vestige.application.VestigeProperties;
 import com.googlecode.vestige.application.descriptor.xml.PropertiesApplicationDescriptorFactory;
 import com.googlecode.vestige.core.VestigeExecutor;
 import com.googlecode.vestige.core.logger.VestigeLoggerFactory;
@@ -40,6 +39,7 @@ import com.googlecode.vestige.platform.DefaultVestigePlatform;
 import com.googlecode.vestige.platform.VestigePlatform;
 import com.googlecode.vestige.platform.logger.SLF4JLoggerFactoryAdapter;
 import com.googlecode.vestige.platform.logger.SLF4JPrintStream;
+import com.googlecode.vestige.platform.system.VestigeProperties;
 
 /**
  * @author Gael Lalire
@@ -60,15 +60,12 @@ public class MicroEditionVestige {
 
     private Thread workerThread;
 
-    private VestigeProperties vestigeProperties;
-
     private ApplicationDescriptorFactory applicationDescriptorFactory;
 
-    public MicroEditionVestige(final File homeFile, final VestigeExecutor vestigeExecutor, final VestigePlatform vestigePlatform, final VestigeProperties vestigeProperties)
+    public MicroEditionVestige(final File homeFile, final VestigeExecutor vestigeExecutor, final VestigePlatform vestigePlatform)
             throws IOException {
         this.vestigeExecutor = vestigeExecutor;
         this.vestigePlatform = vestigePlatform;
-        this.vestigeProperties = vestigeProperties;
 
         File appHome = new File(homeFile, "app");
 
@@ -101,7 +98,7 @@ public class MicroEditionVestige {
             throw new Exception("Vestige ME already started");
         }
         workerThread = vestigeExecutor.createWorker("me-worker", true, 0);
-        defaultApplicationManager.powerOn(vestigePlatform, applicationDescriptorFactory, vestigeProperties);
+        defaultApplicationManager.powerOn(vestigePlatform, applicationDescriptorFactory);
         server.start();
     }
 
@@ -155,7 +152,7 @@ public class MicroEditionVestige {
             }
 
             Properties properties = System.getProperties();
-            VestigeProperties vestigeProperties = new VestigeProperties(properties);
+            VestigeProperties vestigeProperties = new VestigeProperties(System.getProperties());
             System.setProperties(vestigeProperties);
 
             VestigeExecutor vestigeExecutor = new VestigeExecutor();
@@ -168,7 +165,7 @@ public class MicroEditionVestige {
                 }
             }
             LOGGER.info("Use {} for home file", homeFile);
-            final MicroEditionVestige microEditionVestige = new MicroEditionVestige(homeFile, vestigeExecutor, vestigePlatform, vestigeProperties);
+            final MicroEditionVestige microEditionVestige = new MicroEditionVestige(homeFile, vestigeExecutor, vestigePlatform);
             Runtime.getRuntime().addShutdownHook(new Thread("me-shutdown") {
                 @Override
                 public void run() {

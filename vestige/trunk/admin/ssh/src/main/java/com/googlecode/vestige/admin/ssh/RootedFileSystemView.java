@@ -21,17 +21,17 @@ package com.googlecode.vestige.admin.ssh;
 
 import java.io.File;
 
-import org.apache.sshd.server.FileSystemView;
-import org.apache.sshd.server.SshFile;
-import org.apache.sshd.server.filesystem.NativeFileSystemFactory;
-import org.apache.sshd.server.filesystem.NativeSshFile;
+import org.apache.sshd.common.file.SshFile;
+import org.apache.sshd.common.file.nativefs.NativeFileSystemFactory;
+import org.apache.sshd.common.file.nativefs.NativeFileSystemView;
+import org.apache.sshd.common.file.nativefs.NativeSshFile;
 
 /**
  * <strong>Internal class, do not use directly.</strong> File system view based
  * on native file system. Here the root directory will be user virtual root (/).
  * @author <a href="http://mina.apache.org">Apache MINA Project</a>
  */
-public class RootedFileSystemView implements FileSystemView {
+public class RootedFileSystemView extends NativeFileSystemView {
 
 
     // the first and the last character will always be '/'
@@ -47,6 +47,7 @@ public class RootedFileSystemView implements FileSystemView {
      * {@link NativeFileSystemFactory} instead
      */
     public RootedFileSystemView(final File root, final String userName) {
+        super(userName);
         currDir = "/";
         rootDir = NativeSshFile.getPhysicalName(root.getAbsolutePath(), "/", "/", false);
         this.userName = userName;
@@ -55,14 +56,17 @@ public class RootedFileSystemView implements FileSystemView {
     /**
      * Get file object.
      */
+    @Override
     public SshFile getFile(final String file) {
         return getFile(currDir, file);
     }
 
+    @Override
     public SshFile getFile(final SshFile baseDir, final String file) {
         return getFile(baseDir.getAbsolutePath(), file);
     }
 
+    @Override
     public SshFile getFile(final String dir, final String file) {
         // get actual file object
         String physicalName = NativeSshFile.getPhysicalName(rootDir, dir, file, false);
@@ -70,13 +74,7 @@ public class RootedFileSystemView implements FileSystemView {
 
         // strip the root directory and return
         String userFileName = physicalName.substring(rootDir.length() - 1);
-        return new RootedSshFile(userFileName, fileObj, userName);
-    }
-
-
-    public static void main(final String[] args) {
-        System.out.println(NativeSshFile.getPhysicalName("C:\\Vestige\\home", "/", "/", false));
-        System.out.println(NativeSshFile.getPhysicalName("/Users/gaellalire/Library/Application Support/Vestige/home", "/koo", "../app1/../app2/conf.xml", false));
+        return new RootedSshFile(this, userFileName, fileObj, userName);
     }
 
 }
