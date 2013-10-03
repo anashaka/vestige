@@ -24,10 +24,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
+import java.net.ProxySelector;
 import java.net.URL;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
+import java.sql.Driver;
+import java.sql.DriverManager;
 import java.util.Hashtable;
+import java.util.Vector;
 import java.util.concurrent.Future;
 
 import javax.xml.bind.JAXBContext;
@@ -66,7 +70,9 @@ import com.googlecode.vestige.platform.DefaultVestigePlatform;
 import com.googlecode.vestige.platform.VestigePlatform;
 import com.googlecode.vestige.platform.logger.SLF4JLoggerFactoryAdapter;
 import com.googlecode.vestige.platform.logger.SLF4JPrintStream;
+import com.googlecode.vestige.platform.system.VestigeDriverVector;
 import com.googlecode.vestige.platform.system.VestigeProperties;
+import com.googlecode.vestige.platform.system.VestigeProxySelector;
 import com.googlecode.vestige.platform.system.VestigeURLHandlersHashTable;
 import com.googlecode.vestige.platform.system.VestigeURLStreamHandlerFactory;
 import com.googlecode.vestige.resolver.maven.MavenArtifactResolver;
@@ -267,9 +273,6 @@ public class StandardEditionVestige {
             // logback can use system stream directly
             giveDirectStreamAccessToLogback();
 
-            Field factoryField = URL.class.getDeclaredField("factory");
-            Field handlersField = URL.class.getDeclaredField("handlers");
-
             VestigeProperties vestigeProperties;
             SLF4JPrintStream out;
             SLF4JPrintStream err;
@@ -284,21 +287,58 @@ public class StandardEditionVestige {
                 vestigeProperties = new VestigeProperties(System.getProperties());
                 System.setProperties(vestigeProperties);
             }
-            VestigeURLStreamHandlerFactory vestigeURLStreamHandlerFactory;
-            VestigeURLHandlersHashTable vestigeURLHandlersHashTable;
-            factoryField.setAccessible(true);
-            handlersField.setAccessible(true);
-            synchronized (URL.class) {
-                vestigeURLStreamHandlerFactory = new VestigeURLStreamHandlerFactory();
-                vestigeURLStreamHandlerFactory.setNextHandler((URLStreamHandlerFactory) factoryField.get(null));
-                factoryField.set(null, vestigeURLStreamHandlerFactory);
-                vestigeURLHandlersHashTable = new VestigeURLHandlersHashTable();
-                vestigeURLHandlersHashTable.setNextHandler((Hashtable<String, URLStreamHandler>) handlersField.get(null));
-                handlersField.set(null, vestigeURLHandlersHashTable);
+            VestigeProxySelector proxySelector;
+            synchronized (ProxySelector.class) {
+                proxySelector = new VestigeProxySelector();
+                proxySelector.setNextHandler(ProxySelector.getDefault());
+                ProxySelector.setDefault(proxySelector);
             }
-            factoryField.setAccessible(false);
-            handlersField.setAccessible(false);
 
+            Field factoryField = null;
+            Field handlersField = null;
+            VestigeURLStreamHandlerFactory vestigeURLStreamHandlerFactory = null;
+            VestigeURLHandlersHashTable vestigeURLHandlersHashTable = null;
+            try {
+                factoryField = URL.class.getDeclaredField("factory");
+                handlersField = URL.class.getDeclaredField("handlers");
+                factoryField.setAccessible(true);
+                handlersField.setAccessible(true);
+                synchronized (URL.class) {
+                    vestigeURLStreamHandlerFactory = new VestigeURLStreamHandlerFactory();
+                    vestigeURLStreamHandlerFactory.setNextHandler((URLStreamHandlerFactory) factoryField.get(null));
+                    factoryField.set(null, vestigeURLStreamHandlerFactory);
+                    vestigeURLHandlersHashTable = new VestigeURLHandlersHashTable();
+                    vestigeURLHandlersHashTable.setNextHandler((Hashtable<String, URLStreamHandler>) handlersField.get(null));
+                    handlersField.set(null, vestigeURLHandlersHashTable);
+                }
+                factoryField.setAccessible(false);
+                handlersField.setAccessible(false);
+            } catch (Exception e) {
+                LOGGER.warn("Could not intercept URL.setURLStreamHandlerFactory", e);
+            }
+
+            Field readersField = null;
+            Field writersField = null;
+            VestigeDriverVector readDrivers = null;
+            VestigeDriverVector writeDrivers = null;
+            try {
+                readersField = DriverManager.class.getDeclaredField("readDrivers");
+                writersField = DriverManager.class.getDeclaredField("writeDrivers");
+                readersField.setAccessible(true);
+                writersField.setAccessible(true);
+                synchronized (DriverManager.class) {
+                    readDrivers = new VestigeDriverVector();
+                    readDrivers.setNextHandler((Vector<Driver>) readersField.get(null));
+                    readersField.set(null, readDrivers);
+                    writeDrivers = new VestigeDriverVector();
+                    writeDrivers.setNextHandler((Vector<Driver>) writersField.get(null));
+                    writersField.set(null, writeDrivers);
+                }
+                readersField.setAccessible(false);
+                writersField.setAccessible(false);
+            } catch (Exception e) {
+                LOGGER.warn("Could not intercept DriverManager.registerDriver", e);
+            }
 
             String home = args[0];
             String base = args[1];
@@ -349,6 +389,16 @@ public class StandardEditionVestige {
             } catch (Exception e) {
                 LOGGER.error("Unable to stop standard vestige edition", e);
             }
+
+            readersField.setAccessible(true);
+            writersField.setAccessible(true);
+            synchronized (DriverManager.class) {
+                readersField.set(null, StackedHandlerUtils.uninstallStackedHandler(readDrivers, (Vector<Driver>) readersField.get(null)));
+                writersField.set(null, StackedHandlerUtils.uninstallStackedHandler(writeDrivers, (Vector<Driver>) writersField.get(null)));
+            }
+            readersField.setAccessible(false);
+            writersField.setAccessible(false);
+
             factoryField.setAccessible(true);
             handlersField.setAccessible(true);
             synchronized (URL.class) {
@@ -357,6 +407,11 @@ public class StandardEditionVestige {
             }
             factoryField.setAccessible(false);
             handlersField.setAccessible(false);
+
+            synchronized (ProxySelector.class) {
+                ProxySelector.setDefault(StackedHandlerUtils.uninstallStackedHandler(proxySelector, ProxySelector.getDefault()));
+            }
+
             synchronized (System.class) {
                 System.setProperties(StackedHandlerUtils.uninstallStackedHandler(vestigeProperties, System.getProperties()));
                 System.setOut(StackedHandlerUtils.uninstallStackedHandler(out, System.out));

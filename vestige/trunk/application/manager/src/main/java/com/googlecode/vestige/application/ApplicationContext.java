@@ -19,6 +19,7 @@ package com.googlecode.vestige.application;
 
 import java.io.File;
 import java.io.Serializable;
+import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Set;
 
@@ -54,9 +55,7 @@ public class ApplicationContext implements Serializable {
 
     private Set<List<Integer>> uninterruptedMigrationVersion;
 
-    private transient int attach;
-
-    private transient Runnable runnable;
+    private transient WeakReference<RuntimeApplicationContext> runtimeApplicationContext;
 
     private transient Thread thread;
 
@@ -84,14 +83,6 @@ public class ApplicationContext implements Serializable {
         this.started = started;
     }
 
-    public int getAttach() {
-        return attach;
-    }
-
-    public void setAttach(final int attach) {
-        this.attach = attach;
-    }
-
     public File getHome() {
         return home;
     }
@@ -100,12 +91,15 @@ public class ApplicationContext implements Serializable {
         this.home = home;
     }
 
-    public Runnable getRunnable() {
-        return runnable;
+    public RuntimeApplicationContext getRuntimeApplicationContext() {
+        if (runtimeApplicationContext == null) {
+            return null;
+        }
+        return runtimeApplicationContext.get();
     }
 
-    public void setRunnable(final Runnable runnable) {
-        this.runnable = runnable;
+    public void setRuntimeApplicationContext(final RuntimeApplicationContext runtimeApplicationContext) {
+        this.runtimeApplicationContext = new WeakReference<RuntimeApplicationContext>(runtimeApplicationContext);
     }
 
     public Thread getThread() {
