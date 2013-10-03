@@ -28,6 +28,8 @@ import com.googlecode.vestige.core.VestigeClassLoader;
  */
 public interface VestigePlatform {
 
+    int attach(VestigeClassLoader<AttachedVestigeClassLoader> classLoader);
+
     int attach(ClassLoaderConfiguration classLoaderConfiguration) throws InterruptedException;
 
     void detach(int id);
@@ -44,7 +46,7 @@ public interface VestigePlatform {
 
     Set<Integer> getAttachments();
 
-    VestigeClassLoader<?> getClassLoader(int id);
+    VestigeClassLoader<AttachedVestigeClassLoader> getClassLoader(int id);
 
     AttachedVestigeClassLoader getAttachedVestigeClassLoader(int id);
 

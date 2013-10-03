@@ -19,16 +19,14 @@ package com.googlecode.vestige.application;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
 import java.io.Serializable;
+import java.lang.ref.SoftReference;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.URLStreamHandlerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,7 +35,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -47,6 +44,7 @@ import org.slf4j.MDC;
 
 import com.googlecode.vestige.application.util.FileUtils;
 import com.googlecode.vestige.core.VestigeClassLoader;
+import com.googlecode.vestige.platform.AttachedVestigeClassLoader;
 import com.googlecode.vestige.platform.ClassLoaderConfiguration;
 import com.googlecode.vestige.platform.VestigePlatform;
 import com.googlecode.vestige.platform.system.VestigeSystem;
@@ -351,7 +349,9 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         Integer compare = VersionUtils.compare(fromVersion, toVersion);
 
         ClassLoaderConfiguration installerResolve;
-        if (applicationContext.isStarted()) {
+        RuntimeApplicationContext runtimeApplicationContext = applicationContext.getRuntimeApplicationContext();
+        // && runtimeApplicationContext != null should be redondant
+        if (applicationContext.isStarted() && runtimeApplicationContext != null) {
             if (compare == null) {
                 if (applicationContext.getUninterruptedMigrationVersion().contains(toVersion)) {
                     // use fromVersion to perform the migration
@@ -402,8 +402,8 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                         currentThread.setContextClassLoader(installerClassLoader);
                         try {
                             installerMethod.invoke(null, applicationContext.getHome(), fromVersion,
-                                    applicationContext.getRunnable(), toApplicationContext.getHome(), toVersion,
-                                    toApplicationContext.getRunnable());
+                                    runtimeApplicationContext.getRunnable(), toApplicationContext.getHome(), toVersion,
+                                    toApplicationContext.getRuntimeApplicationContext().getRunnable());
                         } finally {
                             currentThread.setContextClassLoader(contextClassLoader);
                         }
@@ -558,99 +558,111 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         }
     }
 
-    public static <E> E getFieldValue(final Object o, final Class<E> clazz, final String fieldName) {
-        Field declaredField;
-        try {
-            declaredField = o.getClass().getDeclaredField(fieldName);
-        } catch (SecurityException e) {
-            LOGGER.trace("SecurityException", e);
-            return null;
-        } catch (NoSuchFieldException e) {
-            LOGGER.trace("SecurityException", e);
-            return null;
-        }
-        if (!clazz.isAssignableFrom(declaredField.getType())) {
-            return null;
-        }
-        boolean accessible = true;
-        if (!declaredField.isAccessible()) {
-            accessible = false;
-            declaredField.setAccessible(true);
-        }
-        try {
-            return clazz.cast(declaredField.get(o));
-        } catch (IllegalArgumentException e) {
-            LOGGER.trace("IllegalArgumentException", e);
-        } catch (IllegalAccessException e) {
-            LOGGER.trace("IllegalAccessException", e);
-        } finally {
-            if (!accessible) {
-                declaredField.setAccessible(false);
+    public static Object callConstructor(final ClassLoader classLoader, final Class<?> loadClass, final File home, final VestigeSystem vestigeSystem) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException, ApplicationException  {
+        Class<?> bestItfType = null;
+        Constructor<?> bestConstructor = null;
+        int level = -1;
+        for (Constructor<?> constructor : loadClass.getConstructors()) {
+            Class<?>[] parameterTypes = constructor.getParameterTypes();
+            switch (parameterTypes.length) {
+            case 0:
+                if (level < 0) {
+                    level = 0;
+                    bestConstructor = constructor;
+                }
+                break;
+            case 1:
+                if (level < 1) {
+                    if (!parameterTypes[0].equals(File.class)) {
+                        break;
+                    }
+                    level = 1;
+                    bestConstructor = constructor;
+                }
+                break;
+            case 2:
+                if (vestigeSystem == null) {
+                    break;
+                }
+                if (!parameterTypes[0].equals(File.class)) {
+                    break;
+                }
+                if (!parameterTypes[1].isInterface()) {
+                    break;
+                }
+                if (level == 2) {
+                    LOGGER.warn("Two constructors with two args are available", level);
+                    break;
+                }
+                level = 2;
+                bestConstructor = constructor;
+                bestItfType = parameterTypes[1];
+                break;
+            default:
             }
         }
-        return null;
+        switch (level) {
+        case 0:
+            return bestConstructor.newInstance();
+        case 1:
+            return bestConstructor.newInstance(home);
+        case 2:
+            return bestConstructor.newInstance(home, VestigeSystemInvocationHandler.createProxy(classLoader, bestItfType, vestigeSystem));
+        default:
+            throw new ApplicationException("No constructor found");
+        }
     }
 
     public Thread prepareThreadStart(final ApplicationContext applicationContext) throws ApplicationException {
         try {
-            applicationContext.setAttach(vestigePlatform.attach(applicationContext.getResolve()));
-            vestigePlatform.start(applicationContext.getAttach());
-            VestigeClassLoader<?> classLoader = vestigePlatform.getClassLoader(applicationContext.getAttach());
-            Class<?> loadClass = classLoader.loadClass(applicationContext.getClassName());
-            Constructor<?> declaredConstructor = null;
-            final Runnable runnable;
-            try {
-                declaredConstructor = loadClass.getDeclaredConstructor(File.class);
-            } catch (NoSuchMethodException e) {
-                LOGGER.trace("Use no-arg constructor", e);
-            }
-            if (declaredConstructor == null) {
-                runnable = (Runnable) loadClass.newInstance();
-            } else {
-                runnable = (Runnable) declaredConstructor.newInstance(applicationContext.getHome());
-            }
+            final int attach;
             final VestigeSystem vestigeSystem;
-            if (applicationContext.isPrivateSystem()) {
-                vestigeSystem = new VestigeSystem(VestigeSystem.getSystem());
-                PrintStream out = getFieldValue(runnable, PrintStream.class, "out");
-                if (out != null) {
-                    vestigeSystem.setOut(out);
-                }
-                PrintStream err = getFieldValue(runnable, PrintStream.class, "err");
-                if (err != null) {
-                    vestigeSystem.setErr(err);
-                }
-                InputStream in = getFieldValue(runnable, InputStream.class, "in");
-                if (in != null) {
-                    vestigeSystem.setIn(in);
-                }
-                Properties properties = getFieldValue(runnable, Properties.class, "properties");
-                if (properties != null) {
-                    vestigeSystem.setProperties(properties);
-                }
-                URLStreamHandlerFactory urlStreamHandlerFactory = getFieldValue(runnable, URLStreamHandlerFactory.class, "urlStreamHandlerFactory");
-                if (urlStreamHandlerFactory != null) {
-                    vestigeSystem.setUrlStreamHandlerFactory(urlStreamHandlerFactory);
+            final VestigeClassLoader<AttachedVestigeClassLoader> classLoader;
+            final RuntimeApplicationContext previousRuntimeApplicationContext = applicationContext.getRuntimeApplicationContext();
+            if (previousRuntimeApplicationContext == null) {
+                attach = vestigePlatform.attach(applicationContext.getResolve());
+                classLoader = vestigePlatform.getClassLoader(attach);
+                if (applicationContext.isPrivateSystem()) {
+                    vestigeSystem = new VestigeSystem(VestigeSystem.getSystem());
+                } else {
+                    vestigeSystem = null;
                 }
             } else {
-                vestigeSystem = null;
+                // reattach to platform
+                attach = vestigePlatform.attach(previousRuntimeApplicationContext.getClassLoader());
+                vestigeSystem = previousRuntimeApplicationContext.getVestigeSystem();
+                classLoader = previousRuntimeApplicationContext.getClassLoader();
             }
-            applicationContext.setRunnable(runnable);
+            vestigePlatform.start(attach);
+
             Thread thread = new Thread("main") {
                 @Override
                 public void run() {
                     MDC.put(VESTIGE_APP_NAME, applicationContext.getName());
-                    if (vestigeSystem != null) {
-                        VestigeSystem.pushSystem(vestigeSystem);
-                    }
                     try {
+                        if (vestigeSystem != null) {
+                            VestigeSystem.pushSystem(vestigeSystem);
+                        }
+                        Runnable runnable;
+                        if (previousRuntimeApplicationContext == null) {
+                            Class<?> loadClass;
+                            try {
+                                loadClass = classLoader.loadClass(applicationContext.getClassName());
+                                runnable = (Runnable) callConstructor(classLoader, loadClass, applicationContext.getHome(), vestigeSystem);
+                            } catch (Exception e) {
+                                LOGGER.error("Unable to create instance", e);
+                                return;
+                            }
+                            RuntimeApplicationContext runtimeApplicationContext = new RuntimeApplicationContext(classLoader, runnable, vestigeSystem);
+                            applicationContext.setRuntimeApplicationContext(runtimeApplicationContext);
+                            classLoader.getData().addObject(new SoftReference<RuntimeApplicationContext>(runtimeApplicationContext));
+                        } else {
+                            runnable = previousRuntimeApplicationContext.getRunnable();
+                        }
                         runnable.run();
                     } finally {
-                        applicationContext.setRunnable(null);
-                        int attach = applicationContext.getAttach();
                         vestigePlatform.stop(attach);
                         vestigePlatform.detach(attach);
-                        applicationContext.setAttach(-1);
                         // allow inner start to run
                         applicationContext.setThread(null);
                         // allow external start to run

@@ -17,6 +17,7 @@
 
 package com.googlecode.vestige.platform;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.googlecode.vestige.core.VestigeClassLoader;
@@ -25,6 +26,8 @@ import com.googlecode.vestige.core.VestigeClassLoader;
  * @author Gael Lalire
  */
 public class AttachedVestigeClassLoader {
+
+    private List<Object> objects;
 
     private VestigeClassLoader<AttachedVestigeClassLoader> vestigeClassLoader;
 
@@ -49,6 +52,7 @@ public class AttachedVestigeClassLoader {
         this.urls = urls;
         this.startStopClasses = startStopClasses;
         this.name = name;
+        objects = new ArrayList<Object>();
     }
 
     public VestigeClassLoader<AttachedVestigeClassLoader> getVestigeClassLoader() {
@@ -77,6 +81,14 @@ public class AttachedVestigeClassLoader {
 
     public List<String> getStartStopClasses() {
         return startStopClasses;
+    }
+
+    public void addObject(final Object o) {
+        objects.add(o);
+    }
+
+    public void removeObject(final Object o) {
+        objects.remove(o);
     }
 
     @Override

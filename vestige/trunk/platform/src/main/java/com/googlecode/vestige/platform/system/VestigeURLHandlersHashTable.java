@@ -39,10 +39,10 @@ public class VestigeURLHandlersHashTable extends Hashtable<String, URLStreamHand
         if (system == null) {
             return super.get(protocol);
         }
-        Map<String, URLStreamHandler> urlStreamHandlerByProtocol = system.getUrlStreamHandlerByProtocol();
+        Map<String, URLStreamHandler> urlStreamHandlerByProtocol = system.getURLStreamHandlerByProtocol();
         URLStreamHandler urlStreamHandler = urlStreamHandlerByProtocol.get(protocol);
         if (urlStreamHandler == null) {
-            URLStreamHandlerFactory urlStreamHandlerFactory = system.getUrlStreamHandlerFactory();
+            URLStreamHandlerFactory urlStreamHandlerFactory = system.getURLStreamHandlerFactory();
             if (urlStreamHandlerFactory != null) {
                 urlStreamHandler = urlStreamHandlerFactory.createURLStreamHandler((String) protocol);
                 urlStreamHandlerByProtocol.put((String) protocol, urlStreamHandler);
@@ -57,7 +57,7 @@ public class VestigeURLHandlersHashTable extends Hashtable<String, URLStreamHand
         if (system == null) {
             return super.put(protocol, urlStreamHandler);
         }
-        return system.getUrlStreamHandlerByProtocol().put(protocol, urlStreamHandler);
+        return system.getURLStreamHandlerByProtocol().put(protocol, urlStreamHandler);
     }
 
     @Override

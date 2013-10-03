@@ -97,8 +97,30 @@ public class DefaultVestigePlatform implements VestigePlatform {
             attached.set(id, load);
         }
         clean();
-        return size;
+        return id;
     }
+
+    public int attach(final VestigeClassLoader<AttachedVestigeClassLoader> classLoader) {
+        int size = attached.size();
+        int id = 0;
+        while (id < size) {
+            if (attached.get(id) == null) {
+                break;
+            }
+            id++;
+        }
+        AttachedVestigeClassLoader load = classLoader.getData();
+        if (id == size) {
+            started.add(Boolean.FALSE);
+            attached.add(load);
+        } else {
+            started.set(id, Boolean.FALSE);
+            attached.set(id, load);
+        }
+        clean();
+        return id;
+    }
+
 
     public void detach(final int id) {
         stop(id);
@@ -164,7 +186,7 @@ public class DefaultVestigePlatform implements VestigePlatform {
         return set;
     }
 
-    public VestigeClassLoader<?> getClassLoader(final int id) {
+    public VestigeClassLoader<AttachedVestigeClassLoader> getClassLoader(final int id) {
         return attached.get(id).getVestigeClassLoader();
     }
 

@@ -19,12 +19,15 @@ package com.googlecode.vestige.platform.system;
 
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.ProxySelector;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
+import java.sql.Driver;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Vector;
 
 /**
  * @author Gael Lalire
@@ -45,6 +48,10 @@ public class VestigeSystem {
 
     private Properties properties;
 
+    private Vector<Driver> driverVector = new Vector<Driver>();
+
+    private ProxySelector defaultProxySelector;
+
     public VestigeSystem(final VestigeSystem previousSystem) {
         urlStreamHandlerByProtocol = new HashMap<String, URLStreamHandler>();
         properties = new Properties();
@@ -53,6 +60,7 @@ public class VestigeSystem {
             err = System.err;
             in = System.in;
             properties.putAll(System.getProperties());
+            defaultProxySelector = ProxySelector.getDefault();
         } else {
             urlStreamHandlerByProtocol.putAll(previousSystem.urlStreamHandlerByProtocol);
             urlStreamHandlerFactory = previousSystem.urlStreamHandlerFactory;
@@ -60,6 +68,8 @@ public class VestigeSystem {
             err = previousSystem.err;
             in = previousSystem.in;
             properties.putAll(previousSystem.properties);
+            driverVector.addAll(previousSystem.driverVector);
+            defaultProxySelector = previousSystem.defaultProxySelector;
         }
     }
 
@@ -95,53 +105,15 @@ public class VestigeSystem {
         }
     }
 
-//    public static void setOut(final PrintStream out) {
-//        LinkedList<VestigeSystem> linkedList = vestigeSystems.get();
-//        if (linkedList == null) {
-//            System.setOut(out);
-//        }
-//        linkedList.getFirst().out = out;
-//    }
-//
-//    public static void setErr(final PrintStream err) {
-//        LinkedList<VestigeSystem> linkedList = vestigeSystems.get();
-//        if (linkedList == null) {
-//            System.setErr(err);
-//        }
-//        linkedList.getFirst().err = err;
-//    }
-//
-//    public static void setIn(final InputStream in) {
-//        LinkedList<VestigeSystem> linkedList = vestigeSystems.get();
-//        if (linkedList == null) {
-//            System.setIn(in);
-//        }
-//        linkedList.getFirst().in = in;
-//    }
-//
-//    public static void setProperties(final Properties properties) {
-//        LinkedList<VestigeSystem> linkedList = vestigeSystems.get();
-//        if (linkedList == null) {
-//            System.setProperties(properties);
-//        }
-//        linkedList.getFirst().properties = properties;
-//    }
-//
-//    public static void setURLStreamHandlerFactory(final URLStreamHandlerFactory urlStreamHandlerFactory) {
-//        LinkedList<VestigeSystem> linkedList = vestigeSystems.get();
-//        if (linkedList == null) {
-//            URL.setURLStreamHandlerFactory(urlStreamHandlerFactory);
-//        }
-//        VestigeSystem first = linkedList.getFirst();
-//        first.urlStreamHandlerFactory = urlStreamHandlerFactory;
-//        first.urlStreamHandlerByProtocol.clear();
-//    }
+    public Vector<Driver> getDriverVector() {
+        return driverVector;
+    }
 
-    public Map<String, URLStreamHandler> getUrlStreamHandlerByProtocol() {
+    public Map<String, URLStreamHandler> getURLStreamHandlerByProtocol() {
         return urlStreamHandlerByProtocol;
     }
 
-    public URLStreamHandlerFactory getUrlStreamHandlerFactory() {
+    public URLStreamHandlerFactory getURLStreamHandlerFactory() {
         return urlStreamHandlerFactory;
     }
 
@@ -161,11 +133,11 @@ public class VestigeSystem {
         return in;
     }
 
-    public void setUrlStreamHandlerByProtocol(final Map<String, URLStreamHandler> urlStreamHandlerByProtocol) {
+    public void setURLStreamHandlerByProtocol(final Map<String, URLStreamHandler> urlStreamHandlerByProtocol) {
         this.urlStreamHandlerByProtocol = urlStreamHandlerByProtocol;
     }
 
-    public void setUrlStreamHandlerFactory(final URLStreamHandlerFactory urlStreamHandlerFactory) {
+    public void setURLStreamHandlerFactory(final URLStreamHandlerFactory urlStreamHandlerFactory) {
         this.urlStreamHandlerFactory = urlStreamHandlerFactory;
     }
 
@@ -183,6 +155,14 @@ public class VestigeSystem {
 
     public void setProperties(final Properties properties) {
         this.properties = properties;
+    }
+
+    public ProxySelector getDefaultProxySelector() {
+        return defaultProxySelector;
+    }
+
+    public void setDefaultProxySelector(final ProxySelector defaultProxySelector) {
+        this.defaultProxySelector = defaultProxySelector;
     }
 
 }
