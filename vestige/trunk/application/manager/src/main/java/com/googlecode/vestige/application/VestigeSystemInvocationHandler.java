@@ -18,6 +18,7 @@
 package com.googlecode.vestige.application;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
@@ -33,7 +34,7 @@ import com.googlecode.vestige.platform.system.VestigeSystem;
  */
 public class VestigeSystemInvocationHandler implements InvocationHandler {
 
-    private Map<String, Map<List<Class<?>>, Method>> delegateMethods = new HashMap<String, Map<List<Class<?>>,Method>>();
+    private Map<String, Map<List<Class<?>>, Method>> delegateMethods = new HashMap<String, Map<List<Class<?>>, Method>>();
 
     private VestigeSystem vestigeSystem;
 
@@ -80,7 +81,11 @@ public class VestigeSystemInvocationHandler implements InvocationHandler {
         if (delegateMethod == null) {
             throw new UnsupportedOperationException();
         }
-        return delegateMethod.invoke(vestigeSystem, args);
+        try {
+            return delegateMethod.invoke(vestigeSystem, args);
+        } catch (InvocationTargetException e) {
+            throw e.getTargetException();
+        }
     }
 
 }

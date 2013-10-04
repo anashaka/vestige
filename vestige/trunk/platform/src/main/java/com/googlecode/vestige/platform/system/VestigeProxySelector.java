@@ -43,7 +43,12 @@ public class VestigeProxySelector extends ProxySelector implements StackedHandle
     public List<Proxy> select(final URI uri) {
         VestigeSystem system = VestigeSystem.getSystem();
         if (system == null) {
-            return Collections.singletonList(Proxy.NO_PROXY);
+            ProxySelector nextHandler = this.nextHandler;
+            if (nextHandler == null) {
+                return Collections.singletonList(Proxy.NO_PROXY);
+            } else {
+                return nextHandler.select(uri);
+            }
         }
         return system.getDefaultProxySelector().select(uri);
     }
@@ -52,12 +57,17 @@ public class VestigeProxySelector extends ProxySelector implements StackedHandle
     public void connectFailed(final URI uri, final SocketAddress sa, final IOException ioe) {
         VestigeSystem system = VestigeSystem.getSystem();
         if (system == null) {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("connectFailed URI:{}, socketAddress:{}, IOException:{}", new Object[] {uri, sa, ioe});
+            ProxySelector nextHandler = this.nextHandler;
+            if (nextHandler == null) {
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("connectFailed URI:{}, socketAddress:{}, IOException:{}", new Object[] {uri, sa, ioe});
+                }
+            } else {
+                nextHandler.connectFailed(uri, sa, ioe);
             }
-            return;
+        } else {
+            system.getDefaultProxySelector().connectFailed(uri, sa, ioe);
         }
-        system.getDefaultProxySelector().connectFailed(uri, sa, ioe);
     }
 
     @Override

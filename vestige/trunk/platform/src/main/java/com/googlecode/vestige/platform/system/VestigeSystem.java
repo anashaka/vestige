@@ -19,6 +19,8 @@ package com.googlecode.vestige.platform.system;
 
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.ContentHandler;
+import java.net.ContentHandlerFactory;
 import java.net.ProxySelector;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
@@ -38,7 +40,11 @@ public class VestigeSystem {
 
     private Map<String, URLStreamHandler> urlStreamHandlerByProtocol = new HashMap<String, URLStreamHandler>();
 
+    private Map<String, ContentHandler> urlConnectionContentHandlerByMime = new HashMap<String, ContentHandler>();
+
     private URLStreamHandlerFactory urlStreamHandlerFactory;
+
+    private ContentHandlerFactory contentHandlerFactory;
 
     private PrintStream out;
 
@@ -109,6 +115,10 @@ public class VestigeSystem {
         return driverVector;
     }
 
+    public Map<String, ContentHandler> getURLConnectionContentHandlerByMime() {
+        return urlConnectionContentHandlerByMime;
+    }
+
     public Map<String, URLStreamHandler> getURLStreamHandlerByProtocol() {
         return urlStreamHandlerByProtocol;
     }
@@ -133,11 +143,18 @@ public class VestigeSystem {
         return in;
     }
 
-    public void setURLStreamHandlerByProtocol(final Map<String, URLStreamHandler> urlStreamHandlerByProtocol) {
-        this.urlStreamHandlerByProtocol = urlStreamHandlerByProtocol;
+    public ContentHandlerFactory getURLConnectionContentHandlerFactory() {
+        return contentHandlerFactory;
+    }
+
+    public void setURLConnectionContentHandlerFactory(final ContentHandlerFactory contentHandlerFactory) {
+        this.contentHandlerFactory = contentHandlerFactory;
     }
 
     public void setURLStreamHandlerFactory(final URLStreamHandlerFactory urlStreamHandlerFactory) {
+        if (this.urlStreamHandlerFactory != null) {
+            throw new Error("factory already defined");
+        }
         this.urlStreamHandlerFactory = urlStreamHandlerFactory;
     }
 
