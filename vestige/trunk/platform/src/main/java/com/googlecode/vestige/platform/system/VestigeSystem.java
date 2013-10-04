@@ -24,7 +24,6 @@ import java.net.ContentHandlerFactory;
 import java.net.ProxySelector;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
-import java.sql.Driver;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -54,7 +53,7 @@ public class VestigeSystem {
 
     private Properties properties;
 
-    private Vector<Driver> driverVector = new Vector<Driver>();
+    private Vector<Object> driverVector = new Vector<Object>();
 
     private ProxySelector defaultProxySelector;
 
@@ -111,7 +110,7 @@ public class VestigeSystem {
         }
     }
 
-    public Vector<Driver> getDriverVector() {
+    public Vector<Object> getDriverVector() {
         return driverVector;
     }
 
