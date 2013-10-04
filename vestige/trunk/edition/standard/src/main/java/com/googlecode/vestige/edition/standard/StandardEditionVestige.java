@@ -24,14 +24,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
-import java.net.ProxySelector;
 import java.net.URL;
-import java.net.URLStreamHandler;
-import java.net.URLStreamHandlerFactory;
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.util.Hashtable;
-import java.util.Vector;
 import java.util.concurrent.Future;
 
 import javax.xml.bind.JAXBContext;
@@ -58,9 +51,7 @@ import com.googlecode.vestige.application.ApplicationException;
 import com.googlecode.vestige.application.DefaultApplicationManager;
 import com.googlecode.vestige.application.SynchronizedApplicationManager;
 import com.googlecode.vestige.application.descriptor.xml.XMLApplicationDescriptorFactory;
-import com.googlecode.vestige.core.StackedHandlerUtils;
 import com.googlecode.vestige.core.VestigeExecutor;
-import com.googlecode.vestige.core.logger.VestigeLoggerFactory;
 import com.googlecode.vestige.edition.standard.schema.Admin;
 import com.googlecode.vestige.edition.standard.schema.ObjectFactory;
 import com.googlecode.vestige.edition.standard.schema.SSH;
@@ -68,13 +59,7 @@ import com.googlecode.vestige.edition.standard.schema.Settings;
 import com.googlecode.vestige.edition.standard.schema.Web;
 import com.googlecode.vestige.platform.DefaultVestigePlatform;
 import com.googlecode.vestige.platform.VestigePlatform;
-import com.googlecode.vestige.platform.logger.SLF4JLoggerFactoryAdapter;
-import com.googlecode.vestige.platform.logger.SLF4JPrintStream;
-import com.googlecode.vestige.platform.system.VestigeDriverVector;
-import com.googlecode.vestige.platform.system.VestigeProperties;
-import com.googlecode.vestige.platform.system.VestigeProxySelector;
-import com.googlecode.vestige.platform.system.VestigeURLHandlersHashTable;
-import com.googlecode.vestige.platform.system.VestigeURLStreamHandlerFactory;
+import com.googlecode.vestige.platform.system.VestigeSystemAction;
 import com.googlecode.vestige.resolver.maven.MavenArtifactResolver;
 
 /**
@@ -252,7 +237,6 @@ public class StandardEditionVestige {
         workerThread = null;
     }
 
-    @SuppressWarnings("unchecked")
     public static void vestigeMain(final VestigeExecutor vestigeExecutor, final VestigePlatform vestigePlatform,
             final String[] args) {
         try {
@@ -260,163 +244,70 @@ public class StandardEditionVestige {
                 throw new IllegalArgumentException("expected two argument (vestige home, vestige base)");
             }
             final Thread currentThread = Thread.currentThread();
-            long startTimeMillis = 0;
+            final long startTimeMillis;
             if (LOGGER.isInfoEnabled()) {
                 startTimeMillis = System.currentTimeMillis();
                 LOGGER.info("Starting vestige SE");
-            }
-            synchronized (VestigeLoggerFactory.class) {
-                SLF4JLoggerFactoryAdapter factory = new SLF4JLoggerFactoryAdapter();
-                factory.setNextHandler(VestigeLoggerFactory.getVestigeLoggerFactory());
-                VestigeLoggerFactory.setVestigeLoggerFactory(factory);
+            } else {
+                startTimeMillis = 0;
             }
             // logback can use system stream directly
             giveDirectStreamAccessToLogback();
 
-            VestigeProperties vestigeProperties;
-            SLF4JPrintStream out;
-            SLF4JPrintStream err;
-            // avoid direct log
-            synchronized (System.class) {
-                out = new SLF4JPrintStream(true);
-                out.setNextHandler(System.out);
-                System.setOut(out);
-                err = new SLF4JPrintStream(false);
-                err.setNextHandler(System.err);
-                System.setErr(err);
-                vestigeProperties = new VestigeProperties(System.getProperties());
-                System.setProperties(vestigeProperties);
-            }
-            VestigeProxySelector proxySelector;
-            synchronized (ProxySelector.class) {
-                proxySelector = new VestigeProxySelector();
-                proxySelector.setNextHandler(ProxySelector.getDefault());
-                ProxySelector.setDefault(proxySelector);
-            }
+            new VestigeSystemAction() {
 
-            Field factoryField = null;
-            Field handlersField = null;
-            VestigeURLStreamHandlerFactory vestigeURLStreamHandlerFactory = null;
-            VestigeURLHandlersHashTable vestigeURLHandlersHashTable = null;
-            try {
-                factoryField = URL.class.getDeclaredField("factory");
-                handlersField = URL.class.getDeclaredField("handlers");
-                factoryField.setAccessible(true);
-                handlersField.setAccessible(true);
-                synchronized (URL.class) {
-                    vestigeURLStreamHandlerFactory = new VestigeURLStreamHandlerFactory();
-                    vestigeURLStreamHandlerFactory.setNextHandler((URLStreamHandlerFactory) factoryField.get(null));
-                    factoryField.set(null, vestigeURLStreamHandlerFactory);
-                    vestigeURLHandlersHashTable = new VestigeURLHandlersHashTable();
-                    vestigeURLHandlersHashTable.setNextHandler((Hashtable<String, URLStreamHandler>) handlersField.get(null));
-                    handlersField.set(null, vestigeURLHandlersHashTable);
-                }
-                factoryField.setAccessible(false);
-                handlersField.setAccessible(false);
-            } catch (Exception e) {
-                LOGGER.warn("Could not intercept URL.setURLStreamHandlerFactory", e);
-            }
-
-            Field readersField = null;
-            Field writersField = null;
-            VestigeDriverVector readDrivers = null;
-            VestigeDriverVector writeDrivers = null;
-            try {
-                readersField = DriverManager.class.getDeclaredField("readDrivers");
-                writersField = DriverManager.class.getDeclaredField("writeDrivers");
-                readersField.setAccessible(true);
-                writersField.setAccessible(true);
-                synchronized (DriverManager.class) {
-                    readDrivers = new VestigeDriverVector();
-                    readDrivers.setNextHandler((Vector<Driver>) readersField.get(null));
-                    readersField.set(null, readDrivers);
-                    writeDrivers = new VestigeDriverVector();
-                    writeDrivers.setNextHandler((Vector<Driver>) writersField.get(null));
-                    writersField.set(null, writeDrivers);
-                }
-                readersField.setAccessible(false);
-                writersField.setAccessible(false);
-            } catch (Exception e) {
-                LOGGER.warn("Could not intercept DriverManager.registerDriver", e);
-            }
-
-            String home = args[0];
-            String base = args[1];
-            File homeFile = new File(home).getCanonicalFile();
-            File baseFile = new File(base).getCanonicalFile();
-            if (!baseFile.isDirectory()) {
-                if (!baseFile.mkdirs()) {
-                    LOGGER.error("Unable to create vestige base");
-                }
-            }
-            LOGGER.info("Use {} for home file", homeFile);
-            final StandardEditionVestige standardEditionVestige = new StandardEditionVestige(homeFile, baseFile, vestigeExecutor,
-                    vestigePlatform);
-            Runtime.getRuntime().addShutdownHook(new Thread("se-shutdown") {
                 @Override
-                public void run() {
-                    currentThread.interrupt();
+                public void vestigeSystemRun() throws Throwable {
+                    String home = args[0];
+                    String base = args[1];
+                    File homeFile = new File(home).getCanonicalFile();
+                    File baseFile = new File(base).getCanonicalFile();
+                    if (!baseFile.isDirectory()) {
+                        if (!baseFile.mkdirs()) {
+                            LOGGER.error("Unable to create vestige base");
+                        }
+                    }
+                    LOGGER.info("Use {} for home file", homeFile);
+                    final StandardEditionVestige standardEditionVestige = new StandardEditionVestige(homeFile, baseFile, vestigeExecutor, vestigePlatform);
+                    Runtime.getRuntime().addShutdownHook(new Thread("se-shutdown") {
+                        @Override
+                        public void run() {
+                            currentThread.interrupt();
+                            try {
+                                currentThread.join();
+                            } catch (InterruptedException e) {
+                                LOGGER.error("Shutdown thread interrupted", e);
+                            }
+                        }
+                    });
+                    standardEditionVestige.start();
+
+                    if (LOGGER.isInfoEnabled()) {
+                        long currentTimeMillis = System.currentTimeMillis();
+                        long jvmStartTime = ManagementFactory.getRuntimeMXBean().getStartTime();
+                        LOGGER.info("Vestige SE started in {} ms ({} ms since JVM started)", currentTimeMillis - startTimeMillis, currentTimeMillis - jvmStartTime);
+                    }
+                    synchronized (standardEditionVestige) {
+                        try {
+                            standardEditionVestige.wait();
+                        } catch (InterruptedException e) {
+                            LOGGER.trace("Vestige SE interrupted", e);
+                        }
+                    }
                     try {
-                        currentThread.join();
-                    } catch (InterruptedException e) {
-                        LOGGER.error("Shutdown thread interrupted", e);
+                        standardEditionVestige.stop();
+                        Thread workerThread = vestigeExecutor.createWorker("se-shutdown-worker", true, 0);
+                        for (Integer id : vestigePlatform.getAttachments()) {
+                            vestigePlatform.detach(id);
+                        }
+                        workerThread.interrupt();
+                        workerThread.join();
+                    } catch (Exception e) {
+                        LOGGER.error("Unable to stop standard vestige edition", e);
                     }
                 }
-            });
-            standardEditionVestige.start();
+            }.execute();
 
-            if (LOGGER.isInfoEnabled()) {
-                long currentTimeMillis = System.currentTimeMillis();
-                long jvmStartTime = ManagementFactory.getRuntimeMXBean().getStartTime();
-                LOGGER.info("Vestige SE started in {} ms ({} ms since JVM started)", currentTimeMillis - startTimeMillis,
-                        currentTimeMillis - jvmStartTime);
-            }
-            synchronized (standardEditionVestige) {
-                try {
-                    standardEditionVestige.wait();
-                } catch (InterruptedException e) {
-                    LOGGER.trace("Vestige SE interrupted", e);
-                }
-            }
-            try {
-                standardEditionVestige.stop();
-                Thread workerThread = vestigeExecutor.createWorker("se-shutdown-worker", true, 0);
-                for (Integer id : vestigePlatform.getAttachments()) {
-                    vestigePlatform.detach(id);
-                }
-                workerThread.interrupt();
-                workerThread.join();
-            } catch (Exception e) {
-                LOGGER.error("Unable to stop standard vestige edition", e);
-            }
-
-            readersField.setAccessible(true);
-            writersField.setAccessible(true);
-            synchronized (DriverManager.class) {
-                readersField.set(null, StackedHandlerUtils.uninstallStackedHandler(readDrivers, (Vector<Driver>) readersField.get(null)));
-                writersField.set(null, StackedHandlerUtils.uninstallStackedHandler(writeDrivers, (Vector<Driver>) writersField.get(null)));
-            }
-            readersField.setAccessible(false);
-            writersField.setAccessible(false);
-
-            factoryField.setAccessible(true);
-            handlersField.setAccessible(true);
-            synchronized (URL.class) {
-                factoryField.set(null, StackedHandlerUtils.uninstallStackedHandler(vestigeURLStreamHandlerFactory, (URLStreamHandlerFactory) factoryField.get(null)));
-                handlersField.set(null, StackedHandlerUtils.uninstallStackedHandler(vestigeURLHandlersHashTable, (Hashtable<String, URLStreamHandler>) handlersField.get(null)));
-            }
-            factoryField.setAccessible(false);
-            handlersField.setAccessible(false);
-
-            synchronized (ProxySelector.class) {
-                ProxySelector.setDefault(StackedHandlerUtils.uninstallStackedHandler(proxySelector, ProxySelector.getDefault()));
-            }
-
-            synchronized (System.class) {
-                System.setProperties(StackedHandlerUtils.uninstallStackedHandler(vestigeProperties, System.getProperties()));
-                System.setOut(StackedHandlerUtils.uninstallStackedHandler(out, System.out));
-                System.setErr(StackedHandlerUtils.uninstallStackedHandler(err, System.err));
-            }
             LOGGER.info("Vestige SE stopped");
         } catch (Throwable e) {
             LOGGER.error("Unable to start vestige SE", e);
