@@ -17,7 +17,6 @@
 
 package com.googlecode.vestige.platform.system;
 
-import java.sql.Driver;
 import java.util.Vector;
 
 import com.googlecode.vestige.core.StackedHandler;
@@ -25,29 +24,49 @@ import com.googlecode.vestige.core.StackedHandler;
 /**
  * @author Gael Lalire
  */
-public class VestigeDriverVector extends Vector<Driver> implements StackedHandler<Vector<Driver>> {
+public class VestigeDriverVector extends Vector<Object> implements StackedHandler<Vector<Object>> {
 
     private static final long serialVersionUID = -8974921954435686686L;
 
-    private Vector<Driver> nextHandler;
+    private Vector<Object> nextHandler;
 
     @Override
-    public Vector<Driver> getNextHandler() {
+    public Vector<Object> getNextHandler() {
         return nextHandler;
     }
 
     @Override
-    public void setNextHandler(final Vector<Driver> nextHandler) {
+    public void setNextHandler(final Vector<Object> nextHandler) {
         this.nextHandler = nextHandler;
     }
 
     @Override
-    public Driver elementAt(final int index) {
+    public Object elementAt(final int index) {
         VestigeSystem system = VestigeSystem.getSystem();
         if (system == null) {
             return super.elementAt(index);
         }
         return system.getDriverVector().elementAt(index);
+    }
+
+    @Override
+    public void removeElementAt(final int index) {
+        VestigeSystem system = VestigeSystem.getSystem();
+        if (system == null) {
+            super.removeElementAt(index);
+        } else {
+            system.getDriverVector().removeElementAt(index);
+        }
+    }
+
+    @Override
+    public void addElement(final Object obj) {
+        VestigeSystem system = VestigeSystem.getSystem();
+        if (system == null) {
+            super.addElement(obj);
+        } else {
+            system.getDriverVector().addElement(obj);
+        }
     }
 
     @Override
