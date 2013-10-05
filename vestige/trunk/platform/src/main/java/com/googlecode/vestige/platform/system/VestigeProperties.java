@@ -17,9 +17,11 @@
 
 package com.googlecode.vestige.platform.system;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.Set;
 
 import com.googlecode.vestige.core.StackedHandler;
 
@@ -55,7 +57,25 @@ public class VestigeProperties extends Properties implements StackedHandler<Prop
     }
 
     @Override
-    public synchronized String getProperty(final String key) {
+    public Object put(final Object key, final Object value) {
+        VestigeSystem system = VestigeSystem.getSystem();
+        if (system == null) {
+            return super.put(key, value);
+        }
+        return system.getProperties().put(key, value);
+    }
+
+    @Override
+    public Object get(final Object key) {
+        VestigeSystem system = VestigeSystem.getSystem();
+        if (system == null) {
+            return super.get(key);
+        }
+        return system.getProperties().get(key);
+    }
+
+    @Override
+    public String getProperty(final String key) {
         VestigeSystem system = VestigeSystem.getSystem();
         if (system == null) {
             return super.getProperty(key);
@@ -68,7 +88,7 @@ public class VestigeProperties extends Properties implements StackedHandler<Prop
     }
 
     @Override
-    public synchronized Object setProperty(final String key, final String value) {
+    public Object setProperty(final String key, final String value) {
         VestigeSystem system = VestigeSystem.getSystem();
         if (system == null) {
             return super.setProperty(key, value);
@@ -77,7 +97,107 @@ public class VestigeProperties extends Properties implements StackedHandler<Prop
     }
 
     @Override
-    public synchronized Enumeration<Object> keys() {
+    public boolean contains(final Object value) {
+        VestigeSystem system = VestigeSystem.getSystem();
+        if (system == null) {
+            return super.contains(value);
+        }
+        return system.getProperties().contains(value);
+    }
+
+    @Override
+    public boolean containsKey(final Object key) {
+        VestigeSystem system = VestigeSystem.getSystem();
+        if (system == null) {
+            return super.containsKey(key);
+        }
+        return system.getProperties().containsKey(key);
+    }
+
+    @Override
+    public Enumeration<Object> elements() {
+        VestigeSystem system = VestigeSystem.getSystem();
+        if (system == null) {
+            return super.elements();
+        }
+        return system.getProperties().elements();
+    }
+
+    @Override
+    public Set<java.util.Map.Entry<Object, Object>> entrySet() {
+        VestigeSystem system = VestigeSystem.getSystem();
+        if (system == null) {
+            return super.entrySet();
+        }
+        return system.getProperties().entrySet();
+    }
+
+    @Override
+    public Collection<Object> values() {
+        VestigeSystem system = VestigeSystem.getSystem();
+        if (system == null) {
+            return super.values();
+        }
+        return system.getProperties().values();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        VestigeSystem system = VestigeSystem.getSystem();
+        if (system == null) {
+            return super.isEmpty();
+        }
+        return system.getProperties().isEmpty();
+    }
+
+    @Override
+    public Set<Object> keySet() {
+        VestigeSystem system = VestigeSystem.getSystem();
+        if (system == null) {
+            return super.keySet();
+        }
+        return system.getProperties().keySet();
+    }
+
+    @Override
+    public String toString() {
+        VestigeSystem system = VestigeSystem.getSystem();
+        if (system == null) {
+            return super.toString();
+        }
+        return system.getProperties().toString();
+    }
+
+    @Override
+    public int size() {
+        VestigeSystem system = VestigeSystem.getSystem();
+        if (system == null) {
+            return super.size();
+        }
+        return system.getProperties().size();
+    }
+
+    @Override
+    public void clear() {
+        VestigeSystem system = VestigeSystem.getSystem();
+        if (system == null) {
+            super.clear();
+        } else {
+            system.getProperties().clear();
+        }
+    }
+
+    @Override
+    public Object remove(final Object key) {
+        VestigeSystem system = VestigeSystem.getSystem();
+        if (system == null) {
+            return super.remove(key);
+        }
+        return system.getProperties().remove(key);
+    }
+
+    @Override
+    public Enumeration<Object> keys() {
         VestigeSystem system = VestigeSystem.getSystem();
         if (system == null) {
             return super.keys();
