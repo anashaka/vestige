@@ -171,9 +171,16 @@ public class XMLApplicationDescriptor implements ApplicationDescriptor {
                 }
                 i++;
             }
-            return new ClassLoaderConfiguration(new URLClassLoaderConfigurationKey(
-                    urlsInstaller.getScope() == com.googlecode.vestige.application.descriptor.xml.schema.Scope.PLATFORM, urls), appName,
-                    urlsInstaller.getScope() == com.googlecode.vestige.application.descriptor.xml.schema.Scope.ATTACHMENT, urls,
+            URLClassLoaderConfigurationKey key;
+            String name;
+            if (urlsInstaller.getScope() == com.googlecode.vestige.application.descriptor.xml.schema.Scope.PLATFORM) {
+                key = new URLClassLoaderConfigurationKey(true, urls);
+                name = url.toString();
+            } else {
+                key = new URLClassLoaderConfigurationKey(false, urls);
+                name = appName;
+            }
+            return new ClassLoaderConfiguration(key, name, urlsInstaller.getScope() == com.googlecode.vestige.application.descriptor.xml.schema.Scope.ATTACHMENT, urls,
                     Collections.<ClassLoaderConfiguration> emptyList(), null, null, null);
         }
         return resolve(appName, installer.getMavenInstaller(), defaultDependencyModifier, additionalRepositories);
@@ -212,10 +219,17 @@ public class XMLApplicationDescriptor implements ApplicationDescriptor {
                 }
                 i++;
             }
-            return new ClassLoaderConfiguration(new URLClassLoaderConfigurationKey(
-                    urlsLauncher.getScope() == com.googlecode.vestige.application.descriptor.xml.schema.Scope.PLATFORM, urls), appName,
-                    urlsLauncher.getScope() == com.googlecode.vestige.application.descriptor.xml.schema.Scope.ATTACHMENT, urls, Collections.<ClassLoaderConfiguration> emptyList(),
-                    null, null, null);
+            URLClassLoaderConfigurationKey key;
+            String name;
+            if (urlsLauncher.getScope() == com.googlecode.vestige.application.descriptor.xml.schema.Scope.PLATFORM) {
+                key = new URLClassLoaderConfigurationKey(true, urls);
+                name = url.toString();
+            } else {
+                key = new URLClassLoaderConfigurationKey(false, urls);
+                name = appName;
+            }
+            return new ClassLoaderConfiguration(key, name, urlsLauncher.getScope() == com.googlecode.vestige.application.descriptor.xml.schema.Scope.ATTACHMENT, urls,
+                    Collections.<ClassLoaderConfiguration> emptyList(), null, null, null);
         }
         return resolve(appName, launcher.getMavenLauncher(), defaultDependencyModifier, additionalRepositories);
     }

@@ -58,6 +58,9 @@ public class URLClassLoaderConfigurationKey implements Serializable {
             return false;
         }
         URLClassLoaderConfigurationKey other = (URLClassLoaderConfigurationKey) obj;
+        if (!other.shared) {
+            return false;
+        }
         if (!urls.equals(other.urls)) {
             return false;
         }

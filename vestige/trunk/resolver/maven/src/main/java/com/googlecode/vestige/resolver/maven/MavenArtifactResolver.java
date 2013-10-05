@@ -242,8 +242,16 @@ public class MavenArtifactResolver {
                 urls[i] = artifact.getFile().toURI().toURL();
                 i++;
             }
-            MavenClassLoaderConfigurationKey key = new MavenClassLoaderConfigurationKey(mavenArtifacts, Collections.<MavenClassLoaderConfigurationKey> emptyList(), scope == Scope.PLATFORM);
-            return new ClassLoaderConfiguration(key, appName, scope == Scope.ATTACHMENT, urls, Collections.<ClassLoaderConfiguration> emptyList(), null, null, null);
+            MavenClassLoaderConfigurationKey key;
+            String name;
+            if (scope == Scope.PLATFORM) {
+                key = new MavenClassLoaderConfigurationKey(mavenArtifacts, Collections.<MavenClassLoaderConfigurationKey> emptyList(), true);
+                name = key.getArtifacts().toString();
+            } else {
+                key = new MavenClassLoaderConfigurationKey(mavenArtifacts, Collections.<MavenClassLoaderConfigurationKey> emptyList(), false);
+                name = appName;
+            }
+            return new ClassLoaderConfiguration(key, name, scope == Scope.ATTACHMENT, urls, Collections.<ClassLoaderConfiguration> emptyList(), null, null, null);
         case FIXED_DEPENDENCIES:
             Map<MavenArtifact, URL> urlByKey = new HashMap<MavenArtifact, URL>();
             for (Artifact artifact : artifacts) {
