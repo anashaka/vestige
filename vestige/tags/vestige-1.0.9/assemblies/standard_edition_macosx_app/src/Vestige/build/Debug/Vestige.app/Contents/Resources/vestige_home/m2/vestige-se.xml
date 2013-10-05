@@ -1,0 +1,16 @@
+<mavenLauncher xmlns="http://vestige.googlecode.com/MAVEN_LAUNCHER" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://vestige.googlecode.com/MAVEN_LAUNCHER mavenLauncher.xsd">
+  <attach version="0.0.1-SNAPSHOT" groupId="com.googlecode.vestige" artifactId="vestige.jvm_enhancer"/>
+  <launch class="com.googlecode.vestige.edition.standard.StandardEditionVestige" groupId="com.googlecode.vestige" artifactId="vestige.edition.standard" version="0.0.1-SNAPSHOT" mode="FIXED_DEPENDENCIES" />
+  <config>
+    <modifyDependency artifactId="slf4j-api" groupId="org.slf4j">
+      <addDependency artifactId="logback-classic" groupId="ch.qos.logback" version="1.0.7" />
+    </modifyDependency>
+    <modifyDependency artifactId="aether-impl" groupId="org.sonatype.aether">
+      <addDependency artifactId="vestige.resolver.maven" groupId="com.googlecode.vestige" version="0.0.1-SNAPSHOT" />
+    </modifyDependency>
+    <replaceDependency artifactId="commons-logging" groupId="commons-logging">
+      <addDependency artifactId="jcl-over-slf4j" groupId="org.slf4j" version="1.6.6" />
+    </replaceDependency>
+    <additionalRepository id="vestige-repo" url="http://vestige.googlecode.com/svn/repo/" />
+  </config>
+</mavenLauncher>
