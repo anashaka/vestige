@@ -86,8 +86,7 @@ public class StandardEditionVestige {
     private File resolverFile;
 
     @SuppressWarnings("unchecked")
-    public StandardEditionVestige(final File homeFile, final File baseFile, final VestigeExecutor vestigeExecutor,
-            final VestigePlatform vestigePlatform) throws Exception {
+    public StandardEditionVestige(final File homeFile, final File baseFile, final VestigeExecutor vestigeExecutor, final VestigePlatform vestigePlatform) throws Exception {
         this.vestigeExecutor = vestigeExecutor;
         this.vestigePlatform = vestigePlatform;
 
@@ -148,8 +147,7 @@ public class StandardEditionVestige {
         if (defaultApplicationManager == null) {
             defaultApplicationManager = new DefaultApplicationManager(appHomeFile);
         }
-        SynchronizedApplicationManager synchronizedApplicationManager = new SynchronizedApplicationManager(
-                defaultApplicationManager);
+        SynchronizedApplicationManager synchronizedApplicationManager = new SynchronizedApplicationManager(defaultApplicationManager);
 
         File m2Home = new File(homeFile, "m2");
         File mavenSettingsFile = new File(System.getProperty("user.home"), ".m2" + File.separator + "settings.xml");
@@ -169,8 +167,7 @@ public class StandardEditionVestige {
             vestigeExecutor.createWorker("ssh-factory-worker", true, 1);
             File sshBase = new File(baseFile, "ssh");
             File sshHome = new File(homeFile, "ssh");
-            futureSshServer = vestigeExecutor.submit(new SSHServerFactory(sshBase, sshHome, ssh, appHomeFile,
-                    synchronizedApplicationManager, vestigePlatform));
+            futureSshServer = vestigeExecutor.submit(new SSHServerFactory(sshBase, sshHome, ssh, appHomeFile, synchronizedApplicationManager, vestigePlatform));
         }
 
         Future<Server> futureServer = null;
@@ -237,8 +234,7 @@ public class StandardEditionVestige {
         workerThread = null;
     }
 
-    public static void vestigeMain(final VestigeExecutor vestigeExecutor, final VestigePlatform vestigePlatform,
-            final String[] args) {
+    public static void vestigeMain(final VestigeExecutor vestigeExecutor, final VestigePlatform vestigePlatform, final String[] args) {
         try {
             if (args.length != 2) {
                 throw new IllegalArgumentException("expected two argument (vestige home, vestige base)");
@@ -247,7 +243,16 @@ public class StandardEditionVestige {
             final long startTimeMillis;
             if (LOGGER.isInfoEnabled()) {
                 startTimeMillis = System.currentTimeMillis();
-                LOGGER.info("Starting vestige SE");
+                String implementationVersion = null;
+                Package cPackage = StandardEditionVestige.class.getPackage();
+                if (cPackage != null) {
+                    implementationVersion = cPackage.getImplementationVersion();
+                }
+                if (implementationVersion == null) {
+                    LOGGER.info("Starting Vestige SE");
+                } else {
+                    LOGGER.info("Starting Vestige SE version {}", implementationVersion);
+                }
             } else {
                 startTimeMillis = 0;
             }
@@ -303,14 +308,14 @@ public class StandardEditionVestige {
                         workerThread.interrupt();
                         workerThread.join();
                     } catch (Exception e) {
-                        LOGGER.error("Unable to stop standard vestige edition", e);
+                        LOGGER.error("Unable to stop Vestige SE", e);
                     }
                 }
             }.execute();
 
             LOGGER.info("Vestige SE stopped");
         } catch (Throwable e) {
-            LOGGER.error("Unable to start vestige SE", e);
+            LOGGER.error("Unable to start Vestige SE", e);
         }
     }
 

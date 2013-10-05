@@ -43,6 +43,12 @@ public abstract class VestigeSystemAction {
     private static final Logger LOGGER = LoggerFactory.getLogger(VestigeSystemAction.class);
 
     public void execute() throws Throwable {
+        if (VestigeSystem.getSystem() != null) {
+            // we are already protected
+            vestigeSystemRun();
+            return;
+        }
+
         synchronized (VestigeLoggerFactory.class) {
             SLF4JLoggerFactoryAdapter factory = new SLF4JLoggerFactoryAdapter();
             factory.setNextHandler(VestigeLoggerFactory.getVestigeLoggerFactory());
