@@ -20,6 +20,7 @@ package com.googlecode.vestige.platform.system;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -52,7 +53,9 @@ public class VestigeProperties extends Properties implements StackedHandler<Prop
 
     public VestigeProperties(final Properties properties) {
         super(getDefaults(properties));
-        putAll(properties);
+        for (Map.Entry<Object, Object> e : properties.entrySet()) {
+            super.put(e.getKey(), e.getValue());
+        }
         this.nextHandler = properties;
     }
 
