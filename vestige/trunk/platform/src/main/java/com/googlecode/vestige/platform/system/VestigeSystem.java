@@ -24,16 +24,26 @@ import java.net.ContentHandlerFactory;
 import java.net.ProxySelector;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.googlecode.vestige.core.StackedHandler;
 
 /**
  * @author Gael Lalire
  */
-public class VestigeSystem {
+public class VestigeSystem implements PublicVestigeSystem {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(VestigeSystem.class);
 
     private static ThreadLocal<LinkedList<VestigeSystem>> vestigeSystems = new InheritableThreadLocal<LinkedList<VestigeSystem>>();
 
@@ -53,10 +63,13 @@ public class VestigeSystem {
 
     private Properties properties;
 
-    private Vector<Object> driverVector = new Vector<Object>();
+    private CopyOnWriteArrayList<Object> registeredDrivers = new CopyOnWriteArrayList<Object>();
+
+    private Vector<Object> writeDrivers = new Vector<Object>();
 
     private ProxySelector defaultProxySelector;
 
+    @SuppressWarnings("unchecked")
     public VestigeSystem(final VestigeSystem previousSystem) {
         urlStreamHandlerByProtocol = new HashMap<String, URLStreamHandler>();
         properties = new Properties();
@@ -65,7 +78,12 @@ public class VestigeSystem {
             err = System.err;
             in = System.in;
             properties.putAll(System.getProperties());
-            defaultProxySelector = ProxySelector.getDefault();
+            try {
+                defaultProxySelector = ((StackedHandler<ProxySelector>) ProxySelector.getDefault()).getNextHandler();
+            } catch (ClassCastException e) {
+                defaultProxySelector = null;
+                LOGGER.error("ProxySelector.setDefault has been called in an application", e);
+            }
         } else {
             urlStreamHandlerByProtocol.putAll(previousSystem.urlStreamHandlerByProtocol);
             urlStreamHandlerFactory = previousSystem.urlStreamHandlerFactory;
@@ -73,7 +91,8 @@ public class VestigeSystem {
             err = previousSystem.err;
             in = previousSystem.in;
             properties.putAll(previousSystem.properties);
-            driverVector.addAll(previousSystem.driverVector);
+            writeDrivers.addAll(previousSystem.writeDrivers);
+            registeredDrivers.addAll(previousSystem.registeredDrivers);
             defaultProxySelector = previousSystem.defaultProxySelector;
         }
     }
@@ -84,6 +103,16 @@ public class VestigeSystem {
             return null;
         }
         return linkedList.getFirst();
+    }
+
+    private static List<VestigeSystemListener> vestigeSystemListeners = new ArrayList<VestigeSystemListener>();
+
+    public static void addVestigeSystemListeners(final VestigeSystemListener vestigeSystemListener) {
+        vestigeSystemListeners.add(vestigeSystemListener);
+    }
+
+    public static void removeVestigeSystemListeners(final VestigeSystemListener vestigeSystemListener) {
+        vestigeSystemListeners.remove(vestigeSystemListener);
     }
 
     public static void pushSystem(VestigeSystem vestigeSystem) {
@@ -100,18 +129,28 @@ public class VestigeSystem {
             vestigeSystem = new VestigeSystem(previousSystem);
         }
         linkedList.addFirst(vestigeSystem);
+        for (VestigeSystemListener vestigeSystemListener : vestigeSystemListeners) {
+            vestigeSystemListener.systemPushed(vestigeSystem);
+        }
     }
 
     public static void popSystem() {
         LinkedList<VestigeSystem> linkedList = vestigeSystems.get();
-        linkedList.removeFirst();
+        VestigeSystem removeFirst = linkedList.removeFirst();
         if (linkedList.size() == 0) {
             vestigeSystems.remove();
         }
+        for (VestigeSystemListener vestigeSystemListener : vestigeSystemListeners) {
+            vestigeSystemListener.systemPoped(removeFirst);
+        }
     }
 
-    public Vector<Object> getDriverVector() {
-        return driverVector;
+    public Vector<Object> getWriteDrivers() {
+        return writeDrivers;
+    }
+
+    public CopyOnWriteArrayList<Object> getRegisteredDrivers() {
+        return registeredDrivers;
     }
 
     public Map<String, ContentHandler> getURLConnectionContentHandlerByMime() {

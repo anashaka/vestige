@@ -18,6 +18,7 @@
 package com.googlecode.vestige.platform.system;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.net.ProxySelector;
 import java.net.URL;
 import java.net.URLConnection;
@@ -25,6 +26,7 @@ import java.sql.DriverManager;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +43,27 @@ import com.googlecode.vestige.platform.logger.SLF4JPrintStream;
 public abstract class VestigeSystemAction {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(VestigeSystemAction.class);
+
+    private static void unsetFinalField(final Field field, final Callable<Void> callable) throws Exception {
+        Field modifiersField = Field.class.getDeclaredField("modifiers");
+        boolean accessible = modifiersField.isAccessible();
+        if (!accessible) {
+            modifiersField.setAccessible(true);
+        }
+        try {
+            int modifiers = field.getModifiers();
+            modifiersField.setInt(field, modifiers & ~Modifier.FINAL);
+            try {
+                callable.call();
+            } finally {
+                modifiersField.setInt(field, modifiers);
+            }
+        } finally {
+            if (!accessible) {
+                modifiersField.setAccessible(false);
+            }
+        }
+    }
 
     public void execute() throws Throwable {
         if (VestigeSystem.getSystem() != null) {
@@ -98,10 +121,24 @@ public abstract class VestigeSystemAction {
         }
 
         Map<String, StackedHandler<?>> driverManagerFields = new HashMap<String, StackedHandler<?>>();
-        driverManagerFields.put("readDrivers", new VestigeDriverVector());
-        driverManagerFields.put("writeDrivers", new VestigeDriverVector());
+        VestigeDriverVector writeDrivers = new VestigeDriverVector();
+        VestigeDriverVector readDrivers = new VestigeDriverVector();
+        writeDrivers.setReadDrivers(readDrivers);
+        driverManagerFields.put("writeDrivers", writeDrivers);
+        driverManagerFields.put("readDrivers", readDrivers);
         try {
-            installFields(DriverManager.class, driverManagerFields);
+            try {
+                installFields(DriverManager.class, driverManagerFields);
+                VestigeSystem.addVestigeSystemListeners(writeDrivers);
+            } catch (NoSuchFieldException e) {
+                LOGGER.trace("Missing field try another", e);
+                writeDrivers = null;
+                readDrivers = null;
+                // JDK 7
+                driverManagerFields.clear();
+                driverManagerFields.put("registeredDrivers", new VestigeDriversCopyOnWriteArrayList());
+                installFields(DriverManager.class, driverManagerFields);
+            }
         } catch (Exception e) {
             LOGGER.warn("Could not intercept DriverManager.registerDriver", e);
             driverManagerFields = null;
@@ -110,6 +147,10 @@ public abstract class VestigeSystemAction {
             vestigeSystemRun();
         } finally {
             if (driverManagerFields != null) {
+                if (writeDrivers != null) {
+                    driverManagerFields.put("readDrivers", writeDrivers.getReadDrivers());
+                    VestigeSystem.removeVestigeSystemListeners(writeDrivers);
+                }
                 uninstallFields(DriverManager.class, driverManagerFields);
             }
 
@@ -134,17 +175,28 @@ public abstract class VestigeSystemAction {
     }
 
     @SuppressWarnings("unchecked")
-    public void uninstallFields(final Class<?> clazz, final Map<String, StackedHandler<?>> valueByFieldName) throws SecurityException, NoSuchFieldException,
-            IllegalArgumentException, IllegalAccessException {
+    public void uninstallFields(final Class<?> clazz, final Map<String, StackedHandler<?>> valueByFieldName) throws Exception {
         synchronized (clazz) {
-            for (Entry<String, StackedHandler<?>> entry : valueByFieldName.entrySet()) {
-                Field declaredField = clazz.getDeclaredField(entry.getKey());
-                boolean accessible = declaredField.isAccessible();
+            for (final Entry<String, StackedHandler<?>> entry : valueByFieldName.entrySet()) {
+                final Field declaredField = clazz.getDeclaredField(entry.getKey());
+                final boolean accessible = declaredField.isAccessible();
                 if (!accessible) {
                     declaredField.setAccessible(true);
                 }
                 try {
-                    declaredField.set(null, StackedHandlerUtils.uninstallStackedHandler((StackedHandler<Object>) entry.getValue(), declaredField.get(null)));
+                    Callable<Void> callable = new Callable<Void>() {
+
+                        @Override
+                        public Void call() throws Exception {
+                            declaredField.set(null, StackedHandlerUtils.uninstallStackedHandler((StackedHandler<Object>) entry.getValue(), declaredField.get(null)));
+                            return null;
+                        }
+                    };
+                    if (Modifier.isFinal(declaredField.getModifiers())) {
+                        unsetFinalField(declaredField, callable);
+                    } else {
+                        callable.call();
+                    }
                 } finally {
                     if (!accessible) {
                         declaredField.setAccessible(false);
@@ -155,19 +207,30 @@ public abstract class VestigeSystemAction {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public void installFields(final Class<?> clazz, final Map<String, StackedHandler<?>> valueByFieldName) throws SecurityException, NoSuchFieldException,
-            IllegalArgumentException, IllegalAccessException {
+    public void installFields(final Class<?> clazz, final Map<String, StackedHandler<?>> valueByFieldName) throws Exception {
         synchronized (clazz) {
-            for (Entry<String, StackedHandler<?>> entry : valueByFieldName.entrySet()) {
-                Field declaredField = clazz.getDeclaredField(entry.getKey());
-                boolean accessible = declaredField.isAccessible();
+            for (final Entry<String, StackedHandler<?>> entry : valueByFieldName.entrySet()) {
+                final Field declaredField = clazz.getDeclaredField(entry.getKey());
+                final boolean accessible = declaredField.isAccessible();
                 if (!accessible) {
                     declaredField.setAccessible(true);
                 }
                 try {
-                    StackedHandler value = entry.getValue();
-                    value.setNextHandler(declaredField.get(null));
-                    declaredField.set(null, value);
+                    Callable<Void> callable = new Callable<Void>() {
+
+                        @Override
+                        public Void call() throws Exception {
+                            StackedHandler value = entry.getValue();
+                            value.setNextHandler(declaredField.get(null));
+                            declaredField.set(null, value);
+                            return null;
+                        }
+                    };
+                    if (Modifier.isFinal(declaredField.getModifiers())) {
+                        unsetFinalField(declaredField, callable);
+                    } else {
+                        callable.call();
+                    }
                 } finally {
                     if (!accessible) {
                         declaredField.setAccessible(false);

@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.googlecode.vestige.platform.system.PublicVestigeSystem;
 import com.googlecode.vestige.platform.system.VestigeSystem;
 
 /**
@@ -36,7 +37,7 @@ public class VestigeSystemInvocationHandler implements InvocationHandler {
 
     private Map<String, Map<List<Class<?>>, Method>> delegateMethods = new HashMap<String, Map<List<Class<?>>, Method>>();
 
-    private VestigeSystem vestigeSystem;
+    private PublicVestigeSystem vestigeSystem;
 
     public void add(final Method method) {
         if (Modifier.isStatic(method.getModifiers())) {
@@ -51,12 +52,9 @@ public class VestigeSystemInvocationHandler implements InvocationHandler {
         map.put(Arrays.asList(method.getParameterTypes()), method);
     }
 
-    public VestigeSystemInvocationHandler(final VestigeSystem vestigeSystem) {
+    public VestigeSystemInvocationHandler(final PublicVestigeSystem vestigeSystem) {
         this.vestigeSystem = vestigeSystem;
-        for (Method method : VestigeSystem.class.getMethods()) {
-            if (Modifier.isStatic(method.getModifiers())) {
-                continue;
-            }
+        for (Method method : PublicVestigeSystem.class.getMethods()) {
             String methodName = method.getName();
             Map<List<Class<?>>, Method> map = delegateMethods.get(methodName);
             if (map == null) {
