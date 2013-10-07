@@ -17,6 +17,8 @@
 
 package com.googlecode.vestige.platform.system;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 import com.googlecode.vestige.core.StackedHandler;
@@ -24,11 +26,33 @@ import com.googlecode.vestige.core.StackedHandler;
 /**
  * @author Gael Lalire
  */
-public class VestigeDriverVector extends Vector<Object> implements StackedHandler<Vector<Object>> {
+public class VestigeDriverVector extends Vector<Object> implements StackedHandler<Vector<Object>>, VestigeSystemListener {
 
     private static final long serialVersionUID = -8974921954435686686L;
 
     private Vector<Object> nextHandler;
+
+    private VestigeDriverVector readDrivers;
+
+    private Map<VestigeSystem, Vector<Object>> readDriversBySystem;
+
+    public VestigeDriverVector() {
+        readDriversBySystem = new HashMap<VestigeSystem, Vector<Object>>();
+    }
+
+    public VestigeDriverVector(final VestigeDriverVector writeDrivers) {
+        // this instance will be new value of readDrivers field
+        readDriversBySystem = new HashMap<VestigeSystem, Vector<Object>>(writeDrivers.readDriversBySystem);
+        nextHandler = writeDrivers.readDrivers.nextHandler;
+    }
+
+    public void setReadDrivers(final VestigeDriverVector readDrivers) {
+        this.readDrivers = readDrivers;
+    }
+
+    public VestigeDriverVector getReadDrivers() {
+        return readDrivers;
+    }
 
     @Override
     public Vector<Object> getNextHandler() {
@@ -40,13 +64,27 @@ public class VestigeDriverVector extends Vector<Object> implements StackedHandle
         this.nextHandler = nextHandler;
     }
 
+    @SuppressWarnings("unchecked")
+    public Vector<Object> getDriverVector(final VestigeSystem system) {
+        if (readDrivers == null) {
+            Vector<Object> vector = readDriversBySystem.get(system);
+            if (vector == null) {
+                // first read
+                vector = (Vector<Object>) system.getWriteDrivers().clone();
+                readDriversBySystem.put(system, vector);
+            }
+            return vector;
+        }
+        return system.getWriteDrivers();
+    }
+
     @Override
     public Object elementAt(final int index) {
         VestigeSystem system = VestigeSystem.getSystem();
         if (system == null) {
             return super.elementAt(index);
         }
-        return system.getDriverVector().elementAt(index);
+        return getDriverVector(system).elementAt(index);
     }
 
     @Override
@@ -55,7 +93,7 @@ public class VestigeDriverVector extends Vector<Object> implements StackedHandle
         if (system == null) {
             super.removeElementAt(index);
         } else {
-            system.getDriverVector().removeElementAt(index);
+            getDriverVector(system).removeElementAt(index);
         }
     }
 
@@ -65,7 +103,7 @@ public class VestigeDriverVector extends Vector<Object> implements StackedHandle
         if (system == null) {
             super.addElement(obj);
         } else {
-            system.getDriverVector().addElement(obj);
+            getDriverVector(system).addElement(obj);
         }
     }
 
@@ -75,7 +113,29 @@ public class VestigeDriverVector extends Vector<Object> implements StackedHandle
         if (system == null) {
             return super.size();
         }
-        return system.getDriverVector().size();
+        return getDriverVector(system).size();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Object clone() {
+        VestigeSystem system = VestigeSystem.getSystem();
+        if (system != null) {
+            // change in current (ie writeDrivers) so if another system ask for a clone, this system can continue to access its readDrivers
+            readDriversBySystem.put(system, (Vector<Object>) system.getWriteDrivers().clone());
+        }
+        readDrivers = new VestigeDriverVector(this);
+        return readDrivers;
+    }
+
+    @Override
+    public void systemPushed(final VestigeSystem system) {
+    }
+
+    @Override
+    public void systemPoped(final VestigeSystem system) {
+        readDriversBySystem.remove(system);
+        readDrivers.readDriversBySystem.remove(system);
     }
 
 }
