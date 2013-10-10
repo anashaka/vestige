@@ -28,8 +28,9 @@ public class SLF4JPrintStream extends PrintStream implements StackedHandler<Prin
 
     private PrintStream nextHandler;
 
-    public SLF4JPrintStream(final boolean info) {
+    public SLF4JPrintStream(final boolean info, final PrintStream nextHandler) {
         super(new SLF4JOutputStream(info));
+        this.nextHandler = nextHandler;
     }
 
     public PrintStream getNextHandler() {

@@ -98,15 +98,28 @@ public class JVMEnhancer {
             Class<?> providersClass = vestigeExecutor.classForName(systemClassLoader, "sun.security.jca.Providers");
             Object providerList = vestigeExecutor.invoke(systemClassLoader, providersClass.getMethod("getProviderList"), null);
             Class<?> providerListClass = vestigeExecutor.classForName(systemClassLoader, "sun.security.jca.ProviderList");
-            vestigeExecutor.invoke(systemClassLoader, providerListClass.getMethod("getService", String.class, String.class),
-                    providerList, "MessageDigest", "SHA");
+            vestigeExecutor.invoke(systemClassLoader, providerListClass.getMethod("getService", String.class, String.class), providerList, "MessageDigest", "SHA");
+        } catch (Exception e) {
+            // ignore
+        }
+        try {
+            // sun.misc.GC create thread (with the context classloader of parent
+            // thread)
+            Class<?> gcClass = vestigeExecutor.classForName(systemClassLoader, "sun.misc.GC");
+            vestigeExecutor.invoke(systemClassLoader, gcClass.getMethod("requestLatency", long.class), null, Long.valueOf(Long.MAX_VALUE - 1));
+        } catch (Exception e) {
+            // ignore
+        }
+        try {
+            // com.sun.jndi.ldap.LdapPoolManager may create thread (with the context
+            // classloader of parent thread)
+            vestigeExecutor.classForName(systemClassLoader, "com.sun.jndi.ldap.LdapPoolManager");
         } catch (Exception e) {
             // ignore
         }
         thread.interrupt();
         thread.join();
     }
-
 
     public static void main(final String[] args) throws Exception {
         if (args.length == 0) {

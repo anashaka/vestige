@@ -39,7 +39,7 @@ import com.googlecode.vestige.platform.DefaultVestigePlatform;
 import com.googlecode.vestige.platform.VestigePlatform;
 import com.googlecode.vestige.platform.logger.SLF4JLoggerFactoryAdapter;
 import com.googlecode.vestige.platform.logger.SLF4JPrintStream;
-import com.googlecode.vestige.platform.system.VestigeProperties;
+import com.googlecode.vestige.platform.system.interceptor.VestigeProperties;
 
 /**
  * @author Gael Lalire
@@ -62,8 +62,7 @@ public class MicroEditionVestige {
 
     private ApplicationDescriptorFactory applicationDescriptorFactory;
 
-    public MicroEditionVestige(final File homeFile, final VestigeExecutor vestigeExecutor, final VestigePlatform vestigePlatform)
-            throws IOException {
+    public MicroEditionVestige(final File homeFile, final VestigeExecutor vestigeExecutor, final VestigePlatform vestigePlatform) throws IOException {
         this.vestigeExecutor = vestigeExecutor;
         this.vestigePlatform = vestigePlatform;
 
@@ -143,16 +142,21 @@ public class MicroEditionVestige {
             // FIXME simple logger must not be intercepted
             // avoid direct log
             synchronized (System.class) {
-                SLF4JPrintStream out = new SLF4JPrintStream(true);
-                out.setNextHandler(System.out);
+                SLF4JPrintStream out = new SLF4JPrintStream(true, System.out);
                 System.setOut(out);
-                SLF4JPrintStream err = new SLF4JPrintStream(false);
-                err.setNextHandler(System.err);
+                SLF4JPrintStream err = new SLF4JPrintStream(false, System.err);
                 System.setErr(err);
             }
 
             Properties properties = System.getProperties();
-            VestigeProperties vestigeProperties = new VestigeProperties(System.getProperties());
+            VestigeProperties vestigeProperties = new VestigeProperties(System.getProperties()) {
+                private static final long serialVersionUID = 5629777990474462598L;
+
+                @Override
+                public Properties getProperties() {
+                    return null;
+                }
+            };
             System.setProperties(vestigeProperties);
 
             VestigeExecutor vestigeExecutor = new VestigeExecutor();

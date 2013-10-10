@@ -24,36 +24,29 @@ import java.net.ContentHandlerFactory;
 import java.net.ProxySelector;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Collections;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
+import java.util.WeakHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.googlecode.vestige.core.StackedHandler;
 
 /**
  * @author Gael Lalire
  */
 public class VestigeSystem implements PublicVestigeSystem {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(VestigeSystem.class);
+    private static ThreadLocal<VestigeSystemHolder> vestigeSystems = new InheritableThreadLocal<VestigeSystemHolder>();
 
-    private static ThreadLocal<LinkedList<VestigeSystem>> vestigeSystems = new InheritableThreadLocal<LinkedList<VestigeSystem>>();
 
-    private Map<String, URLStreamHandler> urlStreamHandlerByProtocol = new HashMap<String, URLStreamHandler>();
+    private Hashtable<String, URLStreamHandler> urlStreamHandlerByProtocol;
 
-    private Map<String, ContentHandler> urlConnectionContentHandlerByMime = new HashMap<String, ContentHandler>();
+    private Hashtable<String, ContentHandler> urlConnectionContentHandlerByMime;
 
     private URLStreamHandlerFactory urlStreamHandlerFactory;
 
-    private ContentHandlerFactory contentHandlerFactory;
+    private ContentHandlerFactory urlConnectionContentHandlerFactory;
 
     private PrintStream out;
 
@@ -63,102 +56,111 @@ public class VestigeSystem implements PublicVestigeSystem {
 
     private Properties properties;
 
-    private CopyOnWriteArrayList<Object> registeredDrivers = new CopyOnWriteArrayList<Object>();
+    private CopyOnWriteArrayList<Object> registeredDrivers;
 
-    private Vector<Object> writeDrivers = new Vector<Object>();
+    private Vector<Object> writeDrivers;
+
+    private Map<Object, Vector<Object>> readDrivers;
 
     private ProxySelector defaultProxySelector;
 
+    public VestigeSystem() {
+    }
+
     @SuppressWarnings("unchecked")
     public VestigeSystem(final VestigeSystem previousSystem) {
-        urlStreamHandlerByProtocol = new HashMap<String, URLStreamHandler>();
-        properties = new Properties();
-        if (previousSystem == null) {
-            out = System.out;
-            err = System.err;
-            in = System.in;
-            properties.putAll(System.getProperties());
-            try {
-                defaultProxySelector = ((StackedHandler<ProxySelector>) ProxySelector.getDefault()).getNextHandler();
-            } catch (ClassCastException e) {
-                defaultProxySelector = null;
-                LOGGER.error("ProxySelector.setDefault has been called in an application", e);
-            }
-        } else {
+        // URL
+        if (previousSystem.urlStreamHandlerByProtocol != null) {
+            urlStreamHandlerByProtocol = new Hashtable<String, URLStreamHandler>();
             urlStreamHandlerByProtocol.putAll(previousSystem.urlStreamHandlerByProtocol);
-            urlStreamHandlerFactory = previousSystem.urlStreamHandlerFactory;
-            out = previousSystem.out;
-            err = previousSystem.err;
-            in = previousSystem.in;
-            properties.putAll(previousSystem.properties);
-            writeDrivers.addAll(previousSystem.writeDrivers);
-            registeredDrivers.addAll(previousSystem.registeredDrivers);
-            defaultProxySelector = previousSystem.defaultProxySelector;
         }
+        urlStreamHandlerFactory = previousSystem.urlStreamHandlerFactory;
+        // URLConnection
+        if (previousSystem.urlConnectionContentHandlerByMime != null) {
+            urlConnectionContentHandlerByMime = new Hashtable<String, ContentHandler>();
+            urlConnectionContentHandlerByMime.putAll(previousSystem.urlConnectionContentHandlerByMime);
+        }
+        urlConnectionContentHandlerFactory = previousSystem.urlConnectionContentHandlerFactory;
+        // System
+        out = previousSystem.out;
+        err = previousSystem.err;
+        in = previousSystem.in;
+        if (previousSystem.properties != null) {
+            Properties defaults = null;
+            for (Object opropertyName : Collections.list(previousSystem.properties.propertyNames())) {
+                if (!previousSystem.properties.containsKey(opropertyName)) {
+                    if (defaults == null) {
+                        defaults = new Properties();
+                    }
+                    if (opropertyName instanceof String) {
+                        String propertyName = (String) opropertyName;
+                        defaults.put(propertyName, previousSystem.properties.getProperty(propertyName));
+                    }
+                }
+            }
+            properties = new Properties(defaults);
+            properties.putAll(previousSystem.properties);
+        }
+        // DriverManager
+        if (previousSystem.writeDrivers != null) {
+            writeDrivers = (Vector<Object>) previousSystem.writeDrivers.clone();
+            readDrivers = new WeakHashMap<Object, Vector<Object>>();
+            readDrivers.put(this, (Vector<Object>) writeDrivers.clone());
+        }
+        if (previousSystem.registeredDrivers != null) {
+            registeredDrivers = new CopyOnWriteArrayList<Object>(previousSystem.registeredDrivers);
+        }
+        // ProxySelector
+        defaultProxySelector = previousSystem.defaultProxySelector;
+    }
+
+    private static VestigeSystem fallbackVestigeSystem;
+
+    public static void setFallbackVestigeSystem(final VestigeSystem fallbackVestigeSystem) {
+        VestigeSystem.fallbackVestigeSystem = fallbackVestigeSystem;
     }
 
     public static VestigeSystem getSystem() {
-        LinkedList<VestigeSystem> linkedList = vestigeSystems.get();
-        if (linkedList == null) {
-            return null;
+        VestigeSystemHolder vestigeSystemHolder = vestigeSystems.get();
+        if (vestigeSystemHolder == null) {
+            return fallbackVestigeSystem;
         }
-        return linkedList.getFirst();
+        return vestigeSystemHolder.getVestigeSystem();
     }
 
-    private static List<VestigeSystemListener> vestigeSystemListeners = new ArrayList<VestigeSystemListener>();
-
-    public static void addVestigeSystemListeners(final VestigeSystemListener vestigeSystemListener) {
-        vestigeSystemListeners.add(vestigeSystemListener);
-    }
-
-    public static void removeVestigeSystemListeners(final VestigeSystemListener vestigeSystemListener) {
-        vestigeSystemListeners.remove(vestigeSystemListener);
-    }
-
-    public static void pushSystem(VestigeSystem vestigeSystem) {
-        LinkedList<VestigeSystem> linkedList = vestigeSystems.get();
-        if (linkedList == null) {
-            linkedList = new LinkedList<VestigeSystem>();
-            vestigeSystems.set(linkedList);
-        }
-        if (vestigeSystem == null) {
-            VestigeSystem previousSystem = null;
-            if (linkedList.size() != 0) {
-                previousSystem = linkedList.getFirst();
-            }
-            vestigeSystem = new VestigeSystem(previousSystem);
-        }
-        linkedList.addFirst(vestigeSystem);
-        for (VestigeSystemListener vestigeSystemListener : vestigeSystemListeners) {
-            vestigeSystemListener.systemPushed(vestigeSystem);
-        }
+    public static void pushSystem(final VestigeSystem vestigeSystem) {
+        vestigeSystems.set(new VestigeSystemHolder(vestigeSystem, vestigeSystems.get()));
     }
 
     public static void popSystem() {
-        LinkedList<VestigeSystem> linkedList = vestigeSystems.get();
-        VestigeSystem removeFirst = linkedList.removeFirst();
-        if (linkedList.size() == 0) {
+        VestigeSystemHolder vestigeSystemHolder = vestigeSystems.get();
+        VestigeSystemHolder previous = vestigeSystemHolder.getPrevious();
+        if (previous == null) {
             vestigeSystems.remove();
+        } else {
+            vestigeSystems.set(previous);
         }
-        for (VestigeSystemListener vestigeSystemListener : vestigeSystemListeners) {
-            vestigeSystemListener.systemPoped(removeFirst);
-        }
+        vestigeSystemHolder.unset();
+    }
+
+    public void setWriteDrivers(final Vector<Object> writeDrivers) {
+        this.writeDrivers = writeDrivers;
     }
 
     public Vector<Object> getWriteDrivers() {
         return writeDrivers;
     }
 
+    public void setReadDrivers(final Map<Object, Vector<Object>> readDrivers) {
+        this.readDrivers = readDrivers;
+    }
+
+    public Map<Object, Vector<Object>> getReadDrivers() {
+        return readDrivers;
+    }
+
     public CopyOnWriteArrayList<Object> getRegisteredDrivers() {
         return registeredDrivers;
-    }
-
-    public Map<String, ContentHandler> getURLConnectionContentHandlerByMime() {
-        return urlConnectionContentHandlerByMime;
-    }
-
-    public Map<String, URLStreamHandler> getURLStreamHandlerByProtocol() {
-        return urlStreamHandlerByProtocol;
     }
 
     public URLStreamHandlerFactory getURLStreamHandlerFactory() {
@@ -182,11 +184,11 @@ public class VestigeSystem implements PublicVestigeSystem {
     }
 
     public ContentHandlerFactory getURLConnectionContentHandlerFactory() {
-        return contentHandlerFactory;
+        return urlConnectionContentHandlerFactory;
     }
 
     public void setURLConnectionContentHandlerFactory(final ContentHandlerFactory contentHandlerFactory) {
-        this.contentHandlerFactory = contentHandlerFactory;
+        this.urlConnectionContentHandlerFactory = contentHandlerFactory;
     }
 
     public void setURLStreamHandlerFactory(final URLStreamHandlerFactory urlStreamHandlerFactory) {
@@ -218,6 +220,26 @@ public class VestigeSystem implements PublicVestigeSystem {
 
     public void setDefaultProxySelector(final ProxySelector defaultProxySelector) {
         this.defaultProxySelector = defaultProxySelector;
+    }
+
+    public void setRegisteredDrivers(final CopyOnWriteArrayList<Object> registeredDrivers) {
+        this.registeredDrivers = registeredDrivers;
+    }
+
+    public Hashtable<String, URLStreamHandler> getURLStreamHandlerByProtocol() {
+        return urlStreamHandlerByProtocol;
+    }
+
+    public void setURLStreamHandlerByProtocol(final Hashtable<String, URLStreamHandler> urlStreamHandlerByProtocol) {
+        this.urlStreamHandlerByProtocol = urlStreamHandlerByProtocol;
+    }
+
+    public Hashtable<String, ContentHandler> getURLConnectionContentHandlerByMime() {
+        return urlConnectionContentHandlerByMime;
+    }
+
+    public void setURLConnectionContentHandlerByMime(final Hashtable<String, ContentHandler> urlConnectionContentHandlerByMime) {
+        this.urlConnectionContentHandlerByMime = urlConnectionContentHandlerByMime;
     }
 
 }

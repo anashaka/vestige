@@ -15,31 +15,32 @@
  * along with Vestige.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.googlecode.vestige.platform.system;
+package com.googlecode.vestige.platform.system.interceptor;
 
-import java.net.URLStreamHandler;
-import java.net.URLStreamHandlerFactory;
+import java.net.ContentHandler;
+import java.net.ContentHandlerFactory;
 
 import com.googlecode.vestige.core.StackedHandler;
 
 /**
  * @author Gael Lalire
  */
-public class VestigeURLStreamHandlerFactory implements URLStreamHandlerFactory, StackedHandler<URLStreamHandlerFactory> {
+public class VestigeURLConnectionContentHandlerFactory implements ContentHandlerFactory, StackedHandler<ContentHandlerFactory> {
 
-    private URLStreamHandlerFactory nextHandler;
+    private ContentHandlerFactory nextHandler;
 
-    public URLStreamHandler createURLStreamHandler(final String protocol) {
+    @Override
+    public ContentHandler createContentHandler(final String mimetype) {
         return null;
     }
 
     @Override
-    public URLStreamHandlerFactory getNextHandler() {
+    public ContentHandlerFactory getNextHandler() {
         return nextHandler;
     }
 
     @Override
-    public void setNextHandler(final URLStreamHandlerFactory nextHandler) {
+    public void setNextHandler(final ContentHandlerFactory nextHandler) {
         this.nextHandler = nextHandler;
     }
 

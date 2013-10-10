@@ -17,6 +17,8 @@
 
 package com.googlecode.vestige.platform.system;
 
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.ProxySelector;
@@ -26,7 +28,11 @@ import java.sql.DriverManager;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Vector;
+import java.util.WeakHashMap;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +42,16 @@ import com.googlecode.vestige.core.StackedHandlerUtils;
 import com.googlecode.vestige.core.logger.VestigeLoggerFactory;
 import com.googlecode.vestige.platform.logger.SLF4JLoggerFactoryAdapter;
 import com.googlecode.vestige.platform.logger.SLF4JPrintStream;
+import com.googlecode.vestige.platform.system.interceptor.VestigeCopyOnWriteArrayList;
+import com.googlecode.vestige.platform.system.interceptor.VestigeDriverVector;
+import com.googlecode.vestige.platform.system.interceptor.VestigeInputStream;
+import com.googlecode.vestige.platform.system.interceptor.VestigePrintStream;
+import com.googlecode.vestige.platform.system.interceptor.VestigeProperties;
+import com.googlecode.vestige.platform.system.interceptor.VestigeProxySelector;
+import com.googlecode.vestige.platform.system.interceptor.VestigeURLConnectionContentHandlerFactory;
+import com.googlecode.vestige.platform.system.interceptor.VestigeURLConnectionHandlersHashTable;
+import com.googlecode.vestige.platform.system.interceptor.VestigeURLHandlersHashTable;
+import com.googlecode.vestige.platform.system.interceptor.VestigeURLStreamHandlerFactory;
 
 /**
  * @author Gael Lalire
@@ -65,7 +81,7 @@ public abstract class VestigeSystemAction {
         }
     }
 
-    public void execute() throws Throwable {
+    public void execute() throws Exception {
         if (VestigeSystem.getSystem() != null) {
             // we are already protected
             vestigeSystemRun();
@@ -78,43 +94,92 @@ public abstract class VestigeSystemAction {
             VestigeLoggerFactory.setVestigeLoggerFactory(factory);
         }
 
+        VestigeSystem vestigeSystem = new VestigeSystem();
+        VestigeSystem.setFallbackVestigeSystem(vestigeSystem);
+
         VestigeProperties vestigeProperties;
-        SLF4JPrintStream out;
-        SLF4JPrintStream err;
+        VestigePrintStream out;
+        VestigePrintStream err;
+        VestigeInputStream in;
         // avoid direct log
         synchronized (System.class) {
-            out = new SLF4JPrintStream(true);
-            out.setNextHandler(System.out);
+            out = new VestigePrintStream(new SLF4JPrintStream(true, System.out)) {
+
+                @Override
+                public PrintStream getPrintStream() {
+                    return VestigeSystem.getSystem().getOut();
+                }
+            };
+            vestigeSystem.setOut(out.getNextHandler());
             System.setOut(out);
-            err = new SLF4JPrintStream(false);
-            err.setNextHandler(System.err);
+
+            err = new VestigePrintStream(new SLF4JPrintStream(false, System.err)) {
+
+                @Override
+                public PrintStream getPrintStream() {
+                    return VestigeSystem.getSystem().getErr();
+                }
+            };
+            vestigeSystem.setErr(err.getNextHandler());
             System.setErr(err);
-            vestigeProperties = new VestigeProperties(System.getProperties());
+
+            in = new VestigeInputStream(System.in) {
+
+                @Override
+                public InputStream getInputStream() {
+                    return VestigeSystem.getSystem().getIn();
+                }
+            };
+            vestigeSystem.setIn(in.getNextHandler());
+            System.setIn(in);
+
+            vestigeProperties = new VestigeProperties(System.getProperties()) {
+                private static final long serialVersionUID = 5951701845063821073L;
+
+                @Override
+                public Properties getProperties() {
+                    return VestigeSystem.getSystem().getProperties();
+                }
+            };
+            vestigeSystem.setProperties(vestigeProperties.getNextHandler());
             System.setProperties(vestigeProperties);
         }
 
         VestigeProxySelector proxySelector;
         synchronized (ProxySelector.class) {
-            proxySelector = new VestigeProxySelector();
-            proxySelector.setNextHandler(ProxySelector.getDefault());
+            proxySelector = new VestigeProxySelector(ProxySelector.getDefault()) {
+                @Override
+                public ProxySelector getProxySelector() {
+                    return VestigeSystem.getSystem().getDefaultProxySelector();
+                }
+            };
+            vestigeSystem.setDefaultProxySelector(proxySelector.getNextHandler());
             ProxySelector.setDefault(proxySelector);
         }
 
         Map<String, StackedHandler<?>> urlFields = new HashMap<String, StackedHandler<?>>();
-        urlFields.put("factory", new VestigeURLStreamHandlerFactory());
-        urlFields.put("handlers", new VestigeURLHandlersHashTable());
+        VestigeURLStreamHandlerFactory vestigeURLStreamHandlerFactory = new VestigeURLStreamHandlerFactory();
+        urlFields.put("factory", vestigeURLStreamHandlerFactory);
+        VestigeURLHandlersHashTable vestigeURLHandlersHashTable = new VestigeURLHandlersHashTable();
+        urlFields.put("handlers", vestigeURLHandlersHashTable);
         try {
             installFields(URL.class, urlFields);
+            vestigeSystem.setURLStreamHandlerFactory(vestigeURLStreamHandlerFactory.getNextHandler());
+            vestigeSystem.setURLStreamHandlerByProtocol(vestigeURLHandlersHashTable.getNextHandler());
         } catch (Exception e) {
             LOGGER.warn("Could not intercept URL.setURLStreamHandlerFactory", e);
             urlFields = null;
         }
 
         Map<String, StackedHandler<?>> urlConnectionFields = new HashMap<String, StackedHandler<?>>();
-        urlConnectionFields.put("factory", new VestigeURLConnectionContentHandlerFactory());
-        urlConnectionFields.put("handlers", new VestigeURLConnectionHandlersHashTable());
+        VestigeURLConnectionContentHandlerFactory vestigeURLConnectionContentHandlerFactory = new VestigeURLConnectionContentHandlerFactory();
+        urlConnectionFields.put("factory", vestigeURLConnectionContentHandlerFactory);
+        VestigeURLConnectionHandlersHashTable vestigeURLConnectionHandlersHashTable = new VestigeURLConnectionHandlersHashTable();
+        urlConnectionFields.put("handlers", vestigeURLConnectionHandlersHashTable);
         try {
             installFields(URLConnection.class, urlConnectionFields);
+            vestigeSystem.setURLConnectionContentHandlerFactory(vestigeURLConnectionContentHandlerFactory.getNextHandler());
+            vestigeSystem.setURLConnectionContentHandlerByMime(vestigeURLConnectionHandlersHashTable.getNextHandler());
         } catch (Exception e) {
             LOGGER.warn("Could not intercept URLConnection.setContentHandlerFactory", e);
             urlFields = null;
@@ -122,22 +187,33 @@ public abstract class VestigeSystemAction {
 
         Map<String, StackedHandler<?>> driverManagerFields = new HashMap<String, StackedHandler<?>>();
         VestigeDriverVector writeDrivers = new VestigeDriverVector();
-        VestigeDriverVector readDrivers = new VestigeDriverVector();
+        VestigeDriverVector readDrivers = new VestigeDriverVector(null, new WeakHashMap<VestigeSystem, Object>());
         writeDrivers.setReadDrivers(readDrivers);
         driverManagerFields.put("writeDrivers", writeDrivers);
         driverManagerFields.put("readDrivers", readDrivers);
         try {
             try {
                 installFields(DriverManager.class, driverManagerFields);
-                VestigeSystem.addVestigeSystemListeners(writeDrivers);
+                vestigeSystem.setWriteDrivers(writeDrivers.getNextHandler());
+                vestigeSystem.setReadDrivers(new WeakHashMap<Object, Vector<Object>>());
+                vestigeSystem.getReadDrivers().put(vestigeSystem, readDrivers.getNextHandler());
             } catch (NoSuchFieldException e) {
                 LOGGER.trace("Missing field try another", e);
                 writeDrivers = null;
                 readDrivers = null;
                 // JDK 7
                 driverManagerFields.clear();
-                driverManagerFields.put("registeredDrivers", new VestigeDriversCopyOnWriteArrayList());
+                VestigeCopyOnWriteArrayList vestigeDriversCopyOnWriteArrayList = new VestigeCopyOnWriteArrayList(null) {
+                    private static final long serialVersionUID = -8739537725123134572L;
+
+                    @Override
+                    public CopyOnWriteArrayList<Object> getCopyOnWriteArrayList() {
+                        return VestigeSystem.getSystem().getRegisteredDrivers();
+                    }
+                };
+                driverManagerFields.put("registeredDrivers", vestigeDriversCopyOnWriteArrayList);
                 installFields(DriverManager.class, driverManagerFields);
+                vestigeSystem.setRegisteredDrivers(vestigeDriversCopyOnWriteArrayList.getNextHandler());
             }
         } catch (Exception e) {
             LOGGER.warn("Could not intercept DriverManager.registerDriver", e);
@@ -147,11 +223,13 @@ public abstract class VestigeSystemAction {
             vestigeSystemRun();
         } finally {
             if (driverManagerFields != null) {
-                if (writeDrivers != null) {
-                    driverManagerFields.put("readDrivers", writeDrivers.getReadDrivers());
-                    VestigeSystem.removeVestigeSystemListeners(writeDrivers);
+                synchronized (DriverManager.class) {
+                    if (writeDrivers != null) {
+                        readDrivers = writeDrivers.getReadDrivers();
+                        driverManagerFields.put("readDrivers", readDrivers);
+                    }
+                    uninstallFields(DriverManager.class, driverManagerFields);
                 }
-                uninstallFields(DriverManager.class, driverManagerFields);
             }
 
             if (urlConnectionFields != null) {
@@ -170,6 +248,7 @@ public abstract class VestigeSystemAction {
                 System.setProperties(StackedHandlerUtils.uninstallStackedHandler(vestigeProperties, System.getProperties()));
                 System.setOut(StackedHandlerUtils.uninstallStackedHandler(out, System.out));
                 System.setErr(StackedHandlerUtils.uninstallStackedHandler(err, System.err));
+                System.setIn(StackedHandlerUtils.uninstallStackedHandler(in, System.in));
             }
         }
     }
@@ -240,6 +319,6 @@ public abstract class VestigeSystemAction {
         }
     }
 
-    public abstract void vestigeSystemRun() throws Throwable;
+    public abstract void vestigeSystemRun() throws Exception;
 
 }

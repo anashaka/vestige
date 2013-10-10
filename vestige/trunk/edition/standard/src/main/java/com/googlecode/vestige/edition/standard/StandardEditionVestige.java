@@ -262,7 +262,7 @@ public class StandardEditionVestige {
             new VestigeSystemAction() {
 
                 @Override
-                public void vestigeSystemRun() throws Throwable {
+                public void vestigeSystemRun() throws Exception {
                     String home = args[0];
                     String base = args[1];
                     File homeFile = new File(home).getCanonicalFile();
