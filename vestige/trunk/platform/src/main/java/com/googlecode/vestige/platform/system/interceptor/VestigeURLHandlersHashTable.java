@@ -15,7 +15,7 @@
  * along with Vestige.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.googlecode.vestige.platform.system;
+package com.googlecode.vestige.platform.system.interceptor;
 
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
@@ -23,6 +23,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import com.googlecode.vestige.core.StackedHandler;
+import com.googlecode.vestige.platform.system.VestigeSystem;
 
 /**
  * @author Gael Lalire
@@ -45,6 +46,9 @@ public class VestigeURLHandlersHashTable extends Hashtable<String, URLStreamHand
             URLStreamHandlerFactory urlStreamHandlerFactory = system.getURLStreamHandlerFactory();
             if (urlStreamHandlerFactory != null) {
                 urlStreamHandler = urlStreamHandlerFactory.createURLStreamHandler((String) protocol);
+                if (urlStreamHandler == null) {
+                    return null;
+                }
                 urlStreamHandlerByProtocol.put((String) protocol, urlStreamHandler);
             }
         }

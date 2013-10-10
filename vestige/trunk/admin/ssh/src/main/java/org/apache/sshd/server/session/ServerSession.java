@@ -60,6 +60,7 @@ import org.apache.sshd.server.x11.X11ForwardSupport;
  *
  * @author <a href="mailto:dev@mina.apache.org">Apache MINA SSHD Project</a>
  */
+@SuppressWarnings("rawtypes")
 public class ServerSession extends AbstractSession {
 
     private Future authTimerFuture;

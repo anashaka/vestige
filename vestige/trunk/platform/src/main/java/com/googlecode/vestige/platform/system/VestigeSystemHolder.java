@@ -17,31 +17,31 @@
 
 package com.googlecode.vestige.platform.system;
 
-import java.net.ContentHandler;
-import java.net.ContentHandlerFactory;
-
-import com.googlecode.vestige.core.StackedHandler;
-
 /**
  * @author Gael Lalire
  */
-public class VestigeURLConnectionContentHandlerFactory implements ContentHandlerFactory, StackedHandler<ContentHandlerFactory> {
+public class VestigeSystemHolder {
 
-    private ContentHandlerFactory nextHandler;
+    private VestigeSystem vestigeSystem;
 
-    @Override
-    public ContentHandler createContentHandler(final String mimetype) {
-        return null;
+    private VestigeSystemHolder previous;
+
+    public VestigeSystemHolder(final VestigeSystem vestigeSystem, final VestigeSystemHolder previous) {
+        this.vestigeSystem = vestigeSystem;
+        this.previous = previous;
     }
 
-    @Override
-    public ContentHandlerFactory getNextHandler() {
-        return nextHandler;
+    public VestigeSystem getVestigeSystem() {
+        return vestigeSystem;
     }
 
-    @Override
-    public void setNextHandler(final ContentHandlerFactory nextHandler) {
-        this.nextHandler = nextHandler;
+    public void unset() {
+        this.vestigeSystem = null;
+        this.previous = null;
+    }
+
+    public VestigeSystemHolder getPrevious() {
+        return previous;
     }
 
 }

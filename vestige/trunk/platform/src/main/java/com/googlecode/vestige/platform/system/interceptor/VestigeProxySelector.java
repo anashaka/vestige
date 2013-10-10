@@ -15,7 +15,7 @@
  * along with Vestige.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.googlecode.vestige.platform.system;
+package com.googlecode.vestige.platform.system.interceptor;
 
 import java.io.IOException;
 import java.net.Proxy;
@@ -33,40 +33,36 @@ import com.googlecode.vestige.core.StackedHandler;
 /**
  * @author Gael Lalire
  */
-public class VestigeProxySelector extends ProxySelector implements StackedHandler<ProxySelector> {
+public abstract class VestigeProxySelector extends ProxySelector implements StackedHandler<ProxySelector> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(VestigeProxySelector.class);
 
     private ProxySelector nextHandler;
 
+    public abstract ProxySelector getProxySelector();
+
+    public VestigeProxySelector(final ProxySelector nextHandler) {
+        this.nextHandler = nextHandler;
+    }
+
     @Override
     public List<Proxy> select(final URI uri) {
-        VestigeSystem system = VestigeSystem.getSystem();
-        if (system == null) {
-            ProxySelector nextHandler = this.nextHandler;
-            if (nextHandler == null) {
-                return Collections.singletonList(Proxy.NO_PROXY);
-            } else {
-                return nextHandler.select(uri);
-            }
+        ProxySelector proxySelector = getProxySelector();
+        if (proxySelector == null) {
+            return Collections.singletonList(Proxy.NO_PROXY);
         }
-        return system.getDefaultProxySelector().select(uri);
+        return proxySelector.select(uri);
     }
 
     @Override
     public void connectFailed(final URI uri, final SocketAddress sa, final IOException ioe) {
-        VestigeSystem system = VestigeSystem.getSystem();
-        if (system == null) {
-            ProxySelector nextHandler = this.nextHandler;
-            if (nextHandler == null) {
-                if (LOGGER.isTraceEnabled()) {
-                    LOGGER.trace("connectFailed URI:{}, socketAddress:{}, IOException:{}", new Object[] {uri, sa, ioe});
-                }
-            } else {
-                nextHandler.connectFailed(uri, sa, ioe);
+        ProxySelector proxySelector = getProxySelector();
+        if (proxySelector == null) {
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("connectFailed URI:{}, socketAddress:{}, IOException:{}", new Object[] {uri, sa, ioe});
             }
         } else {
-            system.getDefaultProxySelector().connectFailed(uri, sa, ioe);
+            proxySelector.connectFailed(uri, sa, ioe);
         }
     }
 

@@ -15,7 +15,7 @@
  * along with Vestige.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.googlecode.vestige.platform.system;
+package com.googlecode.vestige.platform.system.interceptor;
 
 import java.net.ContentHandler;
 import java.net.ContentHandlerFactory;
@@ -23,6 +23,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import com.googlecode.vestige.core.StackedHandler;
+import com.googlecode.vestige.platform.system.VestigeSystem;
 
 /**
  * @author Gael Lalire
@@ -33,18 +34,22 @@ public class VestigeURLConnectionHandlersHashTable extends Hashtable<String, Con
 
     private Hashtable<String, ContentHandler> nextHandler;
 
+    public Hashtable<String, ContentHandler> getHashtable() {
+        return VestigeSystem.getSystem().getURLConnectionContentHandlerByMime();
+    }
+
     @Override
     public ContentHandler get(final Object mimeType) {
         VestigeSystem system = VestigeSystem.getSystem();
-        if (system == null) {
-            return super.get(mimeType);
-        }
         Map<String, ContentHandler> urlConnectionContentHandlerByMime = system.getURLConnectionContentHandlerByMime();
         ContentHandler urlConnectionContentHandler = urlConnectionContentHandlerByMime.get(mimeType);
         if (urlConnectionContentHandler == null) {
             ContentHandlerFactory contentHandlerFactory = system.getURLConnectionContentHandlerFactory();
             if (contentHandlerFactory != null) {
                 urlConnectionContentHandler = contentHandlerFactory.createContentHandler((String) mimeType);
+                if (urlConnectionContentHandler == null) {
+                    return null;
+                }
                 urlConnectionContentHandlerByMime.put((String) mimeType, urlConnectionContentHandler);
             }
         }
@@ -54,9 +59,6 @@ public class VestigeURLConnectionHandlersHashTable extends Hashtable<String, Con
     @Override
     public ContentHandler put(final String mimeType, final ContentHandler urlStreamHandler) {
         VestigeSystem system = VestigeSystem.getSystem();
-        if (system == null) {
-            return super.put(mimeType, urlStreamHandler);
-        }
         return system.getURLConnectionContentHandlerByMime().put(mimeType, urlStreamHandler);
     }
 

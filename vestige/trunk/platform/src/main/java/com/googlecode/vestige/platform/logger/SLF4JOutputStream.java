@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SLF4JOutputStream extends OutputStream {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SLF4JOutputStream.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(System.class);
 
     private ByteArrayOutputStream outputStream;
 
