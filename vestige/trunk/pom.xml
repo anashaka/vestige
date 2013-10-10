@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.googlecode.vestige</groupId>
   <artifactId>vestige</artifactId>
-  <version>1.0.12</version>
+  <version>1.0.13-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Vestige</name>
   <build>
@@ -287,8 +287,8 @@
     <!-- </site> -->
   </distributionManagement>
   <scm>
-    <connection>scm:svn:http://vestige.googlecode.com/svn/vestige/tags/vestige-1.0.12</connection>
-    <developerConnection>scm:svn:https://vestige.googlecode.com/svn/vestige/tags/vestige-1.0.12</developerConnection>
+    <connection>scm:svn:http://vestige.googlecode.com/svn/vestige/trunk</connection>
+    <developerConnection>scm:svn:https://vestige.googlecode.com/svn/vestige/trunk</developerConnection>
   </scm>
   <reporting>
     <plugins>
