@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.googlecode.vestige</groupId>
   <artifactId>proxy_vole</artifactId>
-  <version>0.0.2</version>
+  <version>0.0.3-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>Proxy Vole</name>
   <build>
@@ -173,8 +173,8 @@
     <!-- </site> -->
   </distributionManagement>
   <scm>
-    <connection>scm:svn:http://vestige.googlecode.com/svn/proxy_vole/tags/proxy_vole-0.0.2</connection>
-    <developerConnection>scm:svn:https://vestige.googlecode.com/svn/proxy_vole/tags/proxy_vole-0.0.2</developerConnection>
+    <connection>scm:svn:http://vestige.googlecode.com/svn/proxy_vole/trunk</connection>
+    <developerConnection>scm:svn:https://vestige.googlecode.com/svn/proxy_vole/trunk</developerConnection>
   </scm>
   <reporting>
     <plugins>
