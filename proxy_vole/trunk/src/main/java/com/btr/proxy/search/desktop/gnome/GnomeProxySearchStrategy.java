@@ -126,12 +126,6 @@ public class GnomeProxySearchStrategy implements ProxySearchStrategy {
         return result;
     }
 
-    /*************************************************************************
-     * Load the proxy settings from the gconf settings XML file.
-     * @return the loaded settings stored in a properties object.
-     * @throws ProxyException on processing error.
-     ************************************************************************/
-    
     private static final Map<String, String> prefixBySchema = new HashMap<String, String>();
     static {
         prefixBySchema.put("org.gnome.system.proxy", "/system/proxy/");
@@ -141,6 +135,11 @@ public class GnomeProxySearchStrategy implements ProxySearchStrategy {
         prefixBySchema.put("org.gnome.system.proxy.socks", "/system/socks_proxy/");
     }
 
+    /*************************************************************************
+     * Load the proxy settings from the gconf settings XML file.
+     * @return the loaded settings stored in a properties object.
+     * @throws ProxyException on processing error.
+     ************************************************************************/   
     @SuppressWarnings("unchecked")
     public Properties readSettings() throws ProxyException {
         Properties settings = new Properties();
