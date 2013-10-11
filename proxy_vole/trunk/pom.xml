@@ -173,8 +173,8 @@
     <!-- </site> -->
   </distributionManagement>
   <scm>
-    <connection>scm:svn:http://vestige.googlecode.com/svn/proxy_vole/tags/proxy_vole-0.0.4</connection>
-    <developerConnection>scm:svn:https://vestige.googlecode.com/svn/proxy_vole/tags/proxy_vole-0.0.4</developerConnection>
+    <connection>scm:svn:http://vestige.googlecode.com/svn/proxy_vole/trunk</connection>
+    <developerConnection>scm:svn:https://vestige.googlecode.com/svn/proxy_vole/trunk</developerConnection>
   </scm>
   <reporting>
     <plugins>
