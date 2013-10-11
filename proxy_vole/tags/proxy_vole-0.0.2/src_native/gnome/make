@@ -1,2 +1,0 @@
-gcc -fPIC -m32 -shared `pkg-config --cflags gio-2.0` ProxySchemasGSettingsAccess.c `pkg-config --libs gio-2.0` -I /usr/lib/jvm/java-6-openjdk-i386/include/ -o gsettings-x86.so
-gcc -fPIC -m64 -shared `pkg-config --cflags gio-2.0` ProxySchemasGSettingsAccess.c `pkg-config --libs gio-2.0` -I /usr/lib/jvm/java-1.7.0-openjdk-1.7.0.25.x86_64/include/linux/ -I /usr/lib/jvm/java-1.7.0-openjdk-1.7.0.25.x86_64/include -o gsettings-amd64.so
