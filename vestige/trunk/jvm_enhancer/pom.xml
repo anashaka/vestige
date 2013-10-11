@@ -36,7 +36,7 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>com.btr.proxy</groupId>
+      <groupId>com.googlecode.vestige</groupId>
       <artifactId>proxy_vole</artifactId>
     </dependency>
   </dependencies>

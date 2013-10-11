@@ -177,9 +177,9 @@
         <version>${logback.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.btr.proxy</groupId>
+        <groupId>com.googlecode.vestige</groupId>
         <artifactId>proxy_vole</artifactId>
-        <version>0.0.1</version>
+        <version>0.0.2</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>
