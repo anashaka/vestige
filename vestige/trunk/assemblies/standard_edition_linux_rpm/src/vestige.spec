@@ -10,7 +10,7 @@ Source0:        vestige.tar.gz
 
 BuildArchitectures: noarch
 
-Requires:  java >= 1.5.0 pygtk2 >= 2.6.0
+Requires:  java >= 1.6.0 pygtk2 >= 2.6.0
 
 %description
 
