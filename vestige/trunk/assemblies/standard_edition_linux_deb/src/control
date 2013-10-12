@@ -6,4 +6,4 @@ Maintainer: http://code.google.com/p/vestige/people/list <vestige@googlecode.com
 Description: Java Application Manager
 Homepage: http://code.google.com/p/vestige/
 Installed-Size: 4292
-Depends: bash, java5-runtime, python-gtk2 (>= 2.6)
+Depends: bash, java6-runtime, python-gtk2 (>= 2.6)

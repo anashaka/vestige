@@ -61,7 +61,7 @@ begin
     Result := true;
   end else begin
     Result:=false;
-    DowloadNow := MsgBox('This tool requires Java Runtime Environment version 1.5 or newer to run. Please download and install the JRE and run this setup again. Do you want to download it now?', mbConfirmation, MB_YESNO) = idYes;
+    DowloadNow := MsgBox('This tool requires Java Runtime Environment version 1.6 or newer to run. Please download and install the JRE and run this setup again. Do you want to download it now?', mbConfirmation, MB_YESNO) = idYes;
     if DowloadNow then ShellExec('open', 'http://www.java.com/getjava/','','',SW_SHOWNORMAL,ewNoWait,ErrorCode);
   end
 end;
