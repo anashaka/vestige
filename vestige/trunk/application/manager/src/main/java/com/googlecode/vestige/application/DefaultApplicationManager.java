@@ -74,14 +74,6 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         this.repoFile = repoFile;
     }
 
-    public void init() {
-        try {
-            autoMigrate();
-        } catch (ApplicationException e) {
-            LOGGER.error("Automigration failed", e);
-        }
-    }
-
     public void createRepository(final String name, final URL url) throws ApplicationException {
         URL old = urlByRepo.put(name, url);
         if (old != null) {
@@ -308,6 +300,16 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
             throw new ApplicationException("fail to uninstall", e);
         }
 
+        uninstallApplicationContext(repoName, appName, version, applicationContext);
+
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("Application {} version {} on repository {} uninstalled",
+                    new Object[] {appName, VersionUtils.toString(version), repoName});
+        }
+    }
+
+    public void uninstallApplicationContext(final String repoName, final String appName, final List<Integer> version, final ApplicationContext applicationContext) throws ApplicationException {
+        File home = applicationContext.getHome();
         Map<String, Map<List<Integer>, ApplicationContext>> appByVersionByName = applicationContextByVersionByNameByRepo
                 .get(repoName);
         Map<List<Integer>, ApplicationContext> appByVersion = appByVersionByName.get(appName);
@@ -326,10 +328,6 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         } else {
             appByVersion.remove(version);
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Application {} version {} on repository {} uninstalled",
-                    new Object[] {appName, VersionUtils.toString(version), repoName});
-        }
     }
 
     public void migrate(final String repoName, final String appName, final List<Integer> fromVersion,
@@ -338,10 +336,10 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
             LOGGER.info("migrating {} {} from {} to {} ", new Object[] {repoName, appName, VersionUtils.toString(fromVersion),
                     VersionUtils.toString(toVersion)});
         }
-        final ApplicationContext applicationContext = getApplication(repoName, appName, fromVersion);
+        final ApplicationContext fromApplicationContext = getApplication(repoName, appName, fromVersion);
         ApplicationContext toApplicationContext = createApplicationContext(repoName, appName, toVersion);
 
-        int level = applicationContext.getAutoMigrateLevel();
+        int level = fromApplicationContext.getAutoMigrateLevel();
         // migration target inherits autoMigrateLevel
         toApplicationContext.setAutoMigrateLevel(level);
         checkAutoMigrateLevel(repoName, appName, toVersion, level, Collections.singleton(fromVersion));
@@ -349,13 +347,13 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         Integer compare = VersionUtils.compare(fromVersion, toVersion);
 
         ClassLoaderConfiguration installerResolve;
-        RuntimeApplicationContext runtimeApplicationContext = applicationContext.getRuntimeApplicationContext();
+        RuntimeApplicationContext runtimeApplicationContext = fromApplicationContext.getRuntimeApplicationContext();
         // && runtimeApplicationContext != null should be redondant
-        if (applicationContext.isStarted() && runtimeApplicationContext != null) {
+        if (fromApplicationContext.isStarted() && runtimeApplicationContext != null) {
             if (compare == null) {
-                if (applicationContext.getUninterruptedMigrationVersion().contains(toVersion)) {
+                if (fromApplicationContext.getUninterruptedMigrationVersion().contains(toVersion)) {
                     // use fromVersion to perform the migration
-                    installerResolve = applicationContext.getInstallerResolve();
+                    installerResolve = fromApplicationContext.getInstallerResolve();
                 } else {
                     if (!toApplicationContext.getUninterruptedMigrationVersion().contains(fromVersion)) {
                         throw new ApplicationException("None of " + VersionUtils.toString(fromVersion) + " and "
@@ -376,9 +374,9 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                     }
                 } else {
                     // toVersion before fromVersion
-                    if (applicationContext.getUninterruptedMigrationVersion().contains(toVersion)) {
+                    if (fromApplicationContext.getUninterruptedMigrationVersion().contains(toVersion)) {
                         // use fromVersion to perform the migration
-                        installerResolve = applicationContext.getInstallerResolve();
+                        installerResolve = fromApplicationContext.getInstallerResolve();
                     } else {
                         throw new ApplicationException(VersionUtils.toString(fromVersion)
                                 + " does not support uninterrupted migrate from " + VersionUtils.toString(toVersion));
@@ -386,44 +384,75 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                 }
             }
             try {
-                Thread thread = prepareThreadStart(toApplicationContext);
+                final Object runMutex = new Object();
+                RuntimeApplicationContext toRuntimeApplicationContext = toApplicationContext.getRuntimeApplicationContext();
+                Object constructorMutex = null;
+                if (toRuntimeApplicationContext == null) {
+                    constructorMutex = new Object();
+                } else {
+                    toRuntimeApplicationContext.setRunAllowed(false);
+                }
+                start(toApplicationContext, runMutex, constructorMutex);
+                if (constructorMutex != null) {
+                    synchronized (constructorMutex) {
+                        toRuntimeApplicationContext = toApplicationContext.getRuntimeApplicationContext();
+                        while (toRuntimeApplicationContext == null && toApplicationContext.getThread() != null) {
+                            constructorMutex.wait();
+                            toRuntimeApplicationContext = toApplicationContext.getRuntimeApplicationContext();
+                        }
+                    }
+                }
+                if (toRuntimeApplicationContext == null) {
+                    // fail on object construction
+                    throw new ApplicationException("Cannot create application instance");
+                }
+
+                final RuntimeApplicationContext notNullToRuntimeApplicationContext = toRuntimeApplicationContext;
 
                 if (installerResolve != null) {
+                    Runnable notifyRunMutex = new Runnable() {
+
+                        @Override
+                        public void run() {
+                            synchronized (runMutex) {
+                                notNullToRuntimeApplicationContext.setRunAllowed(true);
+                                runMutex.notify();
+                            }
+                        }
+                    };
                     int installerAttach = vestigePlatform.attach(installerResolve);
                     try {
                         vestigePlatform.start(installerAttach);
                         VestigeClassLoader<?> installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
 
-                        Method installerMethod = installerClassLoader.loadClass(applicationContext.getInstallerClassName())
-                                .getMethod("uninterruptedMigrate", File.class, List.class, Runnable.class, File.class,
-                                        List.class, Runnable.class);
+                        Method installerMethod = installerClassLoader.loadClass(fromApplicationContext.getInstallerClassName())
+                                .getMethod("uninterruptedMigrate", File.class, List.class, Object.class, File.class,
+                                        List.class, Object.class, Runnable.class);
                         Thread currentThread = Thread.currentThread();
                         ClassLoader contextClassLoader = currentThread.getContextClassLoader();
                         currentThread.setContextClassLoader(installerClassLoader);
                         try {
-                            installerMethod.invoke(null, applicationContext.getHome(), fromVersion,
-                                    runtimeApplicationContext.getRunnable(), toApplicationContext.getHome(), toVersion,
-                                    toApplicationContext.getRuntimeApplicationContext().getRunnable());
+                            installerMethod.invoke(null, fromApplicationContext.getHome(), fromVersion, runtimeApplicationContext.getRunnable(), toApplicationContext.getHome(),
+                                    toVersion, toApplicationContext.getRuntimeApplicationContext().getRunnable(), notifyRunMutex);
                         } finally {
                             currentThread.setContextClassLoader(contextClassLoader);
                         }
                     } finally {
                         vestigePlatform.detach(installerAttach);
+                        notifyRunMutex.run();
                     }
                 }
 
-                thread.start();
-                stop(applicationContext);
-                toApplicationContext.setStarted(true);
+                stop(fromApplicationContext);
 
             } catch (Exception e) {
                 throw new ApplicationException("fail to uninterrupted migrate", e);
             }
         } else {
             if (compare == null) {
-                if (applicationContext.getSupportedMigrationVersion().contains(toVersion)) {
+                if (fromApplicationContext.getSupportedMigrationVersion().contains(toVersion)) {
                     // use fromVersion to perform the migration
-                    installerResolve = applicationContext.getInstallerResolve();
+                    installerResolve = fromApplicationContext.getInstallerResolve();
                 } else {
                     if (!toApplicationContext.getSupportedMigrationVersion().contains(fromVersion)) {
                         throw new ApplicationException("None of " + VersionUtils.toString(fromVersion) + " and "
@@ -444,9 +473,9 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                     }
                 } else {
                     // toVersion before fromVersion
-                    if (applicationContext.getSupportedMigrationVersion().contains(toVersion)) {
+                    if (fromApplicationContext.getSupportedMigrationVersion().contains(toVersion)) {
                         // use fromVersion to perform the migration
-                        installerResolve = applicationContext.getInstallerResolve();
+                        installerResolve = fromApplicationContext.getInstallerResolve();
                     } else {
                         throw new ApplicationException(VersionUtils.toString(fromVersion) + " does not support migrate from "
                                 + VersionUtils.toString(toVersion));
@@ -460,13 +489,13 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                         vestigePlatform.start(installerAttach);
                         VestigeClassLoader<?> installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
 
-                        Method installerMethod = installerClassLoader.loadClass(applicationContext.getInstallerClassName())
+                        Method installerMethod = installerClassLoader.loadClass(fromApplicationContext.getInstallerClassName())
                                 .getMethod("migrate", File.class, List.class, File.class, List.class);
                         Thread currentThread = Thread.currentThread();
                         ClassLoader contextClassLoader = currentThread.getContextClassLoader();
                         currentThread.setContextClassLoader(installerClassLoader);
                         try {
-                            installerMethod.invoke(null, applicationContext.getHome(), fromVersion,
+                            installerMethod.invoke(null, fromApplicationContext.getHome(), fromVersion,
                                     toApplicationContext.getHome(), toVersion);
                         } finally {
                             currentThread.setContextClassLoader(contextClassLoader);
@@ -479,9 +508,9 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                 throw new ApplicationException("fail to migrate", e);
             }
         }
-        // uninstall from-version
-        uninstall(repoName, appName, fromVersion);
         installApplicationContext(repoName, appName, toVersion, toApplicationContext);
+        // uninstall from-version
+        uninstallApplicationContext(repoName, appName, fromVersion, fromApplicationContext);
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Application {} version {} on repository {} migrated to version {}",
                     new Object[] {appName, VersionUtils.toString(fromVersion), repoName, VersionUtils.toString(toVersion)});
@@ -507,7 +536,6 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
             throw new ApplicationException("already started");
         }
         start(applicationContext);
-        applicationContext.setStarted(true);
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Application {} version {} on repository {} started",
                     new Object[] {appName, VersionUtils.toString(version), repoName});
@@ -550,12 +578,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
             // already started
             return;
         }
-        try {
-            Thread thread = prepareThreadStart(applicationContext);
-            thread.start();
-        } catch (Exception e) {
-            throw new ApplicationException("Unable to start", e);
-        }
+        start(applicationContext, null, null);
     }
 
     public static Object callConstructor(final ClassLoader classLoader, final Class<?> loadClass, final File home, final VestigeSystem vestigeSystem) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException, ApplicationException  {
@@ -613,7 +636,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         }
     }
 
-    public Thread prepareThreadStart(final ApplicationContext applicationContext) throws ApplicationException {
+    public void start(final ApplicationContext applicationContext, final Object runMutex, final Object constructorMutex) throws ApplicationException {
         try {
             final int attach;
             final VestigeSystem vestigeSystem;
@@ -644,6 +667,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                             VestigeSystem.pushSystem(vestigeSystem);
                         }
                         Runnable runnable;
+                        RuntimeApplicationContext runtimeApplicationContext;
                         if (previousRuntimeApplicationContext == null) {
                             Class<?> loadClass;
                             try {
@@ -653,18 +677,45 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                                 LOGGER.error("Unable to create instance", e);
                                 return;
                             }
-                            RuntimeApplicationContext runtimeApplicationContext = new RuntimeApplicationContext(classLoader, runnable, vestigeSystem);
-                            applicationContext.setRuntimeApplicationContext(runtimeApplicationContext);
+                            runtimeApplicationContext = new RuntimeApplicationContext(classLoader, runnable, vestigeSystem, runMutex == null);
+                            if (constructorMutex != null) {
+                                synchronized (constructorMutex) {
+                                    applicationContext.setRuntimeApplicationContext(runtimeApplicationContext);
+                                    constructorMutex.notify();
+                                }
+                            } else {
+                                applicationContext.setRuntimeApplicationContext(runtimeApplicationContext);
+                            }
                             classLoader.getData().addObject(new SoftReference<RuntimeApplicationContext>(runtimeApplicationContext));
                         } else {
-                            runnable = previousRuntimeApplicationContext.getRunnable();
+                            runtimeApplicationContext = previousRuntimeApplicationContext;
+                            runnable = runtimeApplicationContext.getRunnable();
+                        }
+                        if (runMutex != null) {
+                            synchronized (runMutex) {
+                                while (!runtimeApplicationContext.isRunAllowed()) {
+                                    try {
+                                        runMutex.wait();
+                                    } catch (InterruptedException e) {
+                                        LOGGER.trace("Application stopped before run method call", e);
+                                        return;
+                                    }
+                                }
+                            }
                         }
                         runnable.run();
                     } finally {
                         vestigePlatform.stop(attach);
                         vestigePlatform.detach(attach);
                         // allow inner start to run
-                        applicationContext.setThread(null);
+                        if (constructorMutex != null) {
+                            synchronized (constructorMutex) {
+                                applicationContext.setThread(null);
+                                constructorMutex.notify();
+                            }
+                        } else {
+                            applicationContext.setThread(null);
+                        }
                         // allow external start to run
                         applicationContext.setStarted(false);
                         if (vestigeSystem != null) {
@@ -676,7 +727,8 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
             };
             applicationContext.setThread(thread);
             thread.setContextClassLoader(classLoader);
-            return thread;
+            applicationContext.setStarted(true);
+            thread.start();
         } catch (Exception e) {
             throw new ApplicationException("Unable to start", e);
         }
@@ -723,22 +775,31 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
     public void powerOn(final VestigePlatform vestigePlatform, final ApplicationDescriptorFactory applicationDescriptorFactory) {
         this.vestigePlatform = vestigePlatform;
         this.applicationDescriptorFactory = applicationDescriptorFactory;
+        List<ApplicationContext> autoStartApplicationContext = new ArrayList<ApplicationContext>();
         for (Entry<String, Map<String, Map<List<Integer>, ApplicationContext>>> entry : applicationContextByVersionByNameByRepo
                 .entrySet()) {
             for (Entry<String, Map<List<Integer>, ApplicationContext>> entry2 : entry.getValue().entrySet()) {
                 for (Entry<List<Integer>, ApplicationContext> entry3 : entry2.getValue().entrySet()) {
                     ApplicationContext applicationContext = entry3.getValue();
                     if (applicationContext.isStarted()) {
-                        try {
-                            start(applicationContext);
-                        } catch (ApplicationException e) {
-                            LOGGER.error("Unable to start", e);
-                        }
+                        autoStartApplicationContext.add(applicationContext);
+                        applicationContext.setStarted(false);
                     }
                 }
             }
         }
-        init();
+        try {
+            autoMigrate();
+        } catch (ApplicationException e) {
+            LOGGER.error("Automigration failed", e);
+        }
+        for (ApplicationContext applicationContext : autoStartApplicationContext) {
+            try {
+                start(applicationContext);
+            } catch (ApplicationException e) {
+                LOGGER.error("Unable to start", e);
+            }
+        }
     }
 
     public void autoMigrate() throws ApplicationException {
@@ -748,7 +809,9 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
             String repoName = entry.getKey();
             for (Entry<String, Map<List<Integer>, ApplicationContext>> entry2 : entry.getValue().entrySet()) {
                 String appName = entry2.getKey();
-                for (Entry<List<Integer>, ApplicationContext> entry3 : entry2.getValue().entrySet()) {
+                // create a new map because migration cause concurent modification
+                Map<List<Integer>, ApplicationContext> applicationContextByVersion = new HashMap<List<Integer>, ApplicationContext>(entry2.getValue());
+                for (Entry<List<Integer>, ApplicationContext> entry3 : applicationContextByVersion.entrySet()) {
                     List<Integer> version = entry3.getKey();
                     try {
                         ApplicationContext applicationContext = entry3.getValue();

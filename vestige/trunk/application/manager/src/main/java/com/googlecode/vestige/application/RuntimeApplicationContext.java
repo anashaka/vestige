@@ -32,10 +32,13 @@ public class RuntimeApplicationContext {
 
     private VestigeSystem vestigeSystem;
 
-    public RuntimeApplicationContext(final VestigeClassLoader<AttachedVestigeClassLoader> classLoader, final Runnable runnable, final VestigeSystem vestigeSystem) {
+    private boolean runAllowed;
+
+    public RuntimeApplicationContext(final VestigeClassLoader<AttachedVestigeClassLoader> classLoader, final Runnable runnable, final VestigeSystem vestigeSystem, final boolean runAllowed) {
         this.classLoader = classLoader;
         this.runnable = runnable;
         this.vestigeSystem = vestigeSystem;
+        this.runAllowed = runAllowed;
     }
 
     public VestigeClassLoader<AttachedVestigeClassLoader> getClassLoader() {
@@ -48,6 +51,14 @@ public class RuntimeApplicationContext {
 
     public VestigeSystem getVestigeSystem() {
         return vestigeSystem;
+    }
+
+    public void setRunAllowed(final boolean runAllowed) {
+        this.runAllowed = runAllowed;
+    }
+
+    public boolean isRunAllowed() {
+        return runAllowed;
     }
 
 }
