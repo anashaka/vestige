@@ -59,6 +59,8 @@ import com.googlecode.vestige.edition.standard.schema.Settings;
 import com.googlecode.vestige.edition.standard.schema.Web;
 import com.googlecode.vestige.platform.DefaultVestigePlatform;
 import com.googlecode.vestige.platform.VestigePlatform;
+import com.googlecode.vestige.platform.system.VestigePolicy;
+import com.googlecode.vestige.platform.system.VestigeSystem;
 import com.googlecode.vestige.platform.system.VestigeSystemAction;
 import com.googlecode.vestige.resolver.maven.MavenArtifactResolver;
 
@@ -84,6 +86,8 @@ public class StandardEditionVestige {
     private ApplicationDescriptorFactory applicationDescriptorFactory;
 
     private File resolverFile;
+
+    private boolean securityEnabled;
 
     @SuppressWarnings("unchecked")
     public StandardEditionVestige(final File homeFile, final File baseFile, final VestigeExecutor vestigeExecutor, final VestigePlatform vestigePlatform) throws Exception {
@@ -158,6 +162,8 @@ public class StandardEditionVestige {
         LOGGER.info("Use {} for maven settings file", mavenSettingsFile);
 
         applicationDescriptorFactory = new XMLApplicationDescriptorFactory(new MavenArtifactResolver(mavenSettingsFile));
+
+        securityEnabled = settings.getSecurity().isEnabled();
 
         Admin admin = settings.getAdmin();
         SSH ssh = admin.getSsh();
@@ -263,6 +269,10 @@ public class StandardEditionVestige {
 
                 @Override
                 public void vestigeSystemRun() throws Exception {
+                    VestigePolicy vestigePolicy = VestigeSystem.getSystem().getVestigePolicy();
+                    vestigePolicy.addSafeClassLoader(StandardEditionVestige.class.getClassLoader());
+                    vestigePolicy.addSafeClassLoader(JoranConfigurator.class.getClassLoader());
+                    vestigePolicy.addSafeClassLoader(ConsoleTarget.class.getClassLoader());
                     String home = args[0];
                     String base = args[1];
                     File homeFile = new File(home).getCanonicalFile();

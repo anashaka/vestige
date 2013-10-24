@@ -116,33 +116,27 @@ public class SLF4JLoggerAdapter implements VestigeLogger {
         doLog(level, msg);
     }
 
-    public void logp(final Level level, final String sourceClass, final String sourceMethod, final String msg,
-            final Object params[]) {
+    public void logp(final Level level, final String sourceClass, final String sourceMethod, final String msg, final Object params[]) {
         doLog(level, msg);
     }
 
-    public void logp(final Level level, final String sourceClass, final String sourceMethod, final String msg,
-            final Throwable thrown) {
+    public void logp(final Level level, final String sourceClass, final String sourceMethod, final String msg, final Throwable thrown) {
         doLog(level, msg, thrown);
     }
 
-    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName,
-            final String msg) {
+    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName, final String msg) {
         doLog(level, msg);
     }
 
-    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName,
-            final String msg, final Object param1) {
+    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName, final String msg, final Object param1) {
         doLog(level, msg);
     }
 
-    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName,
-            final String msg, final Object params[]) {
+    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName, final String msg, final Object params[]) {
         doLog(level, msg);
     }
 
-    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName,
-            final String msg, final Throwable thrown) {
+    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName, final String msg, final Throwable thrown) {
         doLog(level, msg, thrown);
     }
 

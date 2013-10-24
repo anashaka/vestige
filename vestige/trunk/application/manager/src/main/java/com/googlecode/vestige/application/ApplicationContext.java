@@ -20,6 +20,7 @@ package com.googlecode.vestige.application;
 import java.io.File;
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
+import java.security.Permission;
 import java.util.List;
 import java.util.Set;
 
@@ -32,6 +33,8 @@ import com.googlecode.vestige.platform.ClassLoaderConfiguration;
 public class ApplicationContext implements Serializable {
 
     private static final long serialVersionUID = -63902830158746259L;
+
+    private Set<Permission> permissions;
 
     private ClassLoaderConfiguration resolve;
 
@@ -164,6 +167,14 @@ public class ApplicationContext implements Serializable {
 
     public void setPrivateSystem(final boolean privateSystem) {
         this.privateSystem = privateSystem;
+    }
+
+    public Set<Permission> getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(final Set<Permission> permissions) {
+        this.permissions = permissions;
     }
 
 }

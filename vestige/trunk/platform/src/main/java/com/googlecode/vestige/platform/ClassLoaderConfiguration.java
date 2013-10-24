@@ -17,9 +17,17 @@
 
 package com.googlecode.vestige.platform;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
+import java.net.URLConnection;
+import java.security.Permission;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.googlecode.vestige.core.parser.StringParser;
 
@@ -27,6 +35,8 @@ import com.googlecode.vestige.core.parser.StringParser;
  * @author Gael Lalire
  */
 public class ClassLoaderConfiguration implements Serializable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClassLoaderConfiguration.class);
 
     private static final long serialVersionUID = 4540499333086383595L;
 
@@ -46,7 +56,10 @@ public class ClassLoaderConfiguration implements Serializable {
 
     private String name;
 
-    public ClassLoaderConfiguration(final Serializable key, final String name, final boolean attachmentScoped, final URL[] urls, final List<ClassLoaderConfiguration> dependencies, final List<Integer> paths, final List<List<Integer>> pathIdsList, final StringParser pathIdsPositionByResourceName) {
+    private Set<Permission> permissions;
+
+    public ClassLoaderConfiguration(final Serializable key, final String name, final boolean attachmentScoped, final URL[] urls, final List<ClassLoaderConfiguration> dependencies,
+            final List<Integer> paths, final List<List<Integer>> pathIdsList, final StringParser pathIdsPositionByResourceName) {
         this.key = key;
         this.name = name;
         this.attachmentScoped = attachmentScoped;
@@ -55,6 +68,18 @@ public class ClassLoaderConfiguration implements Serializable {
         this.paths = paths;
         this.pathIdsList = pathIdsList;
         this.pathIdsPositionByResourceName = pathIdsPositionByResourceName;
+        this.permissions = new HashSet<Permission>();
+        for (URL url : urls) {
+            try {
+                URLConnection openConnection = url.openConnection();
+                this.permissions.add(openConnection.getPermission());
+            } catch (IOException e) {
+                LOGGER.warn("IOException", e);
+            }
+        }
+        for (ClassLoaderConfiguration dependency : dependencies) {
+            this.permissions.addAll(dependency.getPermissions());
+        }
     }
 
     public int getDependencyIndex(final int pathIndex) {
@@ -110,6 +135,10 @@ public class ClassLoaderConfiguration implements Serializable {
     @Override
     public String toString() {
         return key.toString();
+    }
+
+    public Set<Permission> getPermissions() {
+        return permissions;
     }
 
 }

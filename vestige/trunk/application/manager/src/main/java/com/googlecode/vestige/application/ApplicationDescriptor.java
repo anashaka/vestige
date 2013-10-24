@@ -17,6 +17,7 @@
 
 package com.googlecode.vestige.application;
 
+import java.security.Permission;
 import java.util.List;
 import java.util.Set;
 
@@ -40,5 +41,7 @@ public interface ApplicationDescriptor {
     boolean isLauncherPrivateSystem() throws ApplicationException;
 
     ClassLoaderConfiguration getLauncherClassLoaderConfiguration() throws ApplicationException;
+
+    Set<Permission> getPermissions() throws ApplicationException;
 
 }
