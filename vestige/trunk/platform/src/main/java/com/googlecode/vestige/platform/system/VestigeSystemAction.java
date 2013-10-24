@@ -24,6 +24,7 @@ import java.lang.reflect.Modifier;
 import java.net.ProxySelector;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.Policy;
 import java.sql.DriverManager;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,9 +40,11 @@ import org.slf4j.LoggerFactory;
 
 import com.googlecode.vestige.core.StackedHandler;
 import com.googlecode.vestige.core.StackedHandlerUtils;
+import com.googlecode.vestige.core.VestigeClassLoader;
 import com.googlecode.vestige.core.logger.VestigeLoggerFactory;
 import com.googlecode.vestige.platform.logger.SLF4JLoggerFactoryAdapter;
 import com.googlecode.vestige.platform.logger.SLF4JPrintStream;
+import com.googlecode.vestige.platform.logger.SecureSLF4JLoggerFactoryAdapter;
 import com.googlecode.vestige.platform.system.interceptor.VestigeCopyOnWriteArrayList;
 import com.googlecode.vestige.platform.system.interceptor.VestigeDriverVector;
 import com.googlecode.vestige.platform.system.interceptor.VestigeInputStream;
@@ -89,7 +92,7 @@ public abstract class VestigeSystemAction {
         }
 
         synchronized (VestigeLoggerFactory.class) {
-            SLF4JLoggerFactoryAdapter factory = new SLF4JLoggerFactoryAdapter();
+            SLF4JLoggerFactoryAdapter factory = new SecureSLF4JLoggerFactoryAdapter();
             factory.setNextHandler(VestigeLoggerFactory.getVestigeLoggerFactory());
             VestigeLoggerFactory.setVestigeLoggerFactory(factory);
         }
@@ -97,6 +100,17 @@ public abstract class VestigeSystemAction {
         VestigeSystem vestigeSystem = new VestigeSystem();
         VestigeSystem.setFallbackVestigeSystem(vestigeSystem);
 
+        VestigePolicy vestigePolicy;
+        synchronized (Policy.class) {
+            vestigePolicy = new VestigePolicy(Policy.getPolicy());
+            vestigePolicy.addSafeClassLoader(VestigePolicy.class.getClassLoader());
+            vestigePolicy.addSafeClassLoader(VestigeSecurityManager.class.getClassLoader());
+            vestigePolicy.addSafeClassLoader(VestigeClassLoader.class.getClassLoader());
+            vestigeSystem.setVestigePolicy(vestigePolicy);
+            Policy.setPolicy(vestigePolicy);
+        }
+
+        VestigeSecurityManager vestigeSecurityManager;
         VestigeProperties vestigeProperties;
         VestigePrintStream out;
         VestigePrintStream err;
@@ -143,6 +157,10 @@ public abstract class VestigeSystemAction {
             };
             vestigeSystem.setProperties(vestigeProperties.getNextHandler());
             System.setProperties(vestigeProperties);
+
+            vestigeSecurityManager = new VestigeSecurityManager(System.getSecurityManager());
+            vestigeSystem.setVestigeSecurityManager(vestigeSecurityManager);
+            System.setSecurityManager(vestigeSecurityManager);
         }
 
         VestigeProxySelector proxySelector;
@@ -245,10 +263,15 @@ public abstract class VestigeSystemAction {
             }
 
             synchronized (System.class) {
+                System.setSecurityManager(StackedHandlerUtils.uninstallStackedHandler(vestigeSecurityManager, System.getSecurityManager()));
                 System.setProperties(StackedHandlerUtils.uninstallStackedHandler(vestigeProperties, System.getProperties()));
                 System.setOut(StackedHandlerUtils.uninstallStackedHandler(out, System.out));
                 System.setErr(StackedHandlerUtils.uninstallStackedHandler(err, System.err));
                 System.setIn(StackedHandlerUtils.uninstallStackedHandler(in, System.in));
+            }
+
+            synchronized (Policy.class) {
+                Policy.setPolicy(StackedHandlerUtils.uninstallStackedHandler(vestigePolicy, Policy.getPolicy()));
             }
         }
     }

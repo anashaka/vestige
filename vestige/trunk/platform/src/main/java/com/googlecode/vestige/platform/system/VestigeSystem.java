@@ -64,6 +64,10 @@ public class VestigeSystem implements PublicVestigeSystem {
 
     private ProxySelector defaultProxySelector;
 
+    private VestigeSecurityManager vestigeSecurityManager;
+
+    private VestigePolicy vestigePolicy;
+
     public VestigeSystem() {
     }
 
@@ -240,6 +244,22 @@ public class VestigeSystem implements PublicVestigeSystem {
 
     public void setURLConnectionContentHandlerByMime(final Hashtable<String, ContentHandler> urlConnectionContentHandlerByMime) {
         this.urlConnectionContentHandlerByMime = urlConnectionContentHandlerByMime;
+    }
+
+    public VestigeSecurityManager getVestigeSecurityManager() {
+        return vestigeSecurityManager;
+    }
+
+    public void setVestigeSecurityManager(final VestigeSecurityManager vestigeSecurityManager) {
+        this.vestigeSecurityManager = vestigeSecurityManager;
+    }
+
+    public VestigePolicy getVestigePolicy() {
+        return vestigePolicy;
+    }
+
+    public void setVestigePolicy(final VestigePolicy vestigePolicy) {
+        this.vestigePolicy = vestigePolicy;
     }
 
 }

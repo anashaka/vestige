@@ -18,24 +18,31 @@
 package com.googlecode.vestige.application;
 
 import java.io.File;
+import java.io.FilePermission;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.net.URLConnection;
+import java.security.Permission;
+import java.security.Permissions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.TreeMap;
 
 import org.slf4j.Logger;
@@ -47,6 +54,8 @@ import com.googlecode.vestige.core.VestigeClassLoader;
 import com.googlecode.vestige.platform.AttachedVestigeClassLoader;
 import com.googlecode.vestige.platform.ClassLoaderConfiguration;
 import com.googlecode.vestige.platform.VestigePlatform;
+import com.googlecode.vestige.platform.system.VestigePolicy;
+import com.googlecode.vestige.platform.system.VestigeSecurityManager;
 import com.googlecode.vestige.platform.system.VestigeSystem;
 
 /**
@@ -60,6 +69,39 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultApplicationManager.class);
 
+    private static final Set<Permission> SYSTEM_RESOURCES_PERMISSIONS;
+
+    static {
+        Set<Permission> resourcesPermissions = new HashSet<Permission>();
+        try {
+            resourcesPermissions.add(ClassLoader.getSystemResource("java/lang/Object.class").openConnection().getPermission());
+            for (URL url : ((URLClassLoader) ClassLoader.getSystemClassLoader()).getURLs()) {
+                resourcesPermissions.add(url.openConnection().getPermission());
+            }
+        } catch (Exception e) {
+            LOGGER.debug("Unable to add permission to system classloader", e);
+        }
+        String extdir = System.getProperty("java.ext.dirs");
+        if (extdir != null) {
+            StringTokenizer extensionsTok = new StringTokenizer(extdir, File.pathSeparator);
+            while (extensionsTok.hasMoreTokens()) {
+                String path = new File(extensionsTok.nextToken()).getPath();
+                resourcesPermissions.add(new FilePermission(path, "read"));
+                resourcesPermissions.add(new FilePermission(path + File.separator + "-", "read"));
+            }
+        }
+        String libdir = System.getProperty("java.library.path");
+        if (libdir != null) {
+            StringTokenizer extensionsTok = new StringTokenizer(libdir, File.pathSeparator);
+            while (extensionsTok.hasMoreTokens()) {
+                String path = new File(extensionsTok.nextToken()).getPath();
+                resourcesPermissions.add(new FilePermission(path, "read"));
+                resourcesPermissions.add(new FilePermission(path + File.separator + "*", "read"));
+            }
+        }
+        SYSTEM_RESOURCES_PERMISSIONS = Collections.unmodifiableSet(resourcesPermissions);
+    }
+
     private transient VestigePlatform vestigePlatform;
 
     private Map<String, Map<String, Map<List<Integer>, ApplicationContext>>> applicationContextByVersionByNameByRepo = new TreeMap<String, Map<String, Map<List<Integer>, ApplicationContext>>>();
@@ -67,6 +109,8 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
     private Map<String, URL> urlByRepo = new TreeMap<String, URL>();
 
     private transient ApplicationDescriptorFactory applicationDescriptorFactory;
+
+    private transient ThreadGroupDestroyer threadGroupDestroyer;
 
     private File repoFile;
 
@@ -185,6 +229,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         applicationContext.setClassName(applicationDescriptor.getLauncherClassName());
         applicationContext.setPrivateSystem(applicationDescriptor.isLauncherPrivateSystem());
         applicationContext.setResolve(applicationDescriptor.getLauncherClassLoaderConfiguration());
+        applicationContext.setPermissions(applicationDescriptor.getPermissions());
 
         applicationContext.setHome(file);
         applicationContext.setSupportedMigrationVersion(supportedMigrationVersion);
@@ -642,8 +687,9 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
             final VestigeSystem vestigeSystem;
             final VestigeClassLoader<AttachedVestigeClassLoader> classLoader;
             final RuntimeApplicationContext previousRuntimeApplicationContext = applicationContext.getRuntimeApplicationContext();
+            final ClassLoaderConfiguration resolve = applicationContext.getResolve();
             if (previousRuntimeApplicationContext == null) {
-                attach = vestigePlatform.attach(applicationContext.getResolve());
+                attach = vestigePlatform.attach(resolve);
                 classLoader = vestigePlatform.getClassLoader(attach);
                 if (applicationContext.isPrivateSystem()) {
                     vestigeSystem = new VestigeSystem(VestigeSystem.getSystem());
@@ -658,10 +704,13 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
             }
             vestigePlatform.start(attach);
 
-            Thread thread = new Thread("main") {
+            final ThreadGroup threadGroup = new ThreadGroup(applicationContext.getName());
+            Thread thread = new Thread(threadGroup, "main") {
                 @Override
                 public void run() {
                     MDC.put(VESTIGE_APP_NAME, applicationContext.getName());
+                    VestigePolicy vestigePolicy = VestigeSystem.getSystem().getVestigePolicy();
+                    VestigeSecurityManager vestigeSecurityManager = VestigeSystem.getSystem().getVestigeSecurityManager();
                     try {
                         if (vestigeSystem != null) {
                             VestigeSystem.pushSystem(vestigeSystem);
@@ -703,8 +752,49 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                                 }
                             }
                         }
+                        if (vestigeSecurityManager != null) {
+                            vestigeSecurityManager.setThreadGroup(threadGroup);
+                        }
+                        if (vestigePolicy != null) {
+                            Permissions permissions = new Permissions();
+                            // getResource for system jar
+                            for (Permission permission : SYSTEM_RESOURCES_PERMISSIONS) {
+                                permissions.add(permission);
+                            }
+                            // getResource for app jar
+                            for (Permission permission : resolve.getPermissions()) {
+                                permissions.add(permission);
+                            }
+                            // access to home of app
+                            permissions.add(new FilePermission(applicationContext.getHome().getPath(), "read,write"));
+                            permissions.add(new FilePermission(applicationContext.getHome().getPath() + File.separator + "-", "read,write,delete"));
+                            // access to tmp dir
+                            String tmpdir = System.getProperty("java.io.tmpdir");
+                            if (tmpdir != null) {
+                                String path = new File(tmpdir).getPath();
+                                permissions.add(new FilePermission(path, "read,write"));
+                                permissions.add(new FilePermission(path + File.separator + "-", "read,write,delete"));
+                            }
+                            // application specific permission
+                            for (Permission permission : applicationContext.getPermissions()) {
+                                permissions.add(permission);
+                            }
+                            vestigePolicy.setPermissionCollection(permissions);
+                        }
                         runnable.run();
+                    } catch (RuntimeException e) {
+                        if (vestigePolicy != null) {
+                            vestigePolicy.unsetPermissionCollection();
+                        }
+                        LOGGER.error("Application runtime exception", e);
                     } finally {
+                        if (vestigePolicy != null) {
+                            vestigePolicy.unsetPermissionCollection();
+                        }
+                        if (vestigeSecurityManager != null) {
+                            vestigeSecurityManager.unsetThreadGroup();
+                            clearSubclassAuditsThreadCache();
+                        }
                         vestigePlatform.stop(attach);
                         vestigePlatform.detach(attach);
                         // allow inner start to run
@@ -722,6 +812,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                             VestigeSystem.popSystem();
                         }
                         MDC.remove(VESTIGE_APP_NAME);
+                        threadGroupDestroyer.destroy(Thread.currentThread(), threadGroup);
                     }
                 }
             };
@@ -731,6 +822,31 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
             thread.start();
         } catch (Exception e) {
             throw new ApplicationException("Unable to start", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void clearSubclassAuditsThreadCache() {
+        try {
+            Field field = Thread.class.getDeclaredField("subclassAudits");
+            Map<Thread, Boolean> map;
+            if (!field.isAccessible()) {
+                field.setAccessible(true);
+                try {
+                    map = (Map<Thread, Boolean>) field.get(null);
+                } finally {
+                    field.setAccessible(false);
+                }
+            } else {
+                map = (Map<Thread, Boolean>) field.get(null);
+            }
+            if (map != null) {
+                synchronized (map) {
+                    map.clear();
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.debug("Unable to clear cache", e);
         }
     }
 
@@ -770,9 +886,12 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         }
         this.vestigePlatform = null;
         this.applicationDescriptorFactory = null;
+        threadGroupDestroyer.interrupt();
     }
 
     public void powerOn(final VestigePlatform vestigePlatform, final ApplicationDescriptorFactory applicationDescriptorFactory) {
+        VestigePolicy vestigePolicy = VestigeSystem.getSystem().getVestigePolicy();
+        vestigePolicy.addSafeClassLoader(DefaultApplicationManager.class.getClassLoader());
         this.vestigePlatform = vestigePlatform;
         this.applicationDescriptorFactory = applicationDescriptorFactory;
         List<ApplicationContext> autoStartApplicationContext = new ArrayList<ApplicationContext>();
@@ -800,6 +919,8 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                 LOGGER.error("Unable to start", e);
             }
         }
+        threadGroupDestroyer = new ThreadGroupDestroyer();
+        threadGroupDestroyer.start();
     }
 
     public void autoMigrate() throws ApplicationException {

@@ -19,6 +19,7 @@ package com.googlecode.vestige.application.descriptor.xml;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.Permission;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,6 +34,8 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonatype.aether.graph.Dependency;
 import org.sonatype.aether.util.artifact.DefaultArtifact;
 
@@ -48,7 +51,9 @@ import com.googlecode.vestige.application.descriptor.xml.schema.Except;
 import com.googlecode.vestige.application.descriptor.xml.schema.MavenConfig;
 import com.googlecode.vestige.application.descriptor.xml.schema.ModifyDependency;
 import com.googlecode.vestige.application.descriptor.xml.schema.ObjectFactory;
+import com.googlecode.vestige.application.descriptor.xml.schema.Permissions;
 import com.googlecode.vestige.application.descriptor.xml.schema.ReplaceDependency;
+import com.googlecode.vestige.application.util.PropertyExpander;
 import com.googlecode.vestige.resolver.maven.DefaultDependencyModifier;
 import com.googlecode.vestige.resolver.maven.MavenArtifactResolver;
 import com.googlecode.vestige.resolver.maven.MavenRepository;
@@ -57,6 +62,8 @@ import com.googlecode.vestige.resolver.maven.MavenRepository;
  * @author Gael Lalire
  */
 public class XMLApplicationDescriptorFactory implements ApplicationDescriptorFactory {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(XMLApplicationDescriptorFactory.class);
 
     private MavenArtifactResolver mavenArtifactResolver;
 
@@ -96,15 +103,58 @@ public class XMLApplicationDescriptorFactory implements ApplicationDescriptorFac
         List<MavenRepository> additionalRepositories = new ArrayList<MavenRepository>();
         DefaultDependencyModifier defaultDependencyModifier = new DefaultDependencyModifier();
         Config configurations = application.getConfigurations();
+        Set<Permission> permissionSet = new HashSet<Permission>();
         if (configurations != null) {
             MavenConfig mavenConfig = configurations.getMavenConfig();
             if (mavenConfig != null) {
                 setMavenConfig(configurations.getMavenConfig(), defaultDependencyModifier, additionalRepositories);
             }
+            Permissions permissions = configurations.getPermissions();
+            if (permissions != null) {
+                readPermissions(permissions, permissionSet);
+            }
         }
         return new XMLApplicationDescriptor(mavenArtifactResolver, repoName + "-" + appName + "-" + VersionUtils.toString(version), version, application, additionalRepositories,
-                defaultDependencyModifier);
+                defaultDependencyModifier, permissionSet);
     }
+
+    public void readPermissions(final Permissions permissions, final Set<Permission> result) {
+        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+        for(com.googlecode.vestige.application.descriptor.xml.schema.Permission perm : permissions.getPermission()) {
+            try {
+                String type = perm.getType();
+                String name = PropertyExpander.expand(perm.getName());
+                String actions = PropertyExpander.expand(perm.getActions());
+                Class<?> loadClass = systemClassLoader.loadClass(type);
+                if (name == null) {
+                    try {
+                        result.add((Permission) loadClass.newInstance());
+                        continue;
+                    } catch (Exception e) {
+                        LOGGER.trace("Exception", e);
+                    }
+                }
+                if (actions == null) {
+                    try {
+                        result.add((Permission) loadClass.getConstructor(String.class).newInstance(name));
+                        continue;
+                    } catch (Exception e) {
+                        LOGGER.trace("Exception", e);
+                    }
+                }
+                try {
+                    result.add((Permission) loadClass.getConstructor(String.class, String.class).newInstance(name, actions));
+                    continue;
+                } catch (Exception e) {
+                    LOGGER.trace("Exception", e);
+                }
+                LOGGER.error("Permission issue");
+            } catch (Exception e) {
+                LOGGER.error("Permission issue", e);
+            }
+        }
+    }
+
 
     public void setMavenConfig(final MavenConfig mavenConfig, final DefaultDependencyModifier defaultDependencyModifier,
             final List<MavenRepository> additionalRepositories) {

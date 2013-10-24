@@ -19,6 +19,7 @@ package com.googlecode.vestige.application.descriptor.xml;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.Permission;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -62,14 +63,17 @@ public class XMLApplicationDescriptor implements ApplicationDescriptor {
 
     private DefaultDependencyModifier defaultDependencyModifier;
 
+    private Set<Permission> permissions;
+
     public XMLApplicationDescriptor(final MavenArtifactResolver mavenArtifactResolver, final String appName, final List<Integer> version, final Application application,
-            final List<MavenRepository> additionalRepositories, final DefaultDependencyModifier defaultDependencyModifier) {
+            final List<MavenRepository> additionalRepositories, final DefaultDependencyModifier defaultDependencyModifier, final Set<Permission> permissions) {
         this.mavenArtifactResolver = mavenArtifactResolver;
         this.appName = appName;
         this.version = version;
         this.application = application;
         this.additionalRepositories = additionalRepositories;
         this.defaultDependencyModifier = defaultDependencyModifier;
+        this.permissions = permissions;
     }
 
     public Set<List<Integer>> getSupportedMigrationVersions() throws ApplicationException {
@@ -273,5 +277,9 @@ public class XMLApplicationDescriptor implements ApplicationDescriptor {
         }
     }
 
+    @Override
+    public Set<Permission> getPermissions() throws ApplicationException {
+        return permissions;
+    }
 
 }

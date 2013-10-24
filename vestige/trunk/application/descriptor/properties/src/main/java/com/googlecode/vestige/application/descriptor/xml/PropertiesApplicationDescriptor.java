@@ -17,6 +17,7 @@
 
 package com.googlecode.vestige.application.descriptor.xml;
 
+import java.security.Permission;
 import java.util.List;
 import java.util.Set;
 
@@ -63,6 +64,12 @@ public class PropertiesApplicationDescriptor implements ApplicationDescriptor {
     public boolean isLauncherPrivateSystem() throws ApplicationException {
         // TODO Auto-generated method stub
         return false;
+    }
+
+    @Override
+    public Set<Permission> getPermissions() throws ApplicationException {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

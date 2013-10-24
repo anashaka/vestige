@@ -30,6 +30,7 @@
   <xs:complexType name="Config">
     <xs:all>
       <xs:element minOccurs="0" name="mavenConfig" type="MavenConfig" />
+      <xs:element minOccurs="0" name="permissions" type="Permissions" />
     </xs:all>
   </xs:complexType>
 
@@ -133,5 +134,16 @@
     </xs:choice>
   </xs:complexType>
 
+  <xs:complexType name="Permissions">
+    <xs:sequence>
+      <xs:element name="permission" type="Permission" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Permission">
+    <xs:attribute name="type" type="xs:string" use="required" />
+    <xs:attribute name="name" type="xs:string" use="optional" />
+    <xs:attribute name="actions" type="xs:string" use="optional" />
+  </xs:complexType>
 
 </xs:schema>
