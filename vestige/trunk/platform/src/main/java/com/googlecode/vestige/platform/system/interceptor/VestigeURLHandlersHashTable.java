@@ -24,6 +24,7 @@ import java.util.Map;
 
 import com.googlecode.vestige.core.StackedHandler;
 import com.googlecode.vestige.platform.system.VestigeSystem;
+import com.googlecode.vestige.platform.system.VestigeSystemHolder;
 
 /**
  * @author Gael Lalire
@@ -34,12 +35,15 @@ public class VestigeURLHandlersHashTable extends Hashtable<String, URLStreamHand
 
     private Hashtable<String, URLStreamHandler> nextHandler;
 
+    private VestigeSystemHolder vestigeSystemHolder;
+
+    public VestigeURLHandlersHashTable(final VestigeSystemHolder vestigeSystemHolder) {
+        this.vestigeSystemHolder = vestigeSystemHolder;
+    }
+
     @Override
     public URLStreamHandler get(final Object protocol) {
-        VestigeSystem system = VestigeSystem.getSystem();
-        if (system == null) {
-            return super.get(protocol);
-        }
+        VestigeSystem system = vestigeSystemHolder.getVestigeSystem();
         Map<String, URLStreamHandler> urlStreamHandlerByProtocol = system.getURLStreamHandlerByProtocol();
         URLStreamHandler urlStreamHandler = urlStreamHandlerByProtocol.get(protocol);
         if (urlStreamHandler == null) {
@@ -57,10 +61,7 @@ public class VestigeURLHandlersHashTable extends Hashtable<String, URLStreamHand
 
     @Override
     public URLStreamHandler put(final String protocol, final URLStreamHandler urlStreamHandler) {
-        VestigeSystem system = VestigeSystem.getSystem();
-        if (system == null) {
-            return super.put(protocol, urlStreamHandler);
-        }
+        VestigeSystem system = vestigeSystemHolder.getVestigeSystem();
         return system.getURLStreamHandlerByProtocol().put(protocol, urlStreamHandler);
     }
 

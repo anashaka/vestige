@@ -15,7 +15,7 @@ Vestige.pkg:
 	
 test:
 	unzip -u -o -d /Applications/Vestige.app/Contents/Resources/vestige_home ../standard_edition_standalone/target/vestige.assemblies.standard_edition_standalone-$(VESTIGE_VERSION)-unix.zip
-	sed -i~ -e 's/-Djava.util.logging.manager/-Dapple.awt.UIElement=true -Djava.util.logging.manager/' -e 's/VESTIGE_BASE=.*/VESTIGE_BASE="$$HOME\/Library\/Application Support\/Vestige"/' target/wc/Vestige.app/Contents/Resources/vestige_home/vestige
+	sed -i~ -e 's/-Djava.util.logging.manager/-Dapple.awt.UIElement=true -Djava.util.logging.manager/' -e 's/VESTIGE_BASE=.*/VESTIGE_BASE="$$HOME\/Library\/Application Support\/Vestige"/' /Applications/Vestige.app/Contents/Resources/vestige_home/vestige
 	rm /Applications/Vestige.app/Contents/Resources/vestige_home/vestige~
 
 clean:

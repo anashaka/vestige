@@ -15,31 +15,27 @@
  * along with Vestige.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.googlecode.vestige.platform.system;
+package com.googlecode.vestige.jvm_enhancer;
+
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * @author Gael Lalire
  */
-public class VestigeSystemHolder {
+@SuppressWarnings("restriction")
+public class WeakSoftCache extends sun.misc.SoftCache {
 
-    private ThreadLocal<VestigeSystem> vestigeSystems = new InheritableThreadLocal<VestigeSystem>();
+    private Map<Object, Object> map = new WeakHashMap<Object, Object>();
 
-    private VestigeSystem fallbackVestigeSystem;
-
-    public VestigeSystem getVestigeSystem() {
-        VestigeSystem vestigeSystem = vestigeSystems.get();
-        if (vestigeSystem != null) {
-            return vestigeSystem;
-        }
-        return fallbackVestigeSystem;
+    @Override
+    public Object get(final Object arg0) {
+        return map.get(arg0);
     }
 
-    public void setVestigeSystem(final VestigeSystem vestigeSystem) {
-        vestigeSystems.set(vestigeSystem);
-    }
-
-    public void setFallbackVestigeSystem(final VestigeSystem vestigeSystem) {
-        fallbackVestigeSystem = vestigeSystem;
+    @Override
+    public Object put(final Object arg0, final Object arg1) {
+        return map.put(arg0, arg1);
     }
 
 }

@@ -22,6 +22,7 @@ import java.io.PrintStream;
 import java.net.ContentHandlerFactory;
 import java.net.ProxySelector;
 import java.net.URLStreamHandlerFactory;
+import java.security.Policy;
 import java.util.Properties;
 
 /**
@@ -54,5 +55,21 @@ public interface PublicVestigeSystem {
     ProxySelector getDefaultProxySelector();
 
     void setDefaultProxySelector(ProxySelector defaultProxySelector);
+
+    void setWhiteListPolicy(Policy policy);
+
+    Policy getWhiteListPolicy();
+
+    void setPolicy(Policy policy);
+
+    Policy getPolicy();
+
+    void setSecurityManager(SecurityManager policy);
+
+    SecurityManager getSecurityManager();
+
+    PublicVestigeSystem createSubSystem();
+
+    void setCurrentSystem();
 
 }

@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.googlecode.vestige.platform.system.PublicVestigeSystem;
-import com.googlecode.vestige.platform.system.VestigeSystem;
 
 /**
  * @author Gael Lalire
@@ -65,7 +64,7 @@ public class VestigeSystemInvocationHandler implements InvocationHandler {
         }
     }
 
-    public static Object createProxy(final ClassLoader classLoader, final Class<?> itf, final VestigeSystem vestigeSystem) {
+    public static Object createProxy(final ClassLoader classLoader, final Class<?> itf, final PublicVestigeSystem vestigeSystem) {
         return Proxy.newProxyInstance(classLoader, new Class<?>[] {itf}, new VestigeSystemInvocationHandler(vestigeSystem));
     }
 

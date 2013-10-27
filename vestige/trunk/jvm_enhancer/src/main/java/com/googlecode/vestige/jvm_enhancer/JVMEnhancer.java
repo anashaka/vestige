@@ -17,7 +17,10 @@
 
 package com.googlecode.vestige.jvm_enhancer;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.net.ProxySelector;
+import java.util.concurrent.Callable;
 
 import com.btr.proxy.util.Logger;
 import com.googlecode.vestige.core.StackedHandlerUtils;
@@ -52,6 +55,52 @@ public class JVMEnhancer {
             }
             systemProxySelector = null;
             Logger.setBackend(null);
+        }
+    }
+
+    private static void setField(final Field field, final Object value) throws Exception {
+        Callable<Void> callable = new Callable<Void>() {
+
+            @Override
+            public Void call() throws Exception {
+                if (!field.isAccessible()) {
+                    field.setAccessible(true);
+                    try {
+                    field.set(null, value);
+                    } finally {
+                        field.setAccessible(false);
+                    }
+                } else {
+                    field.set(null, value);
+                }
+                return null;
+            }
+        };
+        if (Modifier.isFinal(field.getModifiers())) {
+            unsetFinalField(field, callable);
+        } else {
+            callable.call();
+        }
+    }
+
+    private static void unsetFinalField(final Field field, final Callable<Void> callable) throws Exception {
+        Field modifiersField = Field.class.getDeclaredField("modifiers");
+        boolean accessible = modifiersField.isAccessible();
+        if (!accessible) {
+            modifiersField.setAccessible(true);
+        }
+        try {
+            int modifiers = field.getModifiers();
+            modifiersField.setInt(field, modifiers & ~Modifier.FINAL);
+            try {
+                callable.call();
+            } finally {
+                modifiersField.setInt(field, modifiers);
+            }
+        } finally {
+            if (!accessible) {
+                modifiersField.setAccessible(false);
+            }
         }
     }
 
@@ -117,6 +166,14 @@ public class JVMEnhancer {
         } catch (Exception e) {
             // ignore
         }
+
+        try {
+            Class<?> weakSoftCacheClass = Class.forName("com.googlecode.vestige.jvm_enhancer.WeakSoftCache");
+            setField(Thread.class.getDeclaredField("subclassAudits"), weakSoftCacheClass.newInstance());
+        } catch (Exception e) {
+            // ignore
+        }
+
         thread.interrupt();
         thread.join();
     }

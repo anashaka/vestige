@@ -23,15 +23,17 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
+import java.security.AccessController;
 import java.security.Permission;
 import java.security.Permissions;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -54,9 +56,9 @@ import com.googlecode.vestige.core.VestigeClassLoader;
 import com.googlecode.vestige.platform.AttachedVestigeClassLoader;
 import com.googlecode.vestige.platform.ClassLoaderConfiguration;
 import com.googlecode.vestige.platform.VestigePlatform;
-import com.googlecode.vestige.platform.system.VestigePolicy;
-import com.googlecode.vestige.platform.system.VestigeSecurityManager;
-import com.googlecode.vestige.platform.system.VestigeSystem;
+import com.googlecode.vestige.platform.system.PrivateVestigePolicy;
+import com.googlecode.vestige.platform.system.PrivateVestigeSecurityManager;
+import com.googlecode.vestige.platform.system.PublicVestigeSystem;
 
 /**
  * @author Gael Lalire
@@ -103,6 +105,12 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
     }
 
     private transient VestigePlatform vestigePlatform;
+
+    private transient PublicVestigeSystem publicVestigeSystem;
+
+    private transient PrivateVestigePolicy vestigePolicy;
+
+    private transient PrivateVestigeSecurityManager vestigeSecurityManager;
 
     private Map<String, Map<String, Map<List<Integer>, ApplicationContext>>> applicationContextByVersionByNameByRepo = new TreeMap<String, Map<String, Map<List<Integer>, ApplicationContext>>>();
 
@@ -626,7 +634,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         start(applicationContext, null, null);
     }
 
-    public static Object callConstructor(final ClassLoader classLoader, final Class<?> loadClass, final File home, final VestigeSystem vestigeSystem) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException, ApplicationException  {
+    public static Object callConstructor(final ClassLoader classLoader, final Class<?> loadClass, final File home, final PublicVestigeSystem vestigeSystem) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException, ApplicationException  {
         Class<?> bestItfType = null;
         Constructor<?> bestConstructor = null;
         int level = -1;
@@ -684,7 +692,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
     public void start(final ApplicationContext applicationContext, final Object runMutex, final Object constructorMutex) throws ApplicationException {
         try {
             final int attach;
-            final VestigeSystem vestigeSystem;
+            final PublicVestigeSystem vestigeSystem;
             final VestigeClassLoader<AttachedVestigeClassLoader> classLoader;
             final RuntimeApplicationContext previousRuntimeApplicationContext = applicationContext.getRuntimeApplicationContext();
             final ClassLoaderConfiguration resolve = applicationContext.getResolve();
@@ -692,7 +700,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                 attach = vestigePlatform.attach(resolve);
                 classLoader = vestigePlatform.getClassLoader(attach);
                 if (applicationContext.isPrivateSystem()) {
-                    vestigeSystem = new VestigeSystem(VestigeSystem.getSystem());
+                    vestigeSystem = publicVestigeSystem.createSubSystem();
                 } else {
                     vestigeSystem = null;
                 }
@@ -709,53 +717,12 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                 @Override
                 public void run() {
                     MDC.put(VESTIGE_APP_NAME, applicationContext.getName());
-                    VestigePolicy vestigePolicy = VestigeSystem.getSystem().getVestigePolicy();
-                    VestigeSecurityManager vestigeSecurityManager = VestigeSystem.getSystem().getVestigeSecurityManager();
                     try {
                         if (vestigeSystem != null) {
-                            VestigeSystem.pushSystem(vestigeSystem);
-                        }
-                        Runnable runnable;
-                        RuntimeApplicationContext runtimeApplicationContext;
-                        if (previousRuntimeApplicationContext == null) {
-                            Class<?> loadClass;
-                            try {
-                                loadClass = classLoader.loadClass(applicationContext.getClassName());
-                                runnable = (Runnable) callConstructor(classLoader, loadClass, applicationContext.getHome(), vestigeSystem);
-                            } catch (Exception e) {
-                                LOGGER.error("Unable to create instance", e);
-                                return;
-                            }
-                            runtimeApplicationContext = new RuntimeApplicationContext(classLoader, runnable, vestigeSystem, runMutex == null);
-                            if (constructorMutex != null) {
-                                synchronized (constructorMutex) {
-                                    applicationContext.setRuntimeApplicationContext(runtimeApplicationContext);
-                                    constructorMutex.notify();
-                                }
-                            } else {
-                                applicationContext.setRuntimeApplicationContext(runtimeApplicationContext);
-                            }
-                            classLoader.getData().addObject(new SoftReference<RuntimeApplicationContext>(runtimeApplicationContext));
-                        } else {
-                            runtimeApplicationContext = previousRuntimeApplicationContext;
-                            runnable = runtimeApplicationContext.getRunnable();
-                        }
-                        if (runMutex != null) {
-                            synchronized (runMutex) {
-                                while (!runtimeApplicationContext.isRunAllowed()) {
-                                    try {
-                                        runMutex.wait();
-                                    } catch (InterruptedException e) {
-                                        LOGGER.trace("Application stopped before run method call", e);
-                                        return;
-                                    }
-                                }
-                            }
+                            vestigeSystem.setCurrentSystem();
                         }
                         if (vestigeSecurityManager != null) {
                             vestigeSecurityManager.setThreadGroup(threadGroup);
-                        }
-                        if (vestigePolicy != null) {
                             Permissions permissions = new Permissions();
                             // getResource for system jar
                             for (Permission permission : SYSTEM_RESOURCES_PERMISSIONS) {
@@ -781,19 +748,76 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                             }
                             vestigePolicy.setPermissionCollection(permissions);
                         }
-                        runnable.run();
+                        final Runnable runnable;
+                        RuntimeApplicationContext runtimeApplicationContext;
+                        if (previousRuntimeApplicationContext == null) {
+                            try {
+                                if (vestigeSecurityManager != null) {
+                                    runnable = AccessController.doPrivileged(new PrivilegedExceptionAction<Runnable>() {
+                                        @Override
+                                        public Runnable run() throws Exception {
+                                            return (Runnable) callConstructor(classLoader, classLoader.loadClass(applicationContext.getClassName()), applicationContext.getHome(), vestigeSystem);
+                                        }
+                                    });
+                                } else {
+                                    runnable = (Runnable) callConstructor(classLoader, classLoader.loadClass(applicationContext.getClassName()), applicationContext.getHome(), vestigeSystem);
+                                }
+                            } catch (Exception e) {
+                                if (vestigeSecurityManager != null) {
+                                    vestigePolicy.unsetPermissionCollection();
+                                }
+                                LOGGER.error("Unable to create instance", e);
+                                return;
+                            }
+                            runtimeApplicationContext = new RuntimeApplicationContext(classLoader, runnable, vestigeSystem, runMutex == null);
+                            if (constructorMutex != null) {
+                                synchronized (constructorMutex) {
+                                    applicationContext.setRuntimeApplicationContext(runtimeApplicationContext);
+                                    constructorMutex.notify();
+                                }
+                            } else {
+                                applicationContext.setRuntimeApplicationContext(runtimeApplicationContext);
+                            }
+                            classLoader.getData().addObject(new SoftReference<RuntimeApplicationContext>(runtimeApplicationContext));
+                        } else {
+                            runtimeApplicationContext = previousRuntimeApplicationContext;
+                            runnable = runtimeApplicationContext.getRunnable();
+                        }
+                        if (runMutex != null) {
+                            synchronized (runMutex) {
+                                while (!runtimeApplicationContext.isRunAllowed()) {
+                                    try {
+                                        runMutex.wait();
+                                    } catch (InterruptedException e) {
+                                        if (vestigeSecurityManager != null) {
+                                            vestigePolicy.unsetPermissionCollection();
+                                        }
+                                        LOGGER.trace("Application stopped before run method call", e);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                        if (vestigeSecurityManager != null) {
+                            AccessController.doPrivileged(new PrivilegedAction<Void>() {
+                                @Override
+                                public Void run() {
+                                    runnable.run();
+                                    return null;
+                                }
+                            });
+                        } else {
+                            runnable.run();
+                        }
                     } catch (RuntimeException e) {
-                        if (vestigePolicy != null) {
+                        if (vestigeSecurityManager != null) {
                             vestigePolicy.unsetPermissionCollection();
                         }
                         LOGGER.error("Application runtime exception", e);
                     } finally {
-                        if (vestigePolicy != null) {
-                            vestigePolicy.unsetPermissionCollection();
-                        }
                         if (vestigeSecurityManager != null) {
+                            vestigePolicy.unsetPermissionCollection();
                             vestigeSecurityManager.unsetThreadGroup();
-                            clearSubclassAuditsThreadCache();
                         }
                         vestigePlatform.stop(attach);
                         vestigePlatform.detach(attach);
@@ -809,7 +833,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                         // allow external start to run
                         applicationContext.setStarted(false);
                         if (vestigeSystem != null) {
-                            VestigeSystem.popSystem();
+                            publicVestigeSystem.setCurrentSystem();
                         }
                         MDC.remove(VESTIGE_APP_NAME);
                         threadGroupDestroyer.destroy(Thread.currentThread(), threadGroup);
@@ -822,31 +846,6 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
             thread.start();
         } catch (Exception e) {
             throw new ApplicationException("Unable to start", e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public static void clearSubclassAuditsThreadCache() {
-        try {
-            Field field = Thread.class.getDeclaredField("subclassAudits");
-            Map<Thread, Boolean> map;
-            if (!field.isAccessible()) {
-                field.setAccessible(true);
-                try {
-                    map = (Map<Thread, Boolean>) field.get(null);
-                } finally {
-                    field.setAccessible(false);
-                }
-            } else {
-                map = (Map<Thread, Boolean>) field.get(null);
-            }
-            if (map != null) {
-                synchronized (map) {
-                    map.clear();
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.debug("Unable to clear cache", e);
         }
     }
 
@@ -889,9 +888,10 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         threadGroupDestroyer.interrupt();
     }
 
-    public void powerOn(final VestigePlatform vestigePlatform, final ApplicationDescriptorFactory applicationDescriptorFactory) {
-        VestigePolicy vestigePolicy = VestigeSystem.getSystem().getVestigePolicy();
-        vestigePolicy.addSafeClassLoader(DefaultApplicationManager.class.getClassLoader());
+    public void powerOn(final VestigePlatform vestigePlatform, final PublicVestigeSystem vestigeSystem, final PrivateVestigeSecurityManager vestigeSecurityManager, final PrivateVestigePolicy vestigePolicy, final ApplicationDescriptorFactory applicationDescriptorFactory) {
+        this.publicVestigeSystem = vestigeSystem;
+        this.vestigeSecurityManager = vestigeSecurityManager;
+        this.vestigePolicy = vestigePolicy;
         this.vestigePlatform = vestigePlatform;
         this.applicationDescriptorFactory = applicationDescriptorFactory;
         List<ApplicationContext> autoStartApplicationContext = new ArrayList<ApplicationContext>();

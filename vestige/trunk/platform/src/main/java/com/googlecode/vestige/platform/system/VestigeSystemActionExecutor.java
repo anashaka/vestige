@@ -20,26 +20,8 @@ package com.googlecode.vestige.platform.system;
 /**
  * @author Gael Lalire
  */
-public class VestigeSystemHolder {
+public interface VestigeSystemActionExecutor {
 
-    private ThreadLocal<VestigeSystem> vestigeSystems = new InheritableThreadLocal<VestigeSystem>();
-
-    private VestigeSystem fallbackVestigeSystem;
-
-    public VestigeSystem getVestigeSystem() {
-        VestigeSystem vestigeSystem = vestigeSystems.get();
-        if (vestigeSystem != null) {
-            return vestigeSystem;
-        }
-        return fallbackVestigeSystem;
-    }
-
-    public void setVestigeSystem(final VestigeSystem vestigeSystem) {
-        vestigeSystems.set(vestigeSystem);
-    }
-
-    public void setFallbackVestigeSystem(final VestigeSystem vestigeSystem) {
-        fallbackVestigeSystem = vestigeSystem;
-    }
+    void execute(VestigeSystemAction vestigeSystemAction);
 
 }
