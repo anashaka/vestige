@@ -59,11 +59,11 @@ import com.googlecode.vestige.edition.standard.schema.Settings;
 import com.googlecode.vestige.edition.standard.schema.Web;
 import com.googlecode.vestige.platform.DefaultVestigePlatform;
 import com.googlecode.vestige.platform.VestigePlatform;
+import com.googlecode.vestige.platform.system.JVMVestigeSystemActionExecutor;
 import com.googlecode.vestige.platform.system.PrivateVestigePolicy;
 import com.googlecode.vestige.platform.system.PrivateVestigeSecurityManager;
 import com.googlecode.vestige.platform.system.PrivateWhiteListVestigePolicy;
 import com.googlecode.vestige.platform.system.PublicVestigeSystem;
-import com.googlecode.vestige.platform.system.JVMVestigeSystemActionExecutor;
 import com.googlecode.vestige.platform.system.VestigeSystemAction;
 import com.googlecode.vestige.platform.system.VestigeSystemActionExecutor;
 import com.googlecode.vestige.resolver.maven.MavenArtifactResolver;
@@ -92,6 +92,8 @@ public class StandardEditionVestige implements VestigeSystemAction, Runnable {
     private File resolverFile;
 
     private VestigeSystemActionExecutor vestigeSystemActionExecutor;
+
+    private boolean securityEnabled;
 
     @SuppressWarnings("unchecked")
     public StandardEditionVestige(final File homeFile, final File baseFile, final VestigeExecutor vestigeExecutor, final VestigePlatform vestigePlatform) throws Exception {
@@ -167,7 +169,8 @@ public class StandardEditionVestige implements VestigeSystemAction, Runnable {
 
         applicationDescriptorFactory = new XMLApplicationDescriptorFactory(new MavenArtifactResolver(mavenSettingsFile));
 
-        vestigeSystemActionExecutor = new JVMVestigeSystemActionExecutor(settings.getSecurity().isEnabled());
+        securityEnabled = settings.getSecurity().isEnabled();
+        vestigeSystemActionExecutor = new JVMVestigeSystemActionExecutor(securityEnabled);
 
         Admin admin = settings.getAdmin();
         SSH ssh = admin.getSsh();
@@ -219,19 +222,24 @@ public class StandardEditionVestige implements VestigeSystemAction, Runnable {
             startTimeMillis = 0;
         }
 
-        PrivateVestigePolicy vestigePolicy = new PrivateVestigePolicy();
-        vestigeSystem.setPolicy(vestigePolicy);
+        PrivateVestigePolicy vestigePolicy = null;
+        PrivateVestigeSecurityManager vestigeSecurityManager = null;
 
-        PrivateWhiteListVestigePolicy whiteListVestigePolicy = new PrivateWhiteListVestigePolicy();
-        // the launch class (before application code)
-        whiteListVestigePolicy.addSafeClassLoader(DefaultApplicationManager.class.getClassLoader());
-        // the log class (after application code)
-        whiteListVestigePolicy.addSafeClassLoader(JoranConfigurator.class.getClassLoader());
-        whiteListVestigePolicy.addSafeClassLoader(ConsoleTarget.class.getClassLoader());
-        vestigeSystem.setWhiteListPolicy(whiteListVestigePolicy);
+        if (securityEnabled) {
+            vestigePolicy = new PrivateVestigePolicy();
+            vestigeSystem.setPolicy(vestigePolicy);
 
-        PrivateVestigeSecurityManager vestigeSecurityManager = new PrivateVestigeSecurityManager();
-        vestigeSystem.setSecurityManager(vestigeSecurityManager);
+            PrivateWhiteListVestigePolicy whiteListVestigePolicy = new PrivateWhiteListVestigePolicy();
+            // the launch class (before application code)
+            whiteListVestigePolicy.addSafeClassLoader(DefaultApplicationManager.class.getClassLoader());
+            // the log class (after application code)
+            whiteListVestigePolicy.addSafeClassLoader(JoranConfigurator.class.getClassLoader());
+            whiteListVestigePolicy.addSafeClassLoader(ConsoleTarget.class.getClassLoader());
+            vestigeSystem.setWhiteListPolicy(whiteListVestigePolicy);
+
+            vestigeSecurityManager = new PrivateVestigeSecurityManager();
+            vestigeSystem.setSecurityManager(vestigeSecurityManager);
+        }
 
         try {
             start(vestigeSystem, vestigeSecurityManager, vestigePolicy);

@@ -22,6 +22,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +39,13 @@ public class VestigeSystemInvocationHandler implements InvocationHandler {
 
     private Map<String, Map<List<Class<?>>, Method>> delegateMethods = new HashMap<String, Map<List<Class<?>>, Method>>();
 
+    private ClassLoader classLoader;
+
+    private Class<?> itf;
+
     private PublicVestigeSystem vestigeSystem;
+
+    private boolean security;
 
     public void add(final Method method) {
         if (Modifier.isStatic(method.getModifiers())) {
@@ -51,8 +60,12 @@ public class VestigeSystemInvocationHandler implements InvocationHandler {
         map.put(Arrays.asList(method.getParameterTypes()), method);
     }
 
-    public VestigeSystemInvocationHandler(final PublicVestigeSystem vestigeSystem) {
+    public VestigeSystemInvocationHandler(final ClassLoader classLoader, final Class<?> itf, final PublicVestigeSystem vestigeSystem, final boolean security) {
+        this.classLoader = classLoader;
+        this.itf = itf;
         this.vestigeSystem = vestigeSystem;
+        this.security = security;
+
         for (Method method : PublicVestigeSystem.class.getMethods()) {
             String methodName = method.getName();
             Map<List<Class<?>>, Method> map = delegateMethods.get(methodName);
@@ -64,12 +77,11 @@ public class VestigeSystemInvocationHandler implements InvocationHandler {
         }
     }
 
-    public static Object createProxy(final ClassLoader classLoader, final Class<?> itf, final PublicVestigeSystem vestigeSystem) {
-        return Proxy.newProxyInstance(classLoader, new Class<?>[] {itf}, new VestigeSystemInvocationHandler(vestigeSystem));
+    public static Object createProxy(final ClassLoader classLoader, final Class<?> itf, final PublicVestigeSystem vestigeSystem, final boolean security) {
+        return Proxy.newProxyInstance(classLoader, new Class<?>[] {itf}, new VestigeSystemInvocationHandler(classLoader, itf, vestigeSystem, security));
     }
 
-    @Override
-    public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+    public Object delegate(final Object proxy, final Method method, final Object[] args) throws Exception {
         Map<List<Class<?>>, Method> map = delegateMethods.get(method.getName());
         if (map == null) {
             throw new UnsupportedOperationException();
@@ -78,11 +90,35 @@ public class VestigeSystemInvocationHandler implements InvocationHandler {
         if (delegateMethod == null) {
             throw new UnsupportedOperationException();
         }
-        try {
-            return delegateMethod.invoke(vestigeSystem, args);
-        } catch (InvocationTargetException e) {
-            throw e.getTargetException();
+        Object invoke = delegateMethod.invoke(vestigeSystem, args);
+        if (invoke instanceof PublicVestigeSystem) {
+            return createProxy(classLoader, itf, (PublicVestigeSystem) invoke, security);
         }
+        return invoke;
     }
 
+    @Override
+    public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+        if (security) {
+            try {
+                return AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
+                    @Override
+                    public Object run() throws Exception {
+                        return delegate(proxy, method, args);
+                    }
+                });
+            } catch (PrivilegedActionException e) {
+                if (e.getCause() instanceof InvocationTargetException) {
+                    throw e.getCause().getCause();
+                }
+                throw e;
+            }
+        } else {
+            try {
+                return delegate(proxy, method, args);
+            } catch (InvocationTargetException e) {
+                throw e.getCause();
+            }
+        }
+    }
 }
