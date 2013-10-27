@@ -23,6 +23,7 @@ import java.util.WeakHashMap;
 
 import com.googlecode.vestige.core.StackedHandler;
 import com.googlecode.vestige.platform.system.VestigeSystem;
+import com.googlecode.vestige.platform.system.VestigeSystemHolder;
 
 /**
  * @author Gael Lalire
@@ -43,10 +44,14 @@ public class VestigeDriverVector extends Vector<Object> implements StackedHandle
     // avoid keeping strong reference to object inside the vector.
     private Map<VestigeSystem, Object> vectorKeyBySystem;
 
-    public VestigeDriverVector() {
+    private VestigeSystemHolder vestigeSystemHolder;
+
+    public VestigeDriverVector(final VestigeSystemHolder vestigeSystemHolder) {
+        this.vestigeSystemHolder = vestigeSystemHolder;
     }
 
-    public VestigeDriverVector(final Vector<Object> nextHandler, final Map<VestigeSystem, Object> vectorKeyBySystem) {
+    public VestigeDriverVector(final VestigeSystemHolder vestigeSystemHolder, final Vector<Object> nextHandler, final Map<VestigeSystem, Object> vectorKeyBySystem) {
+        this.vestigeSystemHolder = vestigeSystemHolder;
         this.vectorKeyBySystem = vectorKeyBySystem;
         this.nextHandler = nextHandler;
     }
@@ -70,7 +75,7 @@ public class VestigeDriverVector extends Vector<Object> implements StackedHandle
     }
 
     public Vector<Object> getDriverVector() {
-        VestigeSystem system = VestigeSystem.getSystem();
+        VestigeSystem system = vestigeSystemHolder.getVestigeSystem();
         if (readDrivers == null) {
             Vector<Object> vector;
             Object key = vectorKeyBySystem.get(system);
@@ -108,8 +113,8 @@ public class VestigeDriverVector extends Vector<Object> implements StackedHandle
     @Override
     public Object clone() {
         Map<VestigeSystem, Object> vectorKeyBySystem = new WeakHashMap<VestigeSystem, Object>(readDrivers.vectorKeyBySystem);
-        readDrivers = new VestigeDriverVector(readDrivers.nextHandler, vectorKeyBySystem);
-        VestigeSystem system = VestigeSystem.getSystem();
+        readDrivers = new VestigeDriverVector(vestigeSystemHolder, readDrivers.nextHandler, vectorKeyBySystem);
+        VestigeSystem system = vestigeSystemHolder.getVestigeSystem();
         Object key = new Object();
         vectorKeyBySystem.put(system, key);
         system.getReadDrivers().put(key, (Vector<Object>) system.getWriteDrivers().clone());

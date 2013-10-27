@@ -19,7 +19,7 @@ package com.googlecode.vestige.application;
 
 import com.googlecode.vestige.core.VestigeClassLoader;
 import com.googlecode.vestige.platform.AttachedVestigeClassLoader;
-import com.googlecode.vestige.platform.system.VestigeSystem;
+import com.googlecode.vestige.platform.system.PublicVestigeSystem;
 
 /**
  * @author Gael Lalire
@@ -30,11 +30,11 @@ public class RuntimeApplicationContext {
 
     private Runnable runnable;
 
-    private VestigeSystem vestigeSystem;
+    private PublicVestigeSystem vestigeSystem;
 
     private boolean runAllowed;
 
-    public RuntimeApplicationContext(final VestigeClassLoader<AttachedVestigeClassLoader> classLoader, final Runnable runnable, final VestigeSystem vestigeSystem, final boolean runAllowed) {
+    public RuntimeApplicationContext(final VestigeClassLoader<AttachedVestigeClassLoader> classLoader, final Runnable runnable, final PublicVestigeSystem vestigeSystem, final boolean runAllowed) {
         this.classLoader = classLoader;
         this.runnable = runnable;
         this.vestigeSystem = vestigeSystem;
@@ -49,7 +49,7 @@ public class RuntimeApplicationContext {
         return runnable;
     }
 
-    public VestigeSystem getVestigeSystem() {
+    public PublicVestigeSystem getVestigeSystem() {
         return vestigeSystem;
     }
 

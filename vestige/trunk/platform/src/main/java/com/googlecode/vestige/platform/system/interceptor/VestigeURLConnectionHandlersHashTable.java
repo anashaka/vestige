@@ -24,6 +24,7 @@ import java.util.Map;
 
 import com.googlecode.vestige.core.StackedHandler;
 import com.googlecode.vestige.platform.system.VestigeSystem;
+import com.googlecode.vestige.platform.system.VestigeSystemHolder;
 
 /**
  * @author Gael Lalire
@@ -34,13 +35,19 @@ public class VestigeURLConnectionHandlersHashTable extends Hashtable<String, Con
 
     private Hashtable<String, ContentHandler> nextHandler;
 
+    private VestigeSystemHolder vestigeSystemHolder;
+
+    public VestigeURLConnectionHandlersHashTable(final VestigeSystemHolder vestigeSystemHolder) {
+        this.vestigeSystemHolder = vestigeSystemHolder;
+    }
+
     public Hashtable<String, ContentHandler> getHashtable() {
-        return VestigeSystem.getSystem().getURLConnectionContentHandlerByMime();
+        return vestigeSystemHolder.getVestigeSystem().getURLConnectionContentHandlerByMime();
     }
 
     @Override
     public ContentHandler get(final Object mimeType) {
-        VestigeSystem system = VestigeSystem.getSystem();
+        VestigeSystem system = vestigeSystemHolder.getVestigeSystem();
         Map<String, ContentHandler> urlConnectionContentHandlerByMime = system.getURLConnectionContentHandlerByMime();
         ContentHandler urlConnectionContentHandler = urlConnectionContentHandlerByMime.get(mimeType);
         if (urlConnectionContentHandler == null) {
@@ -58,7 +65,7 @@ public class VestigeURLConnectionHandlersHashTable extends Hashtable<String, Con
 
     @Override
     public ContentHandler put(final String mimeType, final ContentHandler urlStreamHandler) {
-        VestigeSystem system = VestigeSystem.getSystem();
+        VestigeSystem system = vestigeSystemHolder.getVestigeSystem();
         return system.getURLConnectionContentHandlerByMime().put(mimeType, urlStreamHandler);
     }
 

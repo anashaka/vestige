@@ -25,25 +25,13 @@ import java.security.Permissions;
 import java.security.Policy;
 import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
-import java.util.HashSet;
-import java.util.Set;
-
-import com.googlecode.vestige.core.StackedHandler;
 
 /**
  * @author Gael Lalire
  */
-public class VestigePolicy extends Policy implements StackedHandler<Policy> {
-
-    private Policy nextHandler;
+public class PrivateVestigePolicy extends Policy {
 
     private ThreadLocal<PermissionCollection> permissionCollectionThreadLocal = new InheritableThreadLocal<PermissionCollection>();
-
-    private Set<ClassLoader> safeClassLoaders = new HashSet<ClassLoader>();
-
-    public VestigePolicy(final Policy nextHandler) {
-        this.nextHandler = nextHandler;
-    }
 
     public void setPermissionCollection(final PermissionCollection permissionCollection) {
         permissionCollectionThreadLocal.set(permissionCollection);
@@ -51,18 +39,6 @@ public class VestigePolicy extends Policy implements StackedHandler<Policy> {
 
     public void unsetPermissionCollection() {
         permissionCollectionThreadLocal.remove();
-    }
-
-    public void clearSafeClassLoader() {
-        safeClassLoaders.clear();
-    }
-
-    public void addSafeClassLoader(final ClassLoader safeClassLoader) {
-        ClassLoader classLoader = safeClassLoader;
-        while (classLoader != null) {
-            safeClassLoaders.add(classLoader);
-            classLoader = classLoader.getParent();
-        }
     }
 
     @Override
@@ -77,13 +53,6 @@ public class VestigePolicy extends Policy implements StackedHandler<Policy> {
 
     @Override
     public boolean implies(final ProtectionDomain domain, final Permission permission) {
-        ClassLoader classLoader = domain.getClassLoader();
-        for (ClassLoader safeClassLoader : safeClassLoaders) {
-            if (safeClassLoader == classLoader) {
-                // safeClassLoader are not restricted
-                return true;
-            }
-        }
         PermissionCollection permissionCollection = permissionCollectionThreadLocal.get();
         if (permissionCollection == null) {
             // not restricted
@@ -113,14 +82,6 @@ public class VestigePolicy extends Policy implements StackedHandler<Policy> {
             return true;
         }
         return false;
-    }
-
-    public Policy getNextHandler() {
-        return nextHandler;
-    }
-
-    public void setNextHandler(final Policy nextHandler) {
-        this.nextHandler = nextHandler;
     }
 
 }

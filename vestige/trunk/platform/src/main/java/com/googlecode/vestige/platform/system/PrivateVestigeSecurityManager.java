@@ -17,12 +17,11 @@
 
 package com.googlecode.vestige.platform.system;
 
-import com.googlecode.vestige.core.StackedHandler;
 
 /**
  * @author Gael Lalire
  */
-public class VestigeSecurityManager extends SecurityManager implements StackedHandler<SecurityManager> {
+public class PrivateVestigeSecurityManager extends SecurityManager {
 
     private static final RuntimePermission MODIFY_THREAD_GROUP_PERMISSION = new RuntimePermission("modifyThreadGroup");
 
@@ -30,12 +29,9 @@ public class VestigeSecurityManager extends SecurityManager implements StackedHa
 
     private ThreadLocal<ThreadGroup> threadGroupThreadLocal = new InheritableThreadLocal<ThreadGroup>();
 
-    private SecurityManager nextHandler;
-
     private ThreadGroup rootGroup;
 
-    public VestigeSecurityManager(final SecurityManager nextHandler) {
-        this.nextHandler = nextHandler;
+    public PrivateVestigeSecurityManager() {
         ThreadGroup root = Thread.currentThread().getThreadGroup();
         while (root.getParent() != null) {
             root = root.getParent();
@@ -74,14 +70,6 @@ public class VestigeSecurityManager extends SecurityManager implements StackedHa
         if (threadGroup != null && !threadGroup.parentOf(g)) {
             checkPermission(MODIFY_THREAD_GROUP_PERMISSION);
         }
-    }
-
-    public SecurityManager getNextHandler() {
-        return nextHandler;
-    }
-
-    public void setNextHandler(final SecurityManager nextHandler) {
-        this.nextHandler = nextHandler;
     }
 
 }
