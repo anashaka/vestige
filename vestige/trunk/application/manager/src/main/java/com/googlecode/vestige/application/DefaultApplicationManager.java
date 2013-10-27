@@ -634,7 +634,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         start(applicationContext, null, null);
     }
 
-    public static Object callConstructor(final ClassLoader classLoader, final Class<?> loadClass, final File home, final PublicVestigeSystem vestigeSystem) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException, ApplicationException  {
+    public Object callConstructor(final ClassLoader classLoader, final Class<?> loadClass, final File home, final PublicVestigeSystem vestigeSystem) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException, ApplicationException  {
         Class<?> bestItfType = null;
         Constructor<?> bestConstructor = null;
         int level = -1;
@@ -683,7 +683,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         case 1:
             return bestConstructor.newInstance(home);
         case 2:
-            return bestConstructor.newInstance(home, VestigeSystemInvocationHandler.createProxy(classLoader, bestItfType, vestigeSystem));
+            return bestConstructor.newInstance(home, VestigeSystemInvocationHandler.createProxy(classLoader, bestItfType, vestigeSystem, vestigeSecurityManager != null));
         default:
             throw new ApplicationException("No constructor found");
         }
