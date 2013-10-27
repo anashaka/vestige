@@ -1,5 +1,6 @@
 <settings xmlns="http://vestige.googlecode.com/SETTINGS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 xsi:schemaLocation="http://vestige.googlecode.com/SETTINGS settings.xsd">
+  <security enabled="true" />
   <admin>
     <ssh enabled="true">
       <bind port="1984" />
