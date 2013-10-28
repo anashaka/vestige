@@ -20,6 +20,9 @@ package com.googlecode.vestige.resolver.maven;
 import java.util.List;
 
 /**
+ * @param <Node> type of input nodes
+ * @param <Key> type of input node key
+ * @param <RNode> type of output nodes
  * @author Gael Lalire
  */
 public interface GraphHelper<Node, Key, RNode> {

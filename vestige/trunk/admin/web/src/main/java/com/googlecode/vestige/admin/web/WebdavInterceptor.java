@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The webdav interceptor blocks some FrontPage requests and determinate the
- * encoding of the underlying request
+ * encoding of the underlying request.
  */
 public class WebdavInterceptor implements Filter {
 
@@ -40,7 +40,6 @@ public class WebdavInterceptor implements Filter {
 
     public static final String MICROSOFT_PROTOCOL_AGENT = "Microsoft Data Access Internet Publishing Provider Protocol Discovery";
 
-    /** Creates a new instance of LoginInterceptor */
     public WebdavInterceptor() {
     }
 
@@ -52,55 +51,42 @@ public class WebdavInterceptor implements Filter {
 
     /**
      * Filter some invalid calls from the Microsoft WebDAV clients (Windows
-     * 2000, Windows XP and Office 2003)
+     * 2000, Windows XP and Office 2003).
      */
-    public void doFilter(final ServletRequest servletRequest, final ServletResponse servletResponse, final FilterChain filterChain)
-            throws IOException, ServletException {
+    public void doFilter(final ServletRequest servletRequest, final ServletResponse servletResponse, final FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         String path = request.getServletPath();
         LOGGER.info("path is {}", path);
 
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         if (path.equals("/")) {
-        response.sendRedirect("/webdav");
+            response.sendRedirect("/webdav");
         }
-//        response.addHeader("DAV", "1,2");
+        // response.addHeader("DAV", "1,2");
 
-  //      response.addHeader("Allow", "OPTIONS, TRACE, PROPFIND");
-    //    response.addHeader("MS-AUTHOR-VIA", "DAV");
-
+        // response.addHeader("Allow", "OPTIONS, TRACE, PROPFIND");
+        // response.addHeader("MS-AUTHOR-VIA", "DAV");
 
         /*
-        if (path != null) {
-            if (path.endsWith("/index.jsp")) {
-                // a very strange microsoft webdav handling... (because of the
-                // front page extensions!)
-                // Microsoft (protocol discoverer) is asking the root of the
-                // server
-                // whether it can handles a WebDAV, so we have to catch it here.
-                // Unfortunately we can't
-                // redirect the root URL ("/") to a servlet, because we will
-                // intercept any other
-                // path handling...
-                String agent = request.getHeader("user-agent");
-                if (MICROSOFT_PROTOCOL_AGENT.equals(agent)) {
-                    HttpServletResponse response = (HttpServletResponse) servletResponse;
-                    response.addHeader("DAV", "1,2");
+         * if (path != null) { if (path.endsWith("/index.jsp")) { // a very
+         * strange microsoft webdav handling... (because of the // front page
+         * extensions!) // Microsoft (protocol discoverer) is asking the root of
+         * the // server // whether it can handles a WebDAV, so we have to catch
+         * it here. // Unfortunately we can't // redirect the root URL ("/") to
+         * a servlet, because we will // intercept any other // path handling...
+         * String agent = request.getHeader("user-agent"); if
+         * (MICROSOFT_PROTOCOL_AGENT.equals(agent)) { HttpServletResponse
+         * response = (HttpServletResponse) servletResponse;
+         * response.addHeader("DAV", "1,2"); response.addHeader("Allow",
+         * "OPTIONS, TRACE, PROPFIND"); response.addHeader("MS-AUTHOR-VIA",
+         * "DAV"); return; } } // block, front page and m$ office extensions
+         * requests... if (path.startsWith("/_vti") ||
+         * path.startsWith("/MSOffice")) { ((HttpServletResponse)
+         * servletResponse).setStatus(HttpServletResponse.SC_NOT_FOUND); return;
+         * } }
+         */
 
-                    response.addHeader("Allow", "OPTIONS, TRACE, PROPFIND");
-                    response.addHeader("MS-AUTHOR-VIA", "DAV");
-                    return;
-                }
-            }
-            // block, front page and m$ office extensions requests...
-            if (path.startsWith("/_vti") || path.startsWith("/MSOffice")) {
-                ((HttpServletResponse) servletResponse).setStatus(HttpServletResponse.SC_NOT_FOUND);
-                return;
-            }
-        }
-        */
-
-      //  request.setCharacterEncoding(WebdavServlet.getEnconding(request));
+        // request.setCharacterEncoding(WebdavServlet.getEnconding(request));
         filterChain.doFilter(servletRequest, servletResponse);
     }
 

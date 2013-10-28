@@ -127,7 +127,7 @@ public class MavenArtifactResolver {
         locator.addService(ArtifactDescriptorReader.class, DefaultArtifactDescriptorReader.class);
         locator.addService(RepositoryConnectorFactory.class, AsyncRepositoryConnectorFactory.class);
         locator.addService(RepositoryConnectorFactory.class, FileRepositoryConnectorFactory.class);
-        locator.setService(DependencyCollector.class, ModifiedDependencyCollector.class );
+        locator.setService(DependencyCollector.class, ModifiedDependencyCollector.class);
 
         repoSystem = locator.getService(RepositorySystem.class);
 

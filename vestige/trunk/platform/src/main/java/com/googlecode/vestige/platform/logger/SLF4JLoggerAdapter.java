@@ -100,7 +100,7 @@ public class SLF4JLoggerAdapter implements VestigeLogger {
         doLog(level, msg);
     }
 
-    public void log(final Level level, final String msg, final Object params[]) {
+    public void log(final Level level, final String msg, final Object[] params) {
         doLog(level, msg);
     }
 
@@ -116,7 +116,7 @@ public class SLF4JLoggerAdapter implements VestigeLogger {
         doLog(level, msg);
     }
 
-    public void logp(final Level level, final String sourceClass, final String sourceMethod, final String msg, final Object params[]) {
+    public void logp(final Level level, final String sourceClass, final String sourceMethod, final String msg, final Object[] params) {
         doLog(level, msg);
     }
 
@@ -132,7 +132,7 @@ public class SLF4JLoggerAdapter implements VestigeLogger {
         doLog(level, msg);
     }
 
-    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName, final String msg, final Object params[]) {
+    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName, final String msg, final Object[] params) {
         doLog(level, msg);
     }
 
@@ -150,7 +150,7 @@ public class SLF4JLoggerAdapter implements VestigeLogger {
         }
     }
 
-    public void entering(final String sourceClass, final String sourceMethod, final Object params[]) {
+    public void entering(final String sourceClass, final String sourceMethod, final Object[] params) {
         if (logger.isTraceEnabled()) {
             StringBuilder sb = new StringBuilder("ENTRY {}.{} : ");
             if (params.length == 0) {

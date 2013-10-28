@@ -17,6 +17,7 @@
 
 package com.googlecode.vestige.platform.system;
 
+
 /**
  * @author Gael Lalire
  */

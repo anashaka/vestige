@@ -30,7 +30,7 @@ import com.googlecode.vestige.resolver.maven.GraphCycleRemover;
  */
 public class GraphTest {
 
-    GraphCycleRemover<Node, Node, Node> graphCycleRemover = new GraphCycleRemover<Node, Node, Node>(new NodeGraphHelper());
+    private GraphCycleRemover<Node, Node, Node> graphCycleRemover = new GraphCycleRemover<Node, Node, Node>(new NodeGraphHelper());
 
     @Test
     public void testCycle() {
@@ -43,10 +43,10 @@ public class GraphTest {
         n3.setNexts(Arrays.asList(n2, n4));
 
         Node r1 = new Node("1");
-        Node r2_3 = new Node(Arrays.asList("2", "3"));
+        Node r2a3 = new Node(Arrays.asList("2", "3"));
         Node r4 = new Node("4");
-        r1.setNexts(Collections.singletonList(r2_3));
-        r2_3.setNexts(Collections.singletonList(r4));
+        r1.setNexts(Collections.singletonList(r2a3));
+        r2a3.setNexts(Collections.singletonList(r4));
 
         Assert.assertEquals(r1, graphCycleRemover.removeCycle(n1));
     }
@@ -62,11 +62,11 @@ public class GraphTest {
         n3.setNexts(Collections.singletonList(n4));
         n4.setNexts(Collections.singletonList(n3));
 
-        Node r1_2 = new Node(Arrays.asList("1", "2"));
-        Node r3_4 = new Node(Arrays.asList("3", "4"));
-        r1_2.setNexts(Collections.singletonList(r3_4));
+        Node r1a2 = new Node(Arrays.asList("1", "2"));
+        Node r3a4 = new Node(Arrays.asList("3", "4"));
+        r1a2.setNexts(Collections.singletonList(r3a4));
 
-        Assert.assertEquals(r1_2, graphCycleRemover.removeCycle(n1));
+        Assert.assertEquals(r1a2, graphCycleRemover.removeCycle(n1));
     }
 
 
@@ -82,8 +82,8 @@ public class GraphTest {
         n4.setNexts(Collections.singletonList(n3));
 
         Node r1 = new Node("1");
-        Node r2_3_4 = new Node(Arrays.asList("2", "3", "4"));
-        r1.setNexts(Collections.singletonList(r2_3_4));
+        Node r2a3a4 = new Node(Arrays.asList("2", "3", "4"));
+        r1.setNexts(Collections.singletonList(r2a3a4));
 
         Assert.assertEquals(r1, graphCycleRemover.removeCycle(n1));
     }
@@ -99,9 +99,9 @@ public class GraphTest {
         n3.setNexts(Arrays.asList(n2, n4));
         n4.setNexts(Collections.singletonList(n1));
 
-        Node r1_2_3_4 = new Node(Arrays.asList("1", "2", "3", "4"));
+        Node r1a2a3a4 = new Node(Arrays.asList("1", "2", "3", "4"));
 
-        Assert.assertEquals(r1_2_3_4, graphCycleRemover.removeCycle(n1));
+        Assert.assertEquals(r1a2a3a4, graphCycleRemover.removeCycle(n1));
     }
 
     @Test
@@ -117,9 +117,9 @@ public class GraphTest {
         n4.setNexts(Collections.singletonList(n5));
         n5.setNexts(Collections.singletonList(n2));
 
-        Node r1_2_3_4_5 = new Node(Arrays.asList("1", "2", "3", "4", "5"));
+        Node r1a2a3a4a5 = new Node(Arrays.asList("1", "2", "3", "4", "5"));
 
-        Assert.assertEquals(r1_2_3_4_5, graphCycleRemover.removeCycle(n1));
+        Assert.assertEquals(r1a2a3a4a5, graphCycleRemover.removeCycle(n1));
     }
 
     @Test
@@ -134,8 +134,8 @@ public class GraphTest {
         n4.setNexts(Collections.singletonList(n2));
 
         Node r1 = new Node("1");
-        Node r2_3_4 = new Node(Arrays.asList("2", "3", "4"));
-        r1.setNexts(Collections.singletonList(r2_3_4));
+        Node r2a3a4 = new Node(Arrays.asList("2", "3", "4"));
+        r1.setNexts(Collections.singletonList(r2a3a4));
 
         Assert.assertEquals(r1, graphCycleRemover.removeCycle(n1));
     }
@@ -154,10 +154,10 @@ public class GraphTest {
         n5.setNexts(Arrays.asList(n3, n4));
 
         Node r1 = new Node("1");
-        Node r2_3_5 = new Node(Arrays.asList("2", "3", "5"));
+        Node r2a3a5 = new Node(Arrays.asList("2", "3", "5"));
         Node r4 = new Node("4");
-        r1.setNexts(Collections.singletonList(r2_3_5));
-        r2_3_5.setNexts(Collections.singletonList(r4));
+        r1.setNexts(Collections.singletonList(r2a3a5));
+        r2a3a5.setNexts(Collections.singletonList(r4));
 
         Assert.assertEquals(r1, graphCycleRemover.removeCycle(n1));
     }

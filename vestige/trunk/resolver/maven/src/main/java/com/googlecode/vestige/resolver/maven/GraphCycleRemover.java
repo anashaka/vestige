@@ -23,8 +23,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
-
 /**
+ * @param <Node> type of input nodes
+ * @param <Key> type of input node key
+ * @param <RNode> type of output nodes
  * @author Gael Lalire
  */
 public class GraphCycleRemover<Node, Key, RNode> {
@@ -35,6 +37,9 @@ public class GraphCycleRemover<Node, Key, RNode> {
         this.graphHelper = graphHelper;
     }
 
+    /**
+     * @author Gael Lalire
+     */
     class Context {
 
         private List<List<Key>> merge = new LinkedList<List<Key>>();
@@ -65,7 +70,6 @@ public class GraphCycleRemover<Node, Key, RNode> {
                 return false;
             }
 
-
             parents.add(0, key);
             merge.add(0, Collections.singletonList(key));
             return true;
@@ -82,7 +86,6 @@ public class GraphCycleRemover<Node, Key, RNode> {
 
     }
 
-
     public RNode removeCycle(final Node node) {
         return removeCycle(node, new Context()).get(0);
     }
@@ -98,7 +101,7 @@ public class GraphCycleRemover<Node, Key, RNode> {
         for (Node next : nexts) {
             List<RNode> removeCycle = removeCycle(next, context);
             for (RNode rNode : removeCycle) {
-                if(!mergedNexts.contains(rNode)) {
+                if (!mergedNexts.contains(rNode)) {
                     mergedNexts.add(rNode);
                 }
             }
@@ -112,6 +115,5 @@ public class GraphCycleRemover<Node, Key, RNode> {
 
         return Collections.singletonList(graphHelper.merge(popNode, mergedNexts));
     }
-
 
 }

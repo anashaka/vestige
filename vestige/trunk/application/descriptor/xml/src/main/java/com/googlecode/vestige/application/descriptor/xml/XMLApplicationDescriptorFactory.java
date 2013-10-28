@@ -120,7 +120,7 @@ public class XMLApplicationDescriptorFactory implements ApplicationDescriptorFac
 
     public void readPermissions(final Permissions permissions, final Set<Permission> result) {
         ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
-        for(com.googlecode.vestige.application.descriptor.xml.schema.Permission perm : permissions.getPermission()) {
+        for (com.googlecode.vestige.application.descriptor.xml.schema.Permission perm : permissions.getPermission()) {
             try {
                 String type = perm.getType();
                 String name = PropertyExpander.expand(perm.getName());
@@ -155,17 +155,14 @@ public class XMLApplicationDescriptorFactory implements ApplicationDescriptorFac
         }
     }
 
-
-    public void setMavenConfig(final MavenConfig mavenConfig, final DefaultDependencyModifier defaultDependencyModifier,
-            final List<MavenRepository> additionalRepositories) {
+    public void setMavenConfig(final MavenConfig mavenConfig, final DefaultDependencyModifier defaultDependencyModifier, final List<MavenRepository> additionalRepositories) {
         for (Object object : mavenConfig.getModifyDependencyOrReplaceDependencyOrAdditionalRepository()) {
             if (object instanceof ModifyDependency) {
                 ModifyDependency modifyDependency = (ModifyDependency) object;
                 List<AddDependency> addDependencies = modifyDependency.getAddDependency();
                 List<Dependency> dependencies = new ArrayList<Dependency>(addDependencies.size());
                 for (AddDependency addDependency : addDependencies) {
-                    dependencies.add(new Dependency(new DefaultArtifact(addDependency.getGroupId(),
-                            addDependency.getArtifactId(), "jar", addDependency.getVersion()), "runtime"));
+                    dependencies.add(new Dependency(new DefaultArtifact(addDependency.getGroupId(), addDependency.getArtifactId(), "jar", addDependency.getVersion()), "runtime"));
                 }
                 defaultDependencyModifier.add(modifyDependency.getGroupId(), modifyDependency.getArtifactId(), dependencies);
             } else if (object instanceof ReplaceDependency) {
@@ -173,8 +170,7 @@ public class XMLApplicationDescriptorFactory implements ApplicationDescriptorFac
                 List<AddDependency> addDependencies = replaceDependency.getAddDependency();
                 List<Dependency> dependencies = new ArrayList<Dependency>(addDependencies.size());
                 for (AddDependency addDependency : addDependencies) {
-                    dependencies.add(new Dependency(new DefaultArtifact(addDependency.getGroupId(),
-                            addDependency.getArtifactId(), "jar", addDependency.getVersion()), "runtime"));
+                    dependencies.add(new Dependency(new DefaultArtifact(addDependency.getGroupId(), addDependency.getArtifactId(), "jar", addDependency.getVersion()), "runtime"));
                 }
                 Map<String, Set<String>> exceptsMap = null;
                 List<Except> excepts = replaceDependency.getExcept();
@@ -189,12 +185,10 @@ public class XMLApplicationDescriptorFactory implements ApplicationDescriptorFac
                         set.add(except.getArtifactId());
                     }
                 }
-                defaultDependencyModifier
-                        .replace(replaceDependency.getGroupId(), replaceDependency.getArtifactId(), dependencies, exceptsMap);
+                defaultDependencyModifier.replace(replaceDependency.getGroupId(), replaceDependency.getArtifactId(), dependencies, exceptsMap);
             } else if (object instanceof AdditionalRepository) {
                 AdditionalRepository additionalRepository = (AdditionalRepository) object;
-                additionalRepositories.add(new MavenRepository(additionalRepository.getId(), additionalRepository.getLayout(),
-                        additionalRepository.getUrl()));
+                additionalRepositories.add(new MavenRepository(additionalRepository.getId(), additionalRepository.getLayout(), additionalRepository.getUrl()));
             }
         }
     }

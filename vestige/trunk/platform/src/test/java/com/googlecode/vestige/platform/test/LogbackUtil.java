@@ -16,7 +16,10 @@ import ch.qos.logback.core.util.StatusPrinter;
 /**
  * @author gaellalire
  */
-public class LogbackUtil {
+public final class LogbackUtil {
+
+    private LogbackUtil() {
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogbackUtil.class);
 

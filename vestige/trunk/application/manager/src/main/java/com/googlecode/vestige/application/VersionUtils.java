@@ -31,6 +31,10 @@ public final class VersionUtils {
 
     public static final Pattern VERSION_PATTERN = Pattern.compile("(\\d+)\\.(\\d+)\\.(\\d+)");
 
+    /**
+     *
+     * @author Gael Lalire
+     */
     private static class VersionComparator implements Comparator<List<Integer>>, Serializable {
 
         private static final long serialVersionUID = -4113755399515029010L;
@@ -57,10 +61,11 @@ public final class VersionUtils {
     }
 
     /**
+     * @return
      * < 0 if version < otherVersion
      * = 0 if version = otherVersion
      * > 0 if version > otherVersion
-     * null if we cannot compare
+     * null if we cannot compare.
      */
     public static Integer compare(final List<Integer> version, final List<Integer> otherVersion) {
         for (int i = 0; i < 3; i++) {

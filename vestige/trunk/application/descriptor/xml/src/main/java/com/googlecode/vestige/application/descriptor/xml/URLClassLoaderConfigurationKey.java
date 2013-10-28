@@ -29,7 +29,7 @@ public class URLClassLoaderConfigurationKey implements Serializable {
 
     private static final long serialVersionUID = 3390959845313644407L;
 
-    public List<URL> urls;
+    private List<URL> urls;
 
     private boolean shared;
 

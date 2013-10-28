@@ -46,34 +46,49 @@ import com.googlecode.vestige.platform.MinimalStringParserFactory;
  */
 public class TestStringParserConfiguration {
 
-
-//    @Test
-//    public void test() throws Exception {
-//        DefaultStringParserConfigurationFactory defaultStringParserConfigurationFactory = new DefaultStringParserConfigurationFactory();
-//        long time;
-//        URL[] urls = new URL[1];
-//        urls[0] = TestStringParserConfiguration.class.getResource("/commons-io-2.0.jar");
-//        TreeMap<String, List<Integer>> pathsByResourceName = new TreeMap<String, List<Integer>>();
-//        TreeMap<String, List<Integer>> pathsByClassName = new TreeMap<String, List<Integer>>();
-//        map(urls[0], pathsByResourceName, pathsByClassName);
-//        System.out.println("NbResources : " + pathsByResourceName.size() + ", NbClasses : " + pathsByClassName.size());
-//
-//        time = System.currentTimeMillis();
-//        ClassLoaderConfiguration clc = new ClassLoaderConfiguration((Serializable) Arrays.asList(urls), urls, Collections.<ClassLoaderConfiguration>emptyList(), null, defaultStringParserConfigurationFactory.createStringParserConfiguration(pathsByClassName, EMPTY_PATHS), defaultStringParserConfigurationFactory.createStringParserConfiguration(pathsByResourceName, EMPTY_PATHS));
-//        System.out.println("Ctor time : " + (System.currentTimeMillis() - time));
-//
-//        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-//        ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-//        time = System.currentTimeMillis();
-//        objectOutputStream.writeObject(clc);
-//        objectOutputStream.close();
-//        System.out.println("Ser time : " + (System.currentTimeMillis() - time));
-//
-//        time = System.currentTimeMillis();
-//        ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
-//        Object readObject = objectInputStream.readObject();
-//        System.out.println("Unser time : " + (System.currentTimeMillis() - time));
-//    }
+    // @Test
+    // public void test() throws Exception {
+    // DefaultStringParserConfigurationFactory
+    // defaultStringParserConfigurationFactory = new
+    // DefaultStringParserConfigurationFactory();
+    // long time;
+    // URL[] urls = new URL[1];
+    // urls[0] =
+    // TestStringParserConfiguration.class.getResource("/commons-io-2.0.jar");
+    // TreeMap<String, List<Integer>> pathsByResourceName = new TreeMap<String,
+    // List<Integer>>();
+    // TreeMap<String, List<Integer>> pathsByClassName = new TreeMap<String,
+    // List<Integer>>();
+    // map(urls[0], pathsByResourceName, pathsByClassName);
+    // System.out.println("NbResources : " + pathsByResourceName.size() +
+    // ", NbClasses : " + pathsByClassName.size());
+    //
+    // time = System.currentTimeMillis();
+    // ClassLoaderConfiguration clc = new
+    // ClassLoaderConfiguration((Serializable) Arrays.asList(urls), urls,
+    // Collections.<ClassLoaderConfiguration>emptyList(), null,
+    // defaultStringParserConfigurationFactory.createStringParserConfiguration(pathsByClassName,
+    // EMPTY_PATHS),
+    // defaultStringParserConfigurationFactory.createStringParserConfiguration(pathsByResourceName,
+    // EMPTY_PATHS));
+    // System.out.println("Ctor time : " + (System.currentTimeMillis() - time));
+    //
+    // ByteArrayOutputStream byteArrayOutputStream = new
+    // ByteArrayOutputStream();
+    // ObjectOutputStream objectOutputStream = new
+    // ObjectOutputStream(byteArrayOutputStream);
+    // time = System.currentTimeMillis();
+    // objectOutputStream.writeObject(clc);
+    // objectOutputStream.close();
+    // System.out.println("Ser time : " + (System.currentTimeMillis() - time));
+    //
+    // time = System.currentTimeMillis();
+    // ObjectInputStream objectInputStream = new ObjectInputStream(new
+    // ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
+    // Object readObject = objectInputStream.readObject();
+    // System.out.println("Unser time : " + (System.currentTimeMillis() -
+    // time));
+    // }
 
     @Test
     public void test() {
@@ -297,11 +312,17 @@ public class TestStringParserConfiguration {
         System.out.println("NbResources : " + pathsByResourceName.size());
 
         time = System.currentTimeMillis();
-       // ClassLoaderConfiguration clc = new ClassLoaderConfiguration((Serializable) Arrays.asList(urls), urls, Collections.<ClassLoaderConfiguration>emptyList(), null, defaultStringParserConfigurationFactory.createStringParserConfiguration(pathsByClassName, EMPTY_PATHS), defaultStringParserConfigurationFactory.createStringParserConfiguration(pathsByResourceName, EMPTY_PATHS));
+        // ClassLoaderConfiguration clc = new
+        // ClassLoaderConfiguration((Serializable) Arrays.asList(urls), urls,
+        // Collections.<ClassLoaderConfiguration>emptyList(), null,
+        // defaultStringParserConfigurationFactory.createStringParserConfiguration(pathsByClassName,
+        // EMPTY_PATHS),
+        // defaultStringParserConfigurationFactory.createStringParserConfiguration(pathsByResourceName,
+        // EMPTY_PATHS));
         StringParser clc = fastStringParserFactory.createStringParser(pathsByResourceName, -1);
         Integer beforeMatch = pathsByResourceName.get("org/apache/commons/io/CopyUtils.class");
         int match = clc.match("org/apache/commons/io/CopyUtils.class");
-        System.out.println(match + " " +beforeMatch);
+        System.out.println(match + " " + beforeMatch);
 
         System.out.println("Ctor time : " + (System.currentTimeMillis() - time));
 
@@ -346,7 +367,6 @@ public class TestStringParserConfiguration {
         Object readObject = objectInputStream.readObject();
         System.out.println("Map Unser time : " + (System.currentTimeMillis() - time));
     }
-
 
     private void map(final URL url, final TreeMap<String, Integer> pathsByResourceName) {
         try {

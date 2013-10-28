@@ -37,7 +37,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-public class FileUtils {
+/**
+ *
+ * @author Gael Lalire
+ */
+public final class FileUtils {
+
+    private FileUtils() {
+    }
 
     public static void forceDelete(final File file) throws IOException {
         if (file.isDirectory()) {

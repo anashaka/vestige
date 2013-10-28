@@ -29,7 +29,7 @@ import com.googlecode.vestige.core.StackedHandler;
  */
 public abstract class VestigePrintStream extends PrintStream implements StackedHandler<PrintStream> {
 
-    public final static OutputStream NULL_OUTPUT_STREAM = new OutputStream() {
+    public static final OutputStream NULL_OUTPUT_STREAM = new OutputStream() {
 
         @Override
         public void write(final int b) throws IOException {

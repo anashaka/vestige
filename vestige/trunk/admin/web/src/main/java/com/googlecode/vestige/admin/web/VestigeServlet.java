@@ -131,9 +131,10 @@ public class VestigeServlet extends HttpServlet {
                         } else {
                             applicationManager.setAutoMigrateLevel(req.getParameter("repo"), req.getParameter("name"), VersionUtils.fromString(req.getParameter("version")), 0);
                         }
-                    } else if("/migrate".equals(requestURI)) {
-                        applicationManager.migrate(req.getParameter("repo"), req.getParameter("name"), VersionUtils.fromString(req.getParameter("fromVersion")), VersionUtils.fromString(req.getParameter("toVersion")));
-                    } else if("/auto-migrate".equals(requestURI)) {
+                    } else if ("/migrate".equals(requestURI)) {
+                        applicationManager.migrate(req.getParameter("repo"), req.getParameter("name"), VersionUtils.fromString(req.getParameter("fromVersion")),
+                                VersionUtils.fromString(req.getParameter("toVersion")));
+                    } else if ("/auto-migrate".equals(requestURI)) {
                         applicationManager.autoMigrate();
                     }
                 } catch (Exception e) {

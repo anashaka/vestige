@@ -85,14 +85,13 @@ public class Platform implements Command {
             }
             classloadersByCount.put(count, integer + 1);
         }
-        out.println("Platform has " + vestigePlatform.getClassLoaderKeys().size() + " classloader(s) for " + attachments.size()
-                + " attachment(s)");
+        out.println("Platform has " + vestigePlatform.getClassLoaderKeys().size() + " classloader(s) for " + attachments.size() + " attachment(s)");
         for (Entry<Integer, Integer> entry : classloadersByCount.entrySet()) {
             out.println("  " + entry.getValue() + " classloader(s) are shared by " + entry.getKey() + " attachment(s)");
         }
 
         List<AttachedVestigeClassLoader> unattached = new ArrayList<AttachedVestigeClassLoader>();
-        for(Serializable classLoaderKey : vestigePlatform.getClassLoaderKeys()) {
+        for (Serializable classLoaderKey : vestigePlatform.getClassLoaderKeys()) {
             AttachedVestigeClassLoader attachedVestigeClassLoaderByKey = vestigePlatform.getAttachedVestigeClassLoaderByKey(classLoaderKey);
             if (attachedVestigeClassLoaderByKey != null && !map.containsKey(attachedVestigeClassLoaderByKey)) {
                 unattached.add(attachedVestigeClassLoaderByKey);

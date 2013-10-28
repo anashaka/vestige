@@ -25,7 +25,10 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Gael Lalire
  */
-public class GarbageCollectorUtils {
+public final class GarbageCollectorUtils {
+
+    private GarbageCollectorUtils() {
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GarbageCollectorUtils.class);
 

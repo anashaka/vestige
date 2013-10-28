@@ -30,411 +30,197 @@ public abstract class VestigeSecurityManager extends SecurityManager implements 
 
     private SecurityManager nextHandler;
 
-    private SecurityManager previousSecurityManager;
-
     public VestigeSecurityManager(final SecurityManager nextHandler, final SecurityManager previousSecurityManager) {
         this.nextHandler = nextHandler;
-        this.previousSecurityManager = previousSecurityManager;
     }
 
     public abstract SecurityManager getSecurityManager();
 
     @Override
     public void checkAccept(final String host, final int port) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkAccept(host, port);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkAccept(host, port);
-        }
+        getSecurityManager().checkAccept(host, port);
     }
 
     @Override
     public void checkAccess(final Thread t) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkAccess(t);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkAccess(t);
-        }
+        getSecurityManager().checkAccess(t);
     }
 
     @Override
     public void checkAccess(final ThreadGroup g) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkAccess(g);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkAccess(g);
-        }
+        getSecurityManager().checkAccess(g);
     }
 
     @Override
     public void checkAwtEventQueueAccess() {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkAwtEventQueueAccess();
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkAwtEventQueueAccess();
-        }
+        getSecurityManager().checkAwtEventQueueAccess();
     }
 
     @Override
     public void checkConnect(final String host, final int port) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkConnect(host, port);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkConnect(host, port);
-        }
+        getSecurityManager().checkConnect(host, port);
     }
 
     @Override
     public void checkConnect(final String host, final int port, final Object context) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkConnect(host, port, context);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkConnect(host, port, context);
-        }
+        getSecurityManager().checkConnect(host, port, context);
     }
 
     @Override
     public void checkCreateClassLoader() {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkCreateClassLoader();
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkCreateClassLoader();
-        }
+        getSecurityManager().checkCreateClassLoader();
     }
 
     @Override
     public void checkDelete(final String file) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkDelete(file);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkDelete(file);
-        }
+        getSecurityManager().checkDelete(file);
     }
 
     @Override
     public void checkExec(final String cmd) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkExec(cmd);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkExec(cmd);
-        }
+        getSecurityManager().checkExec(cmd);
     }
 
     @Override
     public void checkExit(final int status) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkExit(status);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkExit(status);
-        }
+        getSecurityManager().checkExit(status);
     }
 
     @Override
     public void checkLink(final String lib) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkLink(lib);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkLink(lib);
-        }
+        getSecurityManager().checkLink(lib);
     }
 
     @Override
     public void checkListen(final int port) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkListen(port);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkListen(port);
-        }
+        getSecurityManager().checkListen(port);
     }
 
     @Override
     public void checkMemberAccess(final Class<?> clazz, final int which) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkMemberAccess(clazz, which);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkMemberAccess(clazz, which);
-        }
+        getSecurityManager().checkMemberAccess(clazz, which);
     }
 
     @Override
     public void checkMulticast(final InetAddress maddr) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkMulticast(maddr);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkMulticast(maddr);
-        }
+        getSecurityManager().checkMulticast(maddr);
     }
 
     @SuppressWarnings("deprecation")
     @Override
     public void checkMulticast(final InetAddress maddr, final byte ttl) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkMulticast(maddr, ttl);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkMulticast(maddr, ttl);
-        }
+        getSecurityManager().checkMulticast(maddr, ttl);
     }
 
     @Override
     public void checkPackageAccess(final String pkg) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkPackageAccess(pkg);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkPackageAccess(pkg);
-        }
+        getSecurityManager().checkPackageAccess(pkg);
     }
 
     @Override
     public void checkPackageDefinition(final String pkg) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkPackageDefinition(pkg);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkPackageDefinition(pkg);
-        }
+        getSecurityManager().checkPackageDefinition(pkg);
     }
 
     @Override
     public void checkPermission(final Permission perm) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkPermission(perm);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkPermission(perm);
-        }
+        getSecurityManager().checkPermission(perm);
     }
 
     @Override
     public void checkPermission(final Permission perm, final Object context) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkPermission(perm, context);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkPermission(perm, context);
-        }
+        getSecurityManager().checkPermission(perm, context);
     }
 
     @Override
     public void checkPrintJobAccess() {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkPrintJobAccess();
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkPrintJobAccess();
-        }
+        getSecurityManager().checkPrintJobAccess();
     }
 
     @Override
     public void checkPropertiesAccess() {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkPropertiesAccess();
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkPropertiesAccess();
-        }
+        getSecurityManager().checkPropertiesAccess();
     }
 
     @Override
     public void checkPropertyAccess(final String key) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkPropertyAccess(key);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkPropertyAccess(key);
-        }
+        getSecurityManager().checkPropertyAccess(key);
     }
 
     @Override
     public void checkRead(final FileDescriptor fd) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkRead(fd);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkRead(fd);
-        }
+        getSecurityManager().checkRead(fd);
     }
 
     @Override
     public void checkRead(final String file) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkRead(file);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkRead(file);
-        }
+        getSecurityManager().checkRead(file);
     }
 
     @Override
     public void checkRead(final String file, final Object context) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkRead(file, context);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkRead(file, context);
-        }
+        getSecurityManager().checkRead(file, context);
     }
 
     @Override
     public void checkSecurityAccess(final String target) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkSecurityAccess(target);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkSecurityAccess(target);
-        }
+        getSecurityManager().checkSecurityAccess(target);
     }
 
     @Override
     public void checkSetFactory() {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkSetFactory();
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkSetFactory();
-        }
+        getSecurityManager().checkSetFactory();
     }
 
     @Override
     public void checkSystemClipboardAccess() {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkSystemClipboardAccess();
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkSystemClipboardAccess();
-        }
+        getSecurityManager().checkSystemClipboardAccess();
     }
 
     @Override
     public boolean checkTopLevelWindow(final Object window) {
-        if (previousSecurityManager != null && !previousSecurityManager.checkTopLevelWindow(window)) {
-            return false;
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null && !securityManager.checkTopLevelWindow(window)) {
-            return false;
-        }
-        return true;
+        return getSecurityManager().checkTopLevelWindow(window);
     }
 
     @Override
     public void checkWrite(final FileDescriptor fd) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkWrite(fd);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkWrite(fd);
-        }
+        getSecurityManager().checkWrite(fd);
     }
 
     @Override
     public void checkWrite(final String file) {
-        if (previousSecurityManager != null) {
-            previousSecurityManager.checkWrite(file);
-        }
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            securityManager.checkWrite(file);
-        }
+        getSecurityManager().checkWrite(file);
     }
 
     @Override
     public boolean equals(final Object obj) {
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            return securityManager.equals(obj);
-        }
-        return super.equals(obj);
+        return getSecurityManager().equals(obj);
     }
 
     @SuppressWarnings("deprecation")
     @Override
     public boolean getInCheck() {
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            return securityManager.getInCheck();
-        }
-        return super.getInCheck();
+        return getSecurityManager().getInCheck();
     }
 
     @Override
     public Object getSecurityContext() {
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            return securityManager.getSecurityContext();
-        }
-        return super.getSecurityContext();
+        return getSecurityManager().getSecurityContext();
     }
 
     @Override
     public ThreadGroup getThreadGroup() {
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            return securityManager.getThreadGroup();
-        }
-        return super.getThreadGroup();
+        return getSecurityManager().getThreadGroup();
     }
 
     @Override
     public int hashCode() {
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            return securityManager.hashCode();
-        }
-        return super.hashCode();
+        return getSecurityManager().hashCode();
     }
 
     @Override
     public String toString() {
-        SecurityManager securityManager = getSecurityManager();
-        if (securityManager != null) {
-            return securityManager.toString();
-        }
-        return super.toString();
+        return getSecurityManager().toString();
     }
 
     public SecurityManager getNextHandler() {
