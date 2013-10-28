@@ -30,7 +30,10 @@ import com.googlecode.vestige.core.VestigeExecutor;
 /**
  * @author Gael Lalire
  */
-public class JVMEnhancer {
+public final class JVMEnhancer {
+
+    private JVMEnhancer() {
+    }
 
     private static SystemProxySelector systemProxySelector;
 

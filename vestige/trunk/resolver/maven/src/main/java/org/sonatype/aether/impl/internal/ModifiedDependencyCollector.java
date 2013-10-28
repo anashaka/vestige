@@ -70,12 +70,10 @@ import org.sonatype.aether.version.Version;
 /**
  * @author Benjamin Bentmann
  */
-@Component( role = DependencyCollector.class )
-public class ModifiedDependencyCollector
-    implements DependencyCollector, Service
-{
+@Component(role = DependencyCollector.class)
+public class ModifiedDependencyCollector implements DependencyCollector, Service {
 
-    @SuppressWarnings( "unused" )
+    @SuppressWarnings("unused")
     @Requirement
     private Logger logger = NullLogger.INSTANCE;
 
@@ -88,60 +86,53 @@ public class ModifiedDependencyCollector
     @Requirement
     private VersionRangeResolver versionRangeResolver;
 
-    public ModifiedDependencyCollector()
-    {
+    public ModifiedDependencyCollector() {
         // enables default constructor
     }
 
-    public ModifiedDependencyCollector( final Logger logger, final RemoteRepositoryManager remoteRepositoryManager,
-                                       final ArtifactDescriptorReader artifactDescriptorReader,
-                                       final VersionRangeResolver versionRangeResolver )
-    {
-        setLogger( logger );
-        setRemoteRepositoryManager( remoteRepositoryManager );
-        setArtifactDescriptorReader( artifactDescriptorReader );
-        setVersionRangeResolver( versionRangeResolver );
+    public ModifiedDependencyCollector(final Logger logger, final RemoteRepositoryManager remoteRepositoryManager, final ArtifactDescriptorReader artifactDescriptorReader,
+            final VersionRangeResolver versionRangeResolver) {
+        setLogger(logger);
+        setRemoteRepositoryManager(remoteRepositoryManager);
+        setArtifactDescriptorReader(artifactDescriptorReader);
+        setVersionRangeResolver(versionRangeResolver);
     }
 
-    public void initService( final ServiceLocator locator )
-    {
-        setLogger( locator.getService( Logger.class ) );
-        setRemoteRepositoryManager( locator.getService( RemoteRepositoryManager.class ) );
-        setArtifactDescriptorReader( locator.getService( ArtifactDescriptorReader.class ) );
-        setVersionRangeResolver( locator.getService( VersionRangeResolver.class ) );
+    public void initService(final ServiceLocator locator) {
+        setLogger(locator.getService(Logger.class));
+        setRemoteRepositoryManager(locator.getService(RemoteRepositoryManager.class));
+        setArtifactDescriptorReader(locator.getService(ArtifactDescriptorReader.class));
+        setVersionRangeResolver(locator.getService(VersionRangeResolver.class));
     }
 
-    public ModifiedDependencyCollector setLogger( final Logger logger )
-    {
-        this.logger = ( logger != null ) ? logger : NullLogger.INSTANCE;
+    public ModifiedDependencyCollector setLogger(final Logger logger) {
+        if (logger != null) {
+            this.logger = logger;
+        } else {
+            this.logger = NullLogger.INSTANCE;
+        }
         return this;
     }
 
-    public ModifiedDependencyCollector setRemoteRepositoryManager( final RemoteRepositoryManager remoteRepositoryManager )
-    {
-        if ( remoteRepositoryManager == null )
-        {
-            throw new IllegalArgumentException( "remote repository manager has not been specified" );
+    public ModifiedDependencyCollector setRemoteRepositoryManager(final RemoteRepositoryManager remoteRepositoryManager) {
+        if (remoteRepositoryManager == null) {
+            throw new IllegalArgumentException("remote repository manager has not been specified");
         }
         this.remoteRepositoryManager = remoteRepositoryManager;
         return this;
     }
 
-    public ModifiedDependencyCollector setArtifactDescriptorReader( final ArtifactDescriptorReader artifactDescriptorReader )
-    {
-        if ( artifactDescriptorReader == null )
-        {
-            throw new IllegalArgumentException( "artifact descriptor reader has not been specified" );
+    public ModifiedDependencyCollector setArtifactDescriptorReader(final ArtifactDescriptorReader artifactDescriptorReader) {
+        if (artifactDescriptorReader == null) {
+            throw new IllegalArgumentException("artifact descriptor reader has not been specified");
         }
         this.descriptorReader = artifactDescriptorReader;
         return this;
     }
 
-    public ModifiedDependencyCollector setVersionRangeResolver( final VersionRangeResolver versionRangeResolver )
-    {
-        if ( versionRangeResolver == null )
-        {
-            throw new IllegalArgumentException( "version range resolver has not been specified" );
+    public ModifiedDependencyCollector setVersionRangeResolver(final VersionRangeResolver versionRangeResolver) {
+        if (versionRangeResolver == null) {
+            throw new IllegalArgumentException("version range resolver has not been specified");
         }
         this.versionRangeResolver = versionRangeResolver;
         return this;
@@ -154,19 +145,19 @@ public class ModifiedDependencyCollector
         }
     };
 
-    public CollectResult collectDependencies( final RepositorySystemSession session, final CollectRequest request )
-            throws DependencyCollectionException {
+    public CollectResult collectDependencies(final RepositorySystemSession session, final CollectRequest request) throws DependencyCollectionException {
         return collectDependencies(session, request, NOOP_DEPENDENCY_MODIFIER);
     }
 
-    public CollectResult collectDependencies( RepositorySystemSession session, final CollectRequest request, final DependencyModifier dependencyModifier )
-        throws DependencyCollectionException
-    {
-        session = optimizeSession( session );
+    public CollectResult collectDependencies(final RepositorySystemSession psession, final CollectRequest request, final DependencyModifier dependencyModifier)
+            throws DependencyCollectionException {
+        RepositorySystemSession session = psession;
 
-        RequestTrace trace = DefaultRequestTrace.newChild( request.getTrace(), request );
+        session = optimizeSession(session);
 
-        CollectResult result = new CollectResult( request );
+        RequestTrace trace = DefaultRequestTrace.newChild(request.getTrace(), request);
+
+        CollectResult result = new CollectResult(request);
 
         DependencySelector depSelector = session.getDependencySelector();
         DependencyManager depManager = session.getDependencyManager();
@@ -178,324 +169,257 @@ public class ModifiedDependencyCollector
         List<Dependency> managedDependencies = request.getManagedDependencies();
 
         GraphEdge edge = null;
-        if ( root != null )
-        {
+        if (root != null) {
             VersionRangeResult rangeResult;
-            try
-            {
-                VersionRangeRequest rangeRequest =
-                    new VersionRangeRequest( root.getArtifact(), request.getRepositories(), request.getRequestContext() );
-                rangeRequest.setTrace( trace );
-                rangeResult = versionRangeResolver.resolveVersionRange( session, rangeRequest );
+            try {
+                VersionRangeRequest rangeRequest = new VersionRangeRequest(root.getArtifact(), request.getRepositories(), request.getRequestContext());
+                rangeRequest.setTrace(trace);
+                rangeResult = versionRangeResolver.resolveVersionRange(session, rangeRequest);
 
-                if ( rangeResult.getVersions().isEmpty() )
-                {
-                    throw new VersionRangeResolutionException( rangeResult, "No versions available for "
-                        + root.getArtifact() + " within specified range" );
+                if (rangeResult.getVersions().isEmpty()) {
+                    throw new VersionRangeResolutionException(rangeResult, "No versions available for " + root.getArtifact() + " within specified range");
                 }
-            }
-            catch ( VersionRangeResolutionException e )
-            {
-                result.addException( e );
-                throw new DependencyCollectionException( result );
+            } catch (VersionRangeResolutionException e) {
+                result.addException(e);
+                throw new DependencyCollectionException(result);
             }
 
-            Version version = rangeResult.getVersions().get( rangeResult.getVersions().size() - 1 );
-            root = root.setArtifact( root.getArtifact().setVersion( version.toString() ) );
+            Version version = rangeResult.getVersions().get(rangeResult.getVersions().size() - 1);
+            root = root.setArtifact(root.getArtifact().setVersion(version.toString()));
 
             ArtifactDescriptorResult descriptorResult;
-            try
-            {
+            try {
                 ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
-                descriptorRequest.setArtifact( root.getArtifact() );
-                descriptorRequest.setRepositories( request.getRepositories() );
-                descriptorRequest.setRequestContext( request.getRequestContext() );
-                descriptorRequest.setTrace( trace );
-                if ( isLackingDescriptor( root.getArtifact() ) )
-                {
-                    descriptorResult = new ArtifactDescriptorResult( descriptorRequest );
+                descriptorRequest.setArtifact(root.getArtifact());
+                descriptorRequest.setRepositories(request.getRepositories());
+                descriptorRequest.setRequestContext(request.getRequestContext());
+                descriptorRequest.setTrace(trace);
+                if (isLackingDescriptor(root.getArtifact())) {
+                    descriptorResult = new ArtifactDescriptorResult(descriptorRequest);
+                } else {
+                    descriptorResult = descriptorReader.readArtifactDescriptor(session, descriptorRequest);
                 }
-                else
-                {
-                    descriptorResult = descriptorReader.readArtifactDescriptor( session, descriptorRequest );
-                }
-            }
-            catch ( ArtifactDescriptorException e )
-            {
-                result.addException( e );
-                throw new DependencyCollectionException( result );
+            } catch (ArtifactDescriptorException e) {
+                result.addException(e);
+                throw new DependencyCollectionException(result);
             }
 
-            root = root.setArtifact( descriptorResult.getArtifact() );
+            root = root.setArtifact(descriptorResult.getArtifact());
 
-            repositories =
-                remoteRepositoryManager.aggregateRepositories( session, repositories,
-                                                               descriptorResult.getRepositories(), true );
-            dependencies = mergeDeps( dependencies, descriptorResult.getDependencies() );
-            managedDependencies = mergeDeps( managedDependencies, descriptorResult.getManagedDependencies() );
+            repositories = remoteRepositoryManager.aggregateRepositories(session, repositories, descriptorResult.getRepositories(), true);
+            dependencies = mergeDeps(dependencies, descriptorResult.getDependencies());
+            managedDependencies = mergeDeps(managedDependencies, descriptorResult.getManagedDependencies());
 
             GraphNode node = new GraphNode();
-            node.setAliases( descriptorResult.getAliases() );
-            node.setRepositories( request.getRepositories() );
+            node.setAliases(descriptorResult.getAliases());
+            node.setRepositories(request.getRepositories());
 
-            edge = new GraphEdge( node );
-            edge.setDependency( root );
-            edge.setRequestContext( request.getRequestContext() );
-            edge.setRelocations( descriptorResult.getRelocations() );
-            edge.setVersionConstraint( rangeResult.getVersionConstraint() );
-            edge.setVersion( version );
-        }
-        else
-        {
-            edge = new GraphEdge( new GraphNode() );
+            edge = new GraphEdge(node);
+            edge.setDependency(root);
+            edge.setRequestContext(request.getRequestContext());
+            edge.setRelocations(descriptorResult.getRelocations());
+            edge.setVersionConstraint(rangeResult.getVersionConstraint());
+            edge.setVersion(version);
+        } else {
+            edge = new GraphEdge(new GraphNode());
         }
 
-        result.setRoot( edge );
+        result.setRoot(edge);
 
-        boolean traverse = ( root == null ) || depTraverser.traverseDependency( root );
+        boolean traverse = (root == null) || depTraverser.traverseDependency(root);
 
-        if ( traverse && !dependencies.isEmpty() )
-        {
-            DataPool pool = new DataPool( session );
+        if (traverse && !dependencies.isEmpty()) {
+            DataPool pool = new DataPool(session);
 
             EdgeStack edges = new EdgeStack();
-            edges.push( edge );
+            edges.push(edge);
 
-            DefaultDependencyCollectionContext context =
-                new DefaultDependencyCollectionContext( session, root, managedDependencies );
+            DefaultDependencyCollectionContext context = new DefaultDependencyCollectionContext(session, root, managedDependencies);
 
-            Args args = new Args( result, session, trace, pool, edges, context );
+            Args args = new Args(result, session, trace, pool, edges, context);
 
             List<Dependency> deps = new ArrayList<Dependency>(dependencies);
 
             deps = dependencyModifier.modify(root, deps);
 
-            process( args, deps, repositories, depSelector.deriveChildSelector( context ),
-                     depManager.deriveChildManager( context ), depTraverser.deriveChildTraverser( context ) , dependencyModifier);
+            process(args, deps, repositories, depSelector.deriveChildSelector(context), depManager.deriveChildManager(context), depTraverser.deriveChildTraverser(context),
+                    dependencyModifier);
         }
 
         DependencyGraphTransformer transformer = session.getDependencyGraphTransformer();
-        try
-        {
-            DefaultDependencyGraphTransformationContext context =
-                new DefaultDependencyGraphTransformationContext( session );
-            result.setRoot( transformer.transformGraph( edge, context ) );
-        }
-        catch ( RepositoryException e )
-        {
-            result.addException( e );
+        try {
+            DefaultDependencyGraphTransformationContext context = new DefaultDependencyGraphTransformationContext(session);
+            result.setRoot(transformer.transformGraph(edge, context));
+        } catch (RepositoryException e) {
+            result.addException(e);
         }
 
-        if ( !result.getExceptions().isEmpty() )
-        {
-            throw new DependencyCollectionException( result );
+        if (!result.getExceptions().isEmpty()) {
+            throw new DependencyCollectionException(result);
         }
 
         return result;
     }
 
-    private RepositorySystemSession optimizeSession( final RepositorySystemSession session )
-    {
-        DefaultRepositorySystemSession optimized = new DefaultRepositorySystemSession( session );
-        optimized.setArtifactTypeRegistry( CachingArtifactTypeRegistry.newInstance( session ) );
+    private RepositorySystemSession optimizeSession(final RepositorySystemSession session) {
+        DefaultRepositorySystemSession optimized = new DefaultRepositorySystemSession(session);
+        optimized.setArtifactTypeRegistry(CachingArtifactTypeRegistry.newInstance(session));
         return optimized;
     }
 
-    private List<Dependency> mergeDeps( final List<Dependency> dominant, final List<Dependency> recessive )
-    {
+    private List<Dependency> mergeDeps(final List<Dependency> dominant, final List<Dependency> recessive) {
         List<Dependency> result;
-        if ( dominant == null || dominant.isEmpty() )
-        {
+        if (dominant == null || dominant.isEmpty()) {
             result = recessive;
-        }
-        else if ( recessive == null || recessive.isEmpty() )
-        {
+        } else if (recessive == null || recessive.isEmpty()) {
             result = dominant;
-        }
-        else
-        {
-            result = new ArrayList<Dependency>( dominant.size() + recessive.size() );
+        } else {
+            result = new ArrayList<Dependency>(dominant.size() + recessive.size());
             Collection<String> ids = new HashSet<String>();
-            for ( Dependency dependency : dominant )
-            {
-                ids.add( getId( dependency.getArtifact() ) );
-                result.add( dependency );
+            for (Dependency dependency : dominant) {
+                ids.add(getId(dependency.getArtifact()));
+                result.add(dependency);
             }
-            for ( Dependency dependency : recessive )
-            {
-                if ( !ids.contains( getId( dependency.getArtifact() ) ) )
-                {
-                    result.add( dependency );
+            for (Dependency dependency : recessive) {
+                if (!ids.contains(getId(dependency.getArtifact()))) {
+                    result.add(dependency);
                 }
             }
         }
         return result;
     }
 
-    private String getId( final Artifact a )
-    {
+    private String getId(final Artifact a) {
         return a.getGroupId() + ':' + a.getArtifactId() + ':' + a.getClassifier() + ':' + a.getExtension();
     }
 
-    private void process( final Args args, final List<Dependency> dependencies, final List<RemoteRepository> repositories,
-                          final DependencySelector depSelector, final DependencyManager depManager, final DependencyTraverser depTraverser , final DependencyModifier dependencyModifier )
-        throws DependencyCollectionException
-    {
-        nextDependency: for ( Dependency dependency : dependencies )
-        {
+    private void process(final Args args, final List<Dependency> dependencies, final List<RemoteRepository> repositories, final DependencySelector depSelector,
+            final DependencyManager depManager, final DependencyTraverser depTraverser, final DependencyModifier dependencyModifier) throws DependencyCollectionException {
+        nextDependency: for (Dependency dependency : dependencies) {
             boolean disableVersionManagement = false;
 
             List<Artifact> relocations = Collections.emptyList();
 
-            thisDependency: while ( true )
-            {
+            thisDependency: while (true) {
 
-                if ( !depSelector.selectDependency( dependency ) )
-                {
+                if (!depSelector.selectDependency(dependency)) {
                     continue nextDependency;
                 }
 
-                DependencyManagement depMngt = depManager.manageDependency( dependency );
+                DependencyManagement depMngt = depManager.manageDependency(dependency);
                 String premanagedVersion = null;
                 String premanagedScope = null;
 
-                if ( depMngt != null )
-                {
-                    if ( depMngt.getVersion() != null && !disableVersionManagement )
-                    {
+                if (depMngt != null) {
+                    if (depMngt.getVersion() != null && !disableVersionManagement) {
                         Artifact artifact = dependency.getArtifact();
                         premanagedVersion = artifact.getVersion();
-                        dependency = dependency.setArtifact( artifact.setVersion( depMngt.getVersion() ) );
+                        dependency = dependency.setArtifact(artifact.setVersion(depMngt.getVersion()));
                     }
-                    if ( depMngt.getProperties() != null )
-                    {
+                    if (depMngt.getProperties() != null) {
                         Artifact artifact = dependency.getArtifact();
-                        dependency = dependency.setArtifact( artifact.setProperties( depMngt.getProperties() ) );
+                        dependency = dependency.setArtifact(artifact.setProperties(depMngt.getProperties()));
                     }
-                    if ( depMngt.getScope() != null )
-                    {
+                    if (depMngt.getScope() != null) {
                         premanagedScope = dependency.getScope();
-                        dependency = dependency.setScope( depMngt.getScope() );
+                        dependency = dependency.setScope(depMngt.getScope());
                     }
-                    if ( depMngt.getExclusions() != null )
-                    {
-                        dependency = dependency.setExclusions( depMngt.getExclusions() );
+                    if (depMngt.getExclusions() != null) {
+                        dependency = dependency.setExclusions(depMngt.getExclusions());
                     }
                 }
                 disableVersionManagement = false;
 
-                boolean noDescriptor = isLackingDescriptor( dependency.getArtifact() );
+                boolean noDescriptor = isLackingDescriptor(dependency.getArtifact());
 
-                boolean traverse = !noDescriptor && depTraverser.traverseDependency( dependency );
+                boolean traverse = !noDescriptor && depTraverser.traverseDependency(dependency);
 
                 VersionRangeResult rangeResult;
-                try
-                {
+                try {
                     VersionRangeRequest rangeRequest = new VersionRangeRequest();
-                    rangeRequest.setArtifact( dependency.getArtifact() );
-                    rangeRequest.setRepositories( repositories );
-                    rangeRequest.setRequestContext( args.result.getRequest().getRequestContext() );
-                    rangeRequest.setTrace( args.trace );
+                    rangeRequest.setArtifact(dependency.getArtifact());
+                    rangeRequest.setRepositories(repositories);
+                    rangeRequest.setRequestContext(args.result.getRequest().getRequestContext());
+                    rangeRequest.setTrace(args.trace);
 
-                    Object key = args.pool.toKey( rangeRequest );
-                    rangeResult = args.pool.getConstraint( key, rangeRequest );
-                    if ( rangeResult == null )
-                    {
-                        rangeResult = versionRangeResolver.resolveVersionRange( args.session, rangeRequest );
-                        args.pool.putConstraint( key, rangeResult );
+                    Object key = args.pool.toKey(rangeRequest);
+                    rangeResult = args.pool.getConstraint(key, rangeRequest);
+                    if (rangeResult == null) {
+                        rangeResult = versionRangeResolver.resolveVersionRange(args.session, rangeRequest);
+                        args.pool.putConstraint(key, rangeResult);
                     }
 
-                    if ( rangeResult.getVersions().isEmpty() )
-                    {
-                        throw new VersionRangeResolutionException( rangeResult, "No versions available for "
-                            + dependency.getArtifact() + " within specified range" );
+                    if (rangeResult.getVersions().isEmpty()) {
+                        throw new VersionRangeResolutionException(rangeResult, "No versions available for " + dependency.getArtifact() + " within specified range");
                     }
-                }
-                catch ( VersionRangeResolutionException e )
-                {
-                    addException( args.result, e );
+                } catch (VersionRangeResolutionException e) {
+                    addException(args.result, e);
                     continue nextDependency;
                 }
 
                 List<Version> versions = rangeResult.getVersions();
-                for ( Version version : versions )
-                {
-                    Artifact originalArtifact = dependency.getArtifact().setVersion( version.toString() );
-                    Dependency d = dependency.setArtifact( originalArtifact );
+                for (Version version : versions) {
+                    Artifact originalArtifact = dependency.getArtifact().setVersion(version.toString());
+                    Dependency d = dependency.setArtifact(originalArtifact);
 
                     ArtifactDescriptorResult descriptorResult;
-                    {
-                        ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
-                        descriptorRequest.setArtifact( d.getArtifact() );
-                        descriptorRequest.setRepositories( repositories );
-                        descriptorRequest.setRequestContext( args.result.getRequest().getRequestContext() );
-                        descriptorRequest.setTrace( args.trace );
+                    ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
+                    descriptorRequest.setArtifact(d.getArtifact());
+                    descriptorRequest.setRepositories(repositories);
+                    descriptorRequest.setRequestContext(args.result.getRequest().getRequestContext());
+                    descriptorRequest.setTrace(args.trace);
 
-                        if ( noDescriptor )
-                        {
-                            descriptorResult = new ArtifactDescriptorResult( descriptorRequest );
-                        }
-                        else
-                        {
-                            Object key = args.pool.toKey( descriptorRequest );
-                            descriptorResult = args.pool.getDescriptor( key, descriptorRequest );
-                            if ( descriptorResult == null )
-                            {
-                                try
-                                {
-                                    descriptorResult =
-                                        descriptorReader.readArtifactDescriptor( args.session, descriptorRequest );
-                                    args.pool.putDescriptor( key, descriptorResult );
-                                }
-                                catch ( ArtifactDescriptorException e )
-                                {
-                                    addException( args.result, e );
-                                    args.pool.putDescriptor( key, e );
-                                    continue;
-                                }
-                            }
-                            else if ( descriptorResult == DataPool.NO_DESCRIPTOR )
-                            {
+                    if (noDescriptor) {
+                        descriptorResult = new ArtifactDescriptorResult(descriptorRequest);
+                    } else {
+                        Object key = args.pool.toKey(descriptorRequest);
+                        descriptorResult = args.pool.getDescriptor(key, descriptorRequest);
+                        if (descriptorResult == null) {
+                            try {
+                                descriptorResult = descriptorReader.readArtifactDescriptor(args.session, descriptorRequest);
+                                args.pool.putDescriptor(key, descriptorResult);
+                            } catch (ArtifactDescriptorException e) {
+                                addException(args.result, e);
+                                args.pool.putDescriptor(key, e);
                                 continue;
                             }
+                        } else if (descriptorResult == DataPool.NO_DESCRIPTOR) {
+                            continue;
                         }
                     }
 
-                    d = d.setArtifact( descriptorResult.getArtifact() );
+                    d = d.setArtifact(descriptorResult.getArtifact());
 
                     GraphNode node = args.edges.top().getTarget();
 
-                    GraphEdge cycleEdge = args.edges.find( d.getArtifact() );
-                    if ( cycleEdge != null )
-                    {
-                        GraphEdge edge = new GraphEdge( cycleEdge.getTarget() );
-                        edge.setDependency( d );
-                        edge.setScope( d.getScope() );
-                        edge.setPremanagedScope( premanagedScope );
-                        edge.setPremanagedVersion( premanagedVersion );
-                        edge.setRelocations( relocations );
-                        edge.setVersionConstraint( rangeResult.getVersionConstraint() );
-                        edge.setVersion( version );
-                        edge.setRequestContext( args.result.getRequest().getRequestContext() );
+                    GraphEdge cycleEdge = args.edges.find(d.getArtifact());
+                    if (cycleEdge != null) {
+                        GraphEdge edge = new GraphEdge(cycleEdge.getTarget());
+                        edge.setDependency(d);
+                        edge.setScope(d.getScope());
+                        edge.setPremanagedScope(premanagedScope);
+                        edge.setPremanagedVersion(premanagedVersion);
+                        edge.setRelocations(relocations);
+                        edge.setVersionConstraint(rangeResult.getVersionConstraint());
+                        edge.setVersion(version);
+                        edge.setRequestContext(args.result.getRequest().getRequestContext());
 
-                        node.getOutgoingEdges().add( edge );
+                        node.getOutgoingEdges().add(edge);
 
                         continue;
                     }
 
-                    if ( !descriptorResult.getRelocations().isEmpty() )
-                    {
+                    if (!descriptorResult.getRelocations().isEmpty()) {
                         relocations = descriptorResult.getRelocations();
 
-                        disableVersionManagement =
-                            originalArtifact.getGroupId().equals( d.getArtifact().getGroupId() )
-                                && originalArtifact.getArtifactId().equals( d.getArtifact().getArtifactId() );
+                        disableVersionManagement = originalArtifact.getGroupId().equals(d.getArtifact().getGroupId())
+                                && originalArtifact.getArtifactId().equals(d.getArtifact().getArtifactId());
 
                         dependency = d;
                         continue thisDependency;
                     }
 
-                    d = args.pool.intern( d.setArtifact( args.pool.intern( d.getArtifact() ) ) );
+                    d = args.pool.intern(d.setArtifact(args.pool.intern(d.getArtifact())));
 
                     DependencySelector childSelector = null;
                     DependencyManager childManager = null;
@@ -504,83 +428,66 @@ public class ModifiedDependencyCollector
                     Object key = null;
 
                     boolean recurse = traverse && !descriptorResult.getDependencies().isEmpty();
-                    if ( recurse )
-                    {
+                    if (recurse) {
                         DefaultDependencyCollectionContext context = args.collectionContext;
-                        context.set( d, descriptorResult.getManagedDependencies() );
+                        context.set(d, descriptorResult.getManagedDependencies());
 
-                        childSelector = depSelector.deriveChildSelector( context );
-                        childManager = depManager.deriveChildManager( context );
-                        childTraverser = depTraverser.deriveChildTraverser( context );
+                        childSelector = depSelector.deriveChildSelector(context);
+                        childManager = depManager.deriveChildManager(context);
+                        childTraverser = depTraverser.deriveChildTraverser(context);
 
-                        childRepos =
-                            remoteRepositoryManager.aggregateRepositories( args.session, repositories,
-                                                                           descriptorResult.getRepositories(), true );
+                        childRepos = remoteRepositoryManager.aggregateRepositories(args.session, repositories, descriptorResult.getRepositories(), true);
 
-                        key =
-                            args.pool.toKey( d.getArtifact(), childRepos, childSelector, childManager, childTraverser );
-                    }
-                    else
-                    {
-                        key = args.pool.toKey( d.getArtifact(), repositories );
+                        key = args.pool.toKey(d.getArtifact(), childRepos, childSelector, childManager, childTraverser);
+                    } else {
+                        key = args.pool.toKey(d.getArtifact(), repositories);
                     }
 
                     List<RemoteRepository> repos;
-                    ArtifactRepository repo = rangeResult.getRepository( version );
-                    if ( repo instanceof RemoteRepository )
-                    {
-                        repos = Collections.singletonList( (RemoteRepository) repo );
-                    }
-                    else if ( repo == null )
-                    {
+                    ArtifactRepository repo = rangeResult.getRepository(version);
+                    if (repo instanceof RemoteRepository) {
+                        repos = Collections.singletonList((RemoteRepository) repo);
+                    } else if (repo == null) {
                         repos = repositories;
-                    }
-                    else
-                    {
+                    } else {
                         repos = Collections.emptyList();
                     }
 
-                    GraphNode child = args.pool.getNode( key );
-                    if ( child == null )
-                    {
+                    GraphNode child = args.pool.getNode(key);
+                    if (child == null) {
                         child = new GraphNode();
-                        child.setAliases( descriptorResult.getAliases() );
-                        child.setRepositories( repos );
+                        child.setAliases(descriptorResult.getAliases());
+                        child.setRepositories(repos);
 
-                        args.pool.putNode( key, child );
-                    }
-                    else
-                    {
+                        args.pool.putNode(key, child);
+                    } else {
                         recurse = false;
 
-                        if ( repos.size() < child.getRepositories().size() )
-                        {
-                            child.setRepositories( repos );
+                        if (repos.size() < child.getRepositories().size()) {
+                            child.setRepositories(repos);
                         }
                     }
 
-                    GraphEdge edge = new GraphEdge( child );
-                    edge.setDependency( d );
-                    edge.setScope( d.getScope() );
-                    edge.setPremanagedScope( premanagedScope );
-                    edge.setPremanagedVersion( premanagedVersion );
-                    edge.setRelocations( relocations );
-                    edge.setVersionConstraint( rangeResult.getVersionConstraint() );
-                    edge.setVersion( version );
-                    edge.setRequestContext( args.result.getRequest().getRequestContext() );
+                    GraphEdge edge = new GraphEdge(child);
+                    edge.setDependency(d);
+                    edge.setScope(d.getScope());
+                    edge.setPremanagedScope(premanagedScope);
+                    edge.setPremanagedVersion(premanagedVersion);
+                    edge.setRelocations(relocations);
+                    edge.setVersionConstraint(rangeResult.getVersionConstraint());
+                    edge.setVersion(version);
+                    edge.setRequestContext(args.result.getRequest().getRequestContext());
 
-                    node.getOutgoingEdges().add( edge );
+                    node.getOutgoingEdges().add(edge);
 
-                    if ( recurse )
-                    {
-                        args.edges.push( edge );
+                    if (recurse) {
+                        args.edges.push(edge);
 
                         List<Dependency> deps = new ArrayList<Dependency>(descriptorResult.getDependencies());
 
                         deps = dependencyModifier.modify(dependency, deps);
 
-                        process( args, deps, childRepos, childSelector, childManager,
-                                 childTraverser , dependencyModifier);
+                        process(args, deps, childRepos, childSelector, childManager, childTraverser, dependencyModifier);
 
                         args.edges.pop();
                     }
@@ -591,43 +498,45 @@ public class ModifiedDependencyCollector
         }
     }
 
-    private boolean isLackingDescriptor( final Artifact artifact )
-    {
-        return artifact.getProperty( ArtifactProperties.LOCAL_PATH, null ) != null;
+    private boolean isLackingDescriptor(final Artifact artifact) {
+        return artifact.getProperty(ArtifactProperties.LOCAL_PATH, null) != null;
     }
 
-    private void addException( final CollectResult result, final Exception e )
-    {
-        if ( result.getExceptions().size() < 100 )
-        {
-            result.addException( e );
+    private void addException(final CollectResult result, final Exception e) {
+        if (result.getExceptions().size() < 100) {
+            result.addException(e);
         }
     }
 
-    static class Args
-    {
+    /**
+     * @author Benjamin Bentmann
+     */
+    static class Args {
 
-        final CollectResult result;
+        private final CollectResult result;
 
-        final RepositorySystemSession session;
+        private final RepositorySystemSession session;
 
-        final RequestTrace trace;
+        private final RequestTrace trace;
 
-        final DataPool pool;
+        private final DataPool pool;
 
-        final EdgeStack edges;
+        private final EdgeStack edges;
 
-        final DefaultDependencyCollectionContext collectionContext;
+        private final DefaultDependencyCollectionContext collectionContext;
 
-        public Args( final CollectResult result, final RepositorySystemSession session, final RequestTrace trace, final DataPool pool,
-                     final EdgeStack edges, final DefaultDependencyCollectionContext collectionContext )
-        {
+        public Args(final CollectResult result, final RepositorySystemSession session, final RequestTrace trace, final DataPool pool, final EdgeStack edges,
+                final DefaultDependencyCollectionContext collectionContext) {
             this.result = result;
             this.session = session;
             this.trace = trace;
             this.pool = pool;
             this.edges = edges;
             this.collectionContext = collectionContext;
+        }
+
+        public CollectResult getResult() {
+            return result;
         }
 
     }

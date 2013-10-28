@@ -24,7 +24,10 @@ import com.googlecode.vestige.application.ApplicationException;
 /**
  * @author Gael Lalire
  */
-public class PropertyExpander {
+public final class PropertyExpander {
+
+    private PropertyExpander() {
+    }
 
     public static String expand(final String value) throws ApplicationException {
         if (value == null) {

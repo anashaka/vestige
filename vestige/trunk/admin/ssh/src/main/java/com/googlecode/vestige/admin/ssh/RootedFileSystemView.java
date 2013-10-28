@@ -22,7 +22,6 @@ package com.googlecode.vestige.admin.ssh;
 import java.io.File;
 
 import org.apache.sshd.common.file.SshFile;
-import org.apache.sshd.common.file.nativefs.NativeFileSystemFactory;
 import org.apache.sshd.common.file.nativefs.NativeFileSystemView;
 import org.apache.sshd.common.file.nativefs.NativeSshFile;
 
@@ -44,7 +43,7 @@ public class RootedFileSystemView extends NativeFileSystemView {
 
     /**
      * Constructor - internal do not use directly, use
-     * {@link NativeFileSystemFactory} instead
+     * {@link org.apache.sshd.common.file.nativefs.NativeFileSystemFactory} instead.
      */
     public RootedFileSystemView(final File root, final String userName) {
         super(userName);

@@ -38,7 +38,7 @@ public abstract class AbstractStringParserFactory implements StringParserFactory
     public int[] convertList(final List<Integer> integers) {
         int[] tab = new int[integers.size()];
         int i = 0;
-        for(Integer integer : integers) {
+        for (Integer integer : integers) {
             tab[i] = integer;
             i++;
         }

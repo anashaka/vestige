@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -73,7 +72,10 @@ import com.googlecode.vestige.resolver.maven.schema.ReplaceDependency;
 /**
  * @author Gael Lalire
  */
-public class VestigeMavenResolver {
+public final class VestigeMavenResolver {
+
+    private VestigeMavenResolver() {
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(VestigeMavenResolver.class);
 
@@ -398,7 +400,7 @@ public class VestigeMavenResolver {
     }
 
     /**
-     * Sun JDK serialization keep {@link SoftReference} of serialized classes.
+     * Sun JDK serialization keep {@link java.lang.ref.SoftReference SoftReference} of serialized classes.
      * Those reference are hard to GC (you must allocate all available memory),
      * so we try to remove them.
      */

@@ -36,7 +36,6 @@ import java.util.WeakHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.googlecode.vestige.platform.system.interceptor.VestigePolicy;
-import com.googlecode.vestige.platform.system.interceptor.VestigeSecurityManager;
 
 /**
  * @author Gael Lalire
@@ -61,6 +60,8 @@ public final class VestigeSystem implements PublicVestigeSystem {
 
     private Properties properties;
 
+    private Properties securityProperties;
+
     private CopyOnWriteArrayList<Object> registeredDrivers;
 
     private Vector<Object> writeDrivers;
@@ -69,7 +70,7 @@ public final class VestigeSystem implements PublicVestigeSystem {
 
     private ProxySelector defaultProxySelector;
 
-    private VestigeSecurityManager securityManager;
+    private VestigeSystemSecurityManager securityManager;
 
     private VestigePolicy previousWhiteListPolicy;
 
@@ -79,15 +80,10 @@ public final class VestigeSystem implements PublicVestigeSystem {
 
     private VestigePolicy blackListPolicy;
 
-    private void init(final VestigeSecurityManager previousVestigeSecurityManager) {
-        this.securityManager = new VestigeSecurityManager(null, previousVestigeSecurityManager) {
+    private Object securityProviderList;
 
-            @Override
-            public SecurityManager getSecurityManager() {
-                return getNextHandler();
-            }
-
-        };
+    private void init(final VestigeSystemSecurityManager previousVestigeSecurityManager) {
+        this.securityManager = new VestigeSystemSecurityManager(vestigeSystemHolder, this, previousVestigeSecurityManager);
         this.whiteListPolicy = new VestigePolicy(null) {
             @Override
             public Policy getCurrentPolicy() {
@@ -97,14 +93,20 @@ public final class VestigeSystem implements PublicVestigeSystem {
 
             @Override
             public boolean implies(final ProtectionDomain domain, final Permission permission) {
-                if (previousBlackListPolicy != null && !previousBlackListPolicy.implies(domain, permission)) {
+                VestigeSystem currentVestigeSystem = vestigeSystemHolder.getVestigeSystem();
+                vestigeSystemHolder.setVestigeSystem(VestigeSystem.this);
+                try {
+                    if (previousBlackListPolicy != null && !previousBlackListPolicy.implies(domain, permission)) {
+                        return false;
+                    }
+                    Policy nextHandler = getNextHandler();
+                    if (nextHandler != null && nextHandler.implies(domain, permission)) {
+                        return true;
+                    }
                     return false;
+                } finally {
+                    vestigeSystemHolder.setVestigeSystem(currentVestigeSystem);
                 }
-                Policy nextHandler = getNextHandler();
-                if (nextHandler != null && nextHandler.implies(domain, permission)) {
-                    return true;
-                }
-                return false;
             }
         };
         this.blackListPolicy = new VestigePolicy(null) {
@@ -115,25 +117,31 @@ public final class VestigeSystem implements PublicVestigeSystem {
 
             @Override
             public boolean implies(final ProtectionDomain domain, final Permission permission) {
-                if (previousWhiteListPolicy != null && previousWhiteListPolicy.implies(domain, permission)) {
-                    return true;
-                }
-                Policy nextHandler;
-                if (previousBlackListPolicy != null) {
-                    nextHandler = previousBlackListPolicy.getNextHandler();
+                VestigeSystem currentVestigeSystem = vestigeSystemHolder.getVestigeSystem();
+                vestigeSystemHolder.setVestigeSystem(VestigeSystem.this);
+                try {
+                    if (previousWhiteListPolicy != null && previousWhiteListPolicy.implies(domain, permission)) {
+                        return true;
+                    }
+                    Policy nextHandler;
+                    if (previousBlackListPolicy != null) {
+                        nextHandler = previousBlackListPolicy.getNextHandler();
+                        if (nextHandler != null && !nextHandler.implies(domain, permission)) {
+                            return false;
+                        }
+                    }
+                    nextHandler = whiteListPolicy.getNextHandler();
+                    if (nextHandler != null && nextHandler.implies(domain, permission)) {
+                        return true;
+                    }
+                    nextHandler = getNextHandler();
                     if (nextHandler != null && !nextHandler.implies(domain, permission)) {
                         return false;
                     }
-                }
-                nextHandler = whiteListPolicy.getNextHandler();
-                if (nextHandler != null && nextHandler.implies(domain, permission)) {
                     return true;
+                } finally {
+                    vestigeSystemHolder.setVestigeSystem(currentVestigeSystem);
                 }
-                nextHandler = getNextHandler();
-                if (nextHandler != null && !nextHandler.implies(domain, permission)) {
-                    return false;
-                }
-                return true;
             }
         };
     }
@@ -143,10 +151,31 @@ public final class VestigeSystem implements PublicVestigeSystem {
         init(null);
     }
 
+    private static Properties copyProperties(final Properties previous) {
+        if (previous == null) {
+            return null;
+        }
+        Properties defaults = null;
+        for (Object opropertyName : Collections.list(previous.propertyNames())) {
+            if (!previous.containsKey(opropertyName)) {
+                if (defaults == null) {
+                    defaults = new Properties();
+                }
+                if (opropertyName instanceof String) {
+                    String propertyName = (String) opropertyName;
+                    defaults.put(propertyName, previous.getProperty(propertyName));
+                }
+            }
+        }
+        Properties properties = new Properties(defaults);
+        properties.putAll(previous);
+        return properties;
+    }
+
     @SuppressWarnings("unchecked")
     public VestigeSystem(final VestigeSystem previousSystem) {
-        init(previousSystem.securityManager);
         vestigeSystemHolder = previousSystem.vestigeSystemHolder;
+        init(previousSystem.securityManager);
         previousWhiteListPolicy = previousSystem.whiteListPolicy;
         previousBlackListPolicy = previousSystem.blackListPolicy;
         // URL
@@ -165,22 +194,10 @@ public final class VestigeSystem implements PublicVestigeSystem {
         out = previousSystem.out;
         err = previousSystem.err;
         in = previousSystem.in;
-        if (previousSystem.properties != null) {
-            Properties defaults = null;
-            for (Object opropertyName : Collections.list(previousSystem.properties.propertyNames())) {
-                if (!previousSystem.properties.containsKey(opropertyName)) {
-                    if (defaults == null) {
-                        defaults = new Properties();
-                    }
-                    if (opropertyName instanceof String) {
-                        String propertyName = (String) opropertyName;
-                        defaults.put(propertyName, previousSystem.properties.getProperty(propertyName));
-                    }
-                }
-            }
-            properties = new Properties(defaults);
-            properties.putAll(previousSystem.properties);
-        }
+        properties = copyProperties(previousSystem.properties);
+        securityProperties = copyProperties(previousSystem.securityProperties);
+        // no need to clone, ProviderList instance are immutable
+        securityProviderList = previousSystem.securityProviderList;
         // DriverManager
         if (previousSystem.writeDrivers != null) {
             writeDrivers = (Vector<Object>) previousSystem.writeDrivers.clone();
@@ -216,6 +233,10 @@ public final class VestigeSystem implements PublicVestigeSystem {
 
     public URLStreamHandlerFactory getURLStreamHandlerFactory() {
         return urlStreamHandlerFactory;
+    }
+
+    public Properties getSecurityProperties() {
+        return securityProperties;
     }
 
     public Properties getProperties() {
@@ -261,6 +282,10 @@ public final class VestigeSystem implements PublicVestigeSystem {
         this.in = in;
     }
 
+    public void setSecurityProperties(final Properties securityProperties) {
+        this.securityProperties = securityProperties;
+    }
+
     public void setProperties(final Properties properties) {
         this.properties = properties;
     }
@@ -293,16 +318,16 @@ public final class VestigeSystem implements PublicVestigeSystem {
         this.urlConnectionContentHandlerByMime = urlConnectionContentHandlerByMime;
     }
 
-    public VestigeSecurityManager getCurrentSecurityManager() {
+    public VestigeSystemSecurityManager getCurrentSecurityManager() {
         return securityManager;
     }
 
     public SecurityManager getSecurityManager() {
-        return securityManager.getNextHandler();
+        return securityManager.getSecurityManager();
     }
 
     public void setSecurityManager(final SecurityManager securityManager) {
-        this.securityManager.setNextHandler(securityManager);
+        this.securityManager.setSecurityManager(securityManager);
     }
 
     public Policy getWhiteListPolicy() {
@@ -333,6 +358,14 @@ public final class VestigeSystem implements PublicVestigeSystem {
     @Override
     public void setCurrentSystem() {
         vestigeSystemHolder.setVestigeSystem(this);
+    }
+
+    public Object getSecurityProviderList() {
+        return securityProviderList;
+    }
+
+    public void setSecurityProviderList(final Object securityProviderList) {
+        this.securityProviderList = securityProviderList;
     }
 
 }

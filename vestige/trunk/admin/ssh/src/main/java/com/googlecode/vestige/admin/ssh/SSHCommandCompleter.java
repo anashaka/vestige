@@ -66,7 +66,10 @@ public class SSHCommandCompleter implements Completer {
             if (candidates.size() == 1) {
                 candidates.set(0, candidates.get(0) + " ");
             }
-            return candidates.isEmpty() ? -1 : 0;
+            if (candidates.isEmpty()) {
+                return -1;
+            }
+            return 0;
         }
         if (split[0].equals("help")) {
             String lastString;
@@ -86,7 +89,10 @@ public class SSHCommandCompleter implements Completer {
             if (candidates.size() == 1) {
                 candidates.set(0, candidates.get(0) + " ");
             }
-            return candidates.isEmpty() ? -1 : buffer.lastIndexOf(lastString);
+            if (candidates.isEmpty()) {
+                return -1;
+            }
+            return buffer.lastIndexOf(lastString);
         }
         Command command = commandByName.get(split[0]);
         if (command == null) {
@@ -159,7 +165,10 @@ public class SSHCommandCompleter implements Completer {
                 candidates.set(0, candidates.get(0) + " ");
             }
 
-            return candidates.isEmpty() ? -1 : buffer.lastIndexOf(lastString);
+            if (candidates.isEmpty()) {
+                return -1;
+            }
+            return buffer.lastIndexOf(lastString);
         } finally {
             for (Argument argument : arguments) {
                 argument.reset();

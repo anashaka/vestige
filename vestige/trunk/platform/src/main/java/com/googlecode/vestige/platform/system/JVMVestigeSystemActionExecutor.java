@@ -25,6 +25,7 @@ import java.net.ProxySelector;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.Policy;
+import java.security.Security;
 import java.sql.DriverManager;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +45,7 @@ import com.googlecode.vestige.core.logger.VestigeLoggerFactory;
 import com.googlecode.vestige.platform.logger.SLF4JLoggerFactoryAdapter;
 import com.googlecode.vestige.platform.logger.SLF4JPrintStream;
 import com.googlecode.vestige.platform.logger.SecureSLF4JLoggerFactoryAdapter;
+import com.googlecode.vestige.platform.system.interceptor.ProviderListThreadLocal;
 import com.googlecode.vestige.platform.system.interceptor.VestigeCopyOnWriteArrayList;
 import com.googlecode.vestige.platform.system.interceptor.VestigeDriverVector;
 import com.googlecode.vestige.platform.system.interceptor.VestigeInputStream;
@@ -70,27 +72,6 @@ public class JVMVestigeSystemActionExecutor implements VestigeSystemActionExecut
         this.securityEnabled = securityEnabled;
     }
 
-    private static void unsetFinalField(final Field field, final Callable<Void> callable) throws Exception {
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
-        boolean accessible = modifiersField.isAccessible();
-        if (!accessible) {
-            modifiersField.setAccessible(true);
-        }
-        try {
-            int modifiers = field.getModifiers();
-            modifiersField.setInt(field, modifiers & ~Modifier.FINAL);
-            try {
-                callable.call();
-            } finally {
-                modifiersField.setInt(field, modifiers);
-            }
-        } finally {
-            if (!accessible) {
-                modifiersField.setAccessible(false);
-            }
-        }
-    }
-
     public void execute(final VestigeSystemAction vestigeSystemAction) {
         // JDK log
         synchronized (VestigeLoggerFactory.class) {
@@ -103,6 +84,7 @@ public class JVMVestigeSystemActionExecutor implements VestigeSystemActionExecut
             factory.setNextHandler(VestigeLoggerFactory.getVestigeLoggerFactory());
             VestigeLoggerFactory.setVestigeLoggerFactory(factory);
         }
+
 
         final VestigeSystemHolder vestigeSystemHolder = new VestigeSystemHolder();
         final VestigeSystem vestigeSystem = new VestigeSystem(vestigeSystemHolder);
@@ -193,6 +175,58 @@ public class JVMVestigeSystemActionExecutor implements VestigeSystemActionExecut
             };
             vestigeSystem.setDefaultProxySelector(proxySelector.getNextHandler());
             ProxySelector.setDefault(proxySelector);
+        }
+
+        Map<String, StackedHandler<?>> securityFields = new HashMap<String, StackedHandler<?>>();
+        VestigeProperties vestigeSecurityProperties = new VestigeProperties(null) {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public Properties getProperties() {
+                return vestigeSystemHolder.getVestigeSystem().getSecurityProperties();
+            }
+        };
+        securityFields.put("props", vestigeSecurityProperties);
+        try {
+            installFields(Security.class, securityFields);
+            vestigeSystem.setSecurityProperties(vestigeSecurityProperties.getNextHandler());
+        } catch (Exception e) {
+            LOGGER.warn("Could not intercept Security.properties", e);
+            securityFields = null;
+        }
+
+        // sun.security.jca.Providers
+        Map<String, StackedHandler<?>> securityProvidersFields = new HashMap<String, StackedHandler<?>>();
+        ProviderListThreadLocal providerListThreadLocal = new ProviderListThreadLocal(null) {
+
+            @Override
+            public Object getSecurityProviderList() {
+                return vestigeSystemHolder.getVestigeSystem().getSecurityProviderList();
+            }
+
+            @Override
+            public void setSecurityProviderList(final Object object) {
+                vestigeSystemHolder.getVestigeSystem().setSecurityProviderList(object);
+            }
+
+        };
+        securityProvidersFields.put("threadLists", providerListThreadLocal);
+        Class<?> securityProviders = null;
+        Field threadListsUsedField = null;
+        try {
+            securityProviders = Class.forName("sun.security.jca.Providers");
+            vestigeSystem.setSecurityProviderList(getStaticFieldValue(securityProviders.getDeclaredField("providerList")));
+            threadListsUsedField = securityProviders.getDeclaredField("threadListsUsed");
+            installFields(securityProviders, securityProvidersFields);
+            synchronized (securityProviders) {
+                // always use thread local providerList
+                threadListsUsedField.setAccessible(true);
+                threadListsUsedField.setInt(null, threadListsUsedField.getInt(null) + 1);
+                threadListsUsedField.setAccessible(false);
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Could not intercept sun.security.jca.Providers", e);
+            securityProvidersFields = null;
         }
 
         Map<String, StackedHandler<?>> urlFields = new HashMap<String, StackedHandler<?>>();
@@ -290,6 +324,28 @@ public class JVMVestigeSystemActionExecutor implements VestigeSystemActionExecut
                 }
             }
 
+            if (securityProvidersFields != null) {
+                try {
+                    synchronized (securityProviders) {
+                        uninstallFields(securityProviders, securityProvidersFields);
+                        // always use thread local providerList
+                        threadListsUsedField.setAccessible(true);
+                        threadListsUsedField.setInt(null, threadListsUsedField.getInt(null) - 1);
+                        threadListsUsedField.setAccessible(false);
+                    }
+                } catch (Exception e) {
+                    LOGGER.warn("Could not release sun.security.jca.Providers interception", e);
+                }
+            }
+
+            if (securityFields != null) {
+                try {
+                    uninstallFields(Security.class, securityFields);
+                } catch (Exception e) {
+                    LOGGER.warn("Could not release Security.properties interception", e);
+                }
+            }
+
             synchronized (ProxySelector.class) {
                 ProxySelector.setDefault(StackedHandlerUtils.uninstallStackedHandler(proxySelector, ProxySelector.getDefault()));
             }
@@ -317,29 +373,7 @@ public class JVMVestigeSystemActionExecutor implements VestigeSystemActionExecut
         synchronized (clazz) {
             for (final Entry<String, StackedHandler<?>> entry : valueByFieldName.entrySet()) {
                 final Field declaredField = clazz.getDeclaredField(entry.getKey());
-                final boolean accessible = declaredField.isAccessible();
-                if (!accessible) {
-                    declaredField.setAccessible(true);
-                }
-                try {
-                    Callable<Void> callable = new Callable<Void>() {
-
-                        @Override
-                        public Void call() throws Exception {
-                            declaredField.set(null, StackedHandlerUtils.uninstallStackedHandler((StackedHandler<Object>) entry.getValue(), declaredField.get(null)));
-                            return null;
-                        }
-                    };
-                    if (Modifier.isFinal(declaredField.getModifiers())) {
-                        unsetFinalField(declaredField, callable);
-                    } else {
-                        callable.call();
-                    }
-                } finally {
-                    if (!accessible) {
-                        declaredField.setAccessible(false);
-                    }
-                }
+                setStaticFieldValue(declaredField, StackedHandlerUtils.uninstallStackedHandler((StackedHandler<Object>) entry.getValue(), getStaticFieldValue(declaredField)));
             }
         }
     }
@@ -348,32 +382,82 @@ public class JVMVestigeSystemActionExecutor implements VestigeSystemActionExecut
     public void installFields(final Class<?> clazz, final Map<String, StackedHandler<?>> valueByFieldName) throws Exception {
         synchronized (clazz) {
             for (final Entry<String, StackedHandler<?>> entry : valueByFieldName.entrySet()) {
-                final Field declaredField = clazz.getDeclaredField(entry.getKey());
-                final boolean accessible = declaredField.isAccessible();
-                if (!accessible) {
-                    declaredField.setAccessible(true);
-                }
-                try {
-                    Callable<Void> callable = new Callable<Void>() {
+                Field declaredField = clazz.getDeclaredField(entry.getKey());
+                StackedHandler value = entry.getValue();
+                Object previousValue = getStaticFieldValue(declaredField);
+                setStaticFieldValue(declaredField, value);
+                value.setNextHandler(previousValue);
+            }
+        }
+    }
 
-                        @Override
-                        public Void call() throws Exception {
-                            StackedHandler value = entry.getValue();
-                            value.setNextHandler(declaredField.get(null));
-                            declaredField.set(null, value);
-                            return null;
-                        }
-                    };
-                    if (Modifier.isFinal(declaredField.getModifiers())) {
-                        unsetFinalField(declaredField, callable);
-                    } else {
-                        callable.call();
+    public static Object getStaticFieldValue(final Field field) throws Exception {
+        Callable<Object> callable = new Callable<Object>() {
+
+            @Override
+            public Object call() throws Exception {
+                if (!field.isAccessible()) {
+                    field.setAccessible(true);
+                    try {
+                        return field.get(null);
+                    } finally {
+                        field.setAccessible(false);
                     }
-                } finally {
-                    if (!accessible) {
-                        declaredField.setAccessible(false);
-                    }
+                } else {
+                    return field.get(null);
                 }
+            }
+        };
+        if (Modifier.isFinal(field.getModifiers())) {
+            // unset for get too (prevent caching)
+            return unsetFinalField(field, callable);
+        } else {
+            return callable.call();
+        }
+    }
+
+    public static void setStaticFieldValue(final Field field, final Object value) throws Exception {
+        Callable<Void> callable = new Callable<Void>() {
+
+            @Override
+            public Void call() throws Exception {
+                if (!field.isAccessible()) {
+                    field.setAccessible(true);
+                    try {
+                        field.set(null, value);
+                    } finally {
+                        field.setAccessible(false);
+                    }
+                } else {
+                    field.set(null, value);
+                }
+                return null;
+            }
+        };
+        if (Modifier.isFinal(field.getModifiers())) {
+            unsetFinalField(field, callable);
+        } else {
+            callable.call();
+        }
+    }
+
+    public static <E> E unsetFinalField(final Field field, final Callable<E> callable) throws Exception {
+        Field modifiersField = Field.class.getDeclaredField("modifiers");
+        boolean accessible = modifiersField.isAccessible();
+        if (!accessible) {
+            modifiersField.setAccessible(true);
+        }
+        try {
+            int modifiers = field.getModifiers();
+            modifiersField.setInt(field, modifiers & ~Modifier.FINAL);
+            try {
+                return callable.call();
+            } finally {
+                modifiersField.setInt(field, modifiers);
+            }
+        } finally {
+            if (!accessible) {
+                modifiersField.setAccessible(false);
             }
         }
     }
