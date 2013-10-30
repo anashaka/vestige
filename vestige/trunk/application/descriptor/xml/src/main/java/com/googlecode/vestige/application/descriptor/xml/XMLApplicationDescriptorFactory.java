@@ -17,8 +17,10 @@
 
 package com.googlecode.vestige.application.descriptor.xml;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.security.Permission;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,6 +72,24 @@ public class XMLApplicationDescriptorFactory implements ApplicationDescriptorFac
     public XMLApplicationDescriptorFactory(final MavenArtifactResolver mavenArtifactResolver) {
         this.mavenArtifactResolver = mavenArtifactResolver;
     }
+
+    public boolean hasApplicationDescriptor(final URL context, final String repoName, final String appName, final List<Integer> version)
+            throws ApplicationException {
+        URL url;
+        try {
+            url = new URL(context, appName + "/" + appName + "-" + VersionUtils.toString(version) + ".xml");
+        } catch (MalformedURLException e) {
+            throw new ApplicationException("url is invalid", e);
+        }
+        try {
+            URLConnection openConnection = url.openConnection();
+            openConnection.connect();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
 
     @SuppressWarnings("unchecked")
     public ApplicationDescriptor createApplicationDescriptor(final URL context, final String repoName, final String appName, final List<Integer> version)
