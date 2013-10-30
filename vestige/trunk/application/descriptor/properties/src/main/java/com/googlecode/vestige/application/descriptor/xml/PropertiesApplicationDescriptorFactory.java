@@ -34,4 +34,10 @@ public class PropertiesApplicationDescriptorFactory implements ApplicationDescri
         return new PropertiesApplicationDescriptor();
     }
 
+    @Override
+    public boolean hasApplicationDescriptor(final URL context, final String repoName, final String appName, final List<Integer> version) throws ApplicationException {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
 }

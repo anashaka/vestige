@@ -97,7 +97,7 @@ public class MicroEditionVestige {
             throw new Exception("Vestige ME already started");
         }
         workerThread = vestigeExecutor.createWorker("me-worker", true, 0);
-        defaultApplicationManager.powerOn(vestigePlatform, null, null, null, applicationDescriptorFactory);
+        defaultApplicationManager.powerOn(vestigePlatform, null, null, null, null, applicationDescriptorFactory);
         server.start();
     }
 

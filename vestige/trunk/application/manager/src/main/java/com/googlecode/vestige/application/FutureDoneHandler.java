@@ -17,16 +17,14 @@
 
 package com.googlecode.vestige.application;
 
-import java.net.URL;
-import java.util.List;
+import java.util.concurrent.Future;
 
 /**
+ * @param <E> return type of future
  * @author Gael Lalire
  */
-public interface ApplicationDescriptorFactory {
+public interface FutureDoneHandler<E> {
 
-    boolean hasApplicationDescriptor(final URL context, final String repoName, final String appName, final List<Integer> version) throws ApplicationException;
-
-    ApplicationDescriptor createApplicationDescriptor(final URL context, String repoName, final String appName, final List<Integer> version) throws ApplicationException;
+    void futureDone(Future<E> future);
 
 }

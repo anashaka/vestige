@@ -161,7 +161,8 @@ public class StandardEditionVestige implements VestigeSystemAction, Runnable {
     @Override
     public void vestigeSystemRun(final PublicVestigeSystem vestigeSystem) {
         // Vestige dependencies can modify system, so we run isolated
-        vestigeSystem.createSubSystem().setCurrentSystem();
+        PublicVestigeSystem standardEditionVestigeSystem = vestigeSystem.createSubSystem();
+        standardEditionVestigeSystem.setCurrentSystem();
         // new threads are in subsystem
         ExecutorService executorService = Executors.newCachedThreadPool();
 
@@ -261,7 +262,7 @@ public class StandardEditionVestige implements VestigeSystemAction, Runnable {
         }
 
         try {
-            start(vestigeSystem, vestigeSecurityManager, vestigePolicy);
+            start(vestigeSystem, standardEditionVestigeSystem, vestigeSecurityManager, vestigePolicy);
         } catch (Exception e) {
             LOGGER.error("Unable to start Vestige SE", e);
         }
@@ -292,14 +293,14 @@ public class StandardEditionVestige implements VestigeSystemAction, Runnable {
         }
     }
 
-    public void start(final PublicVestigeSystem vestigeSystem, final PrivateVestigeSecurityManager vestigeSecurityManager, final PrivateVestigePolicy vestigePolicy)
+    public void start(final PublicVestigeSystem vestigeSystem, final PublicVestigeSystem standardEditionVestigeSystem, final PrivateVestigeSecurityManager vestigeSecurityManager, final PrivateVestigePolicy vestigePolicy)
             throws Exception {
         if (workerThread != null) {
             return;
         }
         workerThread = vestigeExecutor.createWorker("se-worker", true, 0);
         try {
-            defaultApplicationManager.powerOn(vestigePlatform, vestigeSystem, vestigeSecurityManager, vestigePolicy, applicationDescriptorFactory);
+            defaultApplicationManager.powerOn(vestigePlatform, vestigeSystem, standardEditionVestigeSystem, vestigeSecurityManager, vestigePolicy, applicationDescriptorFactory);
             if (sshServer != null) {
                 sshServer.start();
             }
