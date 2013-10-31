@@ -38,9 +38,13 @@ public interface ApplicationDescriptor {
 
     String getLauncherClassName() throws ApplicationException;
 
+    boolean isInstallerPrivateSystem() throws ApplicationException;
+
     boolean isLauncherPrivateSystem() throws ApplicationException;
 
     ClassLoaderConfiguration getLauncherClassLoaderConfiguration() throws ApplicationException;
+
+    Set<Permission> getInstallerPermissions() throws ApplicationException;
 
     Set<Permission> getPermissions() throws ApplicationException;
 

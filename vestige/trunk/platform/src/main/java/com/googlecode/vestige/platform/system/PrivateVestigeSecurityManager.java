@@ -17,33 +17,43 @@
 
 package com.googlecode.vestige.platform.system;
 
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Gael Lalire
  */
 public class PrivateVestigeSecurityManager extends SecurityManager {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(PrivateVestigeSecurityManager.class);
+
     private static final RuntimePermission MODIFY_THREAD_GROUP_PERMISSION = new RuntimePermission("modifyThreadGroup");
 
     private static final RuntimePermission MODIFY_THREAD_PERMISSION = new RuntimePermission("modifyThread");
 
-    private ThreadLocal<ThreadGroup> threadGroupThreadLocal = new InheritableThreadLocal<ThreadGroup>();
+    private ThreadLocal<List<ThreadGroup>> threadGroupThreadLocal = new InheritableThreadLocal<List<ThreadGroup>>();
 
     private ThreadGroup rootGroup;
 
     public PrivateVestigeSecurityManager() {
         ThreadGroup root = Thread.currentThread().getThreadGroup();
-        while (root.getParent() != null) {
-            root = root.getParent();
+        try {
+            while (root.getParent() != null) {
+                root = root.getParent();
+            }
+            rootGroup = root;
+        } catch (SecurityException e) {
+            LOGGER.debug("Access to root thread group not allowed", e);
         }
-        rootGroup = root;
     }
 
-    public void setThreadGroup(final ThreadGroup threadGroup) {
-        threadGroupThreadLocal.set(threadGroup);
+    public void setThreadGroups(final List<ThreadGroup> threadGroups) {
+        threadGroupThreadLocal.set(threadGroups);
     }
 
-    public void unsetThreadGroup() {
+    public void unsetThreadGroups() {
         threadGroupThreadLocal.remove();
     }
 
@@ -51,11 +61,16 @@ public class PrivateVestigeSecurityManager extends SecurityManager {
     public void checkAccess(final Thread t) {
         super.checkAccess(t);
         ThreadGroup otherThreadGroup = t.getThreadGroup();
-        if (otherThreadGroup == rootGroup) {
+        if (otherThreadGroup == rootGroup || otherThreadGroup == null) {
             return;
         }
-        ThreadGroup threadGroup = threadGroupThreadLocal.get();
-        if (threadGroup != null && otherThreadGroup != null && !threadGroup.parentOf(otherThreadGroup)) {
+        List<ThreadGroup> threadGroups = threadGroupThreadLocal.get();
+        if (threadGroups != null) {
+            for (ThreadGroup threadGroup : threadGroups) {
+                if (threadGroup != null && threadGroup.parentOf(otherThreadGroup)) {
+                    return;
+                }
+            }
             checkPermission(MODIFY_THREAD_PERMISSION);
         }
     }
@@ -66,8 +81,13 @@ public class PrivateVestigeSecurityManager extends SecurityManager {
         if (g == rootGroup) {
             return;
         }
-        ThreadGroup threadGroup = threadGroupThreadLocal.get();
-        if (threadGroup != null && !threadGroup.parentOf(g)) {
+        List<ThreadGroup> threadGroups = threadGroupThreadLocal.get();
+        if (threadGroups != null) {
+            for (ThreadGroup threadGroup : threadGroups) {
+                if (threadGroup != null && threadGroup.parentOf(g)) {
+                    return;
+                }
+            }
             checkPermission(MODIFY_THREAD_GROUP_PERMISSION);
         }
     }

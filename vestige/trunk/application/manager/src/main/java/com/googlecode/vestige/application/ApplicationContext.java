@@ -36,6 +36,8 @@ public class ApplicationContext implements Serializable {
 
     private Set<Permission> permissions;
 
+    private Set<Permission> installerPermissions;
+
     private ClassLoaderConfiguration resolve;
 
     private ClassLoaderConfiguration installerResolve;
@@ -51,6 +53,8 @@ public class ApplicationContext implements Serializable {
     private int autoMigrateLevel;
 
     private boolean started;
+
+    private boolean installerPrivateSystem;
 
     private boolean privateSystem;
 
@@ -161,6 +165,14 @@ public class ApplicationContext implements Serializable {
         this.uninterruptedMigrationVersion = uninterruptedMigrationVersion;
     }
 
+    public boolean isInstallerPrivateSystem() {
+        return installerPrivateSystem;
+    }
+
+    public void setInstallerPrivateSystem(final boolean installerPrivateSystem) {
+        this.installerPrivateSystem = installerPrivateSystem;
+    }
+
     public boolean isPrivateSystem() {
         return privateSystem;
     }
@@ -175,6 +187,14 @@ public class ApplicationContext implements Serializable {
 
     public void setPermissions(final Set<Permission> permissions) {
         this.permissions = permissions;
+    }
+
+    public Set<Permission> getInstallerPermissions() {
+        return installerPermissions;
+    }
+
+    public void setInstallerPermissions(final Set<Permission> installerPermissions) {
+        this.installerPermissions = installerPermissions;
     }
 
 }

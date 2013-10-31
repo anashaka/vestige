@@ -72,4 +72,16 @@ public class PropertiesApplicationDescriptor implements ApplicationDescriptor {
         return null;
     }
 
+    @Override
+    public Set<Permission> getInstallerPermissions() throws ApplicationException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean isInstallerPrivateSystem() throws ApplicationException {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
 }

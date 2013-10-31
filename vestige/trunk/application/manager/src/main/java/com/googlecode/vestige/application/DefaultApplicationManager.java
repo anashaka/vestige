@@ -170,9 +170,11 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         applicationContext.setInstallerClassName(applicationDescriptor.getInstallerClassName());
         applicationContext.setInstallerResolve(applicationDescriptor.getInstallerClassLoaderConfiguration());
         applicationContext.setClassName(applicationDescriptor.getLauncherClassName());
+        applicationContext.setInstallerPrivateSystem(applicationDescriptor.isInstallerPrivateSystem());
         applicationContext.setPrivateSystem(applicationDescriptor.isLauncherPrivateSystem());
         applicationContext.setResolve(applicationDescriptor.getLauncherClassLoaderConfiguration());
         applicationContext.setPermissions(applicationDescriptor.getPermissions());
+        applicationContext.setInstallerPermissions(applicationDescriptor.getInstallerPermissions());
 
         applicationContext.setHome(file);
         applicationContext.setSupportedMigrationVersion(supportedMigrationVersion);
@@ -235,7 +237,14 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                     final File home = applicationContext.getHome();
                     additionnalPermissions.add(new FilePermission(home.getPath(), "read,write"));
                     additionnalPermissions.add(new FilePermission(home.getPath() + File.separator + "-", "read,write,delete"));
-                    Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, applicationContext.getName() + "-installer", rootVestigeSystem, new Callable<Void>() {
+                    additionnalPermissions.addAll(applicationContext.getInstallerPermissions());
+                    PublicVestigeSystem vestigeSystem;
+                    if (applicationContext.isInstallerPrivateSystem()) {
+                        vestigeSystem = rootVestigeSystem.createSubSystem();
+                    } else {
+                        vestigeSystem = rootVestigeSystem;
+                    }
+                    Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, null, applicationContext.getName() + "-installer", vestigeSystem, new Callable<Void>() {
 
                         @Override
                         public Void call() throws Exception {
@@ -294,7 +303,14 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                     final File home = applicationContext.getHome();
                     additionnalPermissions.add(new FilePermission(home.getPath(), "read,write"));
                     additionnalPermissions.add(new FilePermission(home.getPath() + File.separator + "-", "read,write,delete"));
-                    Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, applicationContext.getName() + "-installer", rootVestigeSystem, new Callable<Void>() {
+                    additionnalPermissions.addAll(applicationContext.getInstallerPermissions());
+                    PublicVestigeSystem vestigeSystem;
+                    if (applicationContext.isInstallerPrivateSystem()) {
+                        vestigeSystem = rootVestigeSystem.createSubSystem();
+                    } else {
+                        vestigeSystem = rootVestigeSystem;
+                    }
+                    Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, null, applicationContext.getName() + "-installer", vestigeSystem, new Callable<Void>() {
 
                         @Override
                         public Void call() throws Exception {
@@ -475,7 +491,14 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                             additionnalPermissions.add(new FilePermission(toHome.getPath() + File.separator + "-", "read,write,delete"));
                             additionnalPermissions.addAll(fromApplicationContext.getResolve().getPermissions());
                             additionnalPermissions.addAll(toApplicationContext.getResolve().getPermissions());
-                            Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, migratorApplicationContext.getName() + "-installer", rootVestigeSystem,
+                            additionnalPermissions.addAll(migratorApplicationContext.getInstallerPermissions());
+                            PublicVestigeSystem vestigeSystem;
+                            if (migratorApplicationContext.isInstallerPrivateSystem()) {
+                                vestigeSystem = rootVestigeSystem.createSubSystem();
+                            } else {
+                                vestigeSystem = rootVestigeSystem;
+                            }
+                            Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, Arrays.asList(fromApplicationContext.getThread().getThreadGroup(), toApplicationContext.getThread().getThreadGroup()), migratorApplicationContext.getName() + "-installer", vestigeSystem,
                                     new Callable<Void>() {
 
                                         @Override
@@ -533,7 +556,14 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                         final File toHome = toApplicationContext.getHome();
                         additionnalPermissions.add(new FilePermission(toHome.getPath(), "read,write"));
                         additionnalPermissions.add(new FilePermission(toHome.getPath() + File.separator + "-", "read,write,delete"));
-                        Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, migratorApplicationContext.getName() + "-installer", rootVestigeSystem,
+                        additionnalPermissions.addAll(migratorApplicationContext.getInstallerPermissions());
+                        PublicVestigeSystem vestigeSystem;
+                        if (migratorApplicationContext.isInstallerPrivateSystem()) {
+                            vestigeSystem = rootVestigeSystem.createSubSystem();
+                        } else {
+                            vestigeSystem = rootVestigeSystem;
+                        }
+                        Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, null, migratorApplicationContext.getName() + "-installer", vestigeSystem,
                                 new Callable<Void>() {
 
                                     @Override
@@ -707,7 +737,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                 if (applicationContext.isPrivateSystem()) {
                     vestigeSystem = rootVestigeSystem.createSubSystem();
                 } else {
-                    vestigeSystem = null;
+                    vestigeSystem = rootVestigeSystem;
                 }
             } else {
                 // reattach to platform
@@ -722,7 +752,7 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
             additionnalPermissions.add(new FilePermission(applicationContext.getHome().getPath(), "read,write"));
             additionnalPermissions.add(new FilePermission(applicationContext.getHome().getPath() + File.separator + "-", "read,write,delete"));
             additionnalPermissions.addAll(applicationContext.getPermissions());
-            Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, applicationContext.getName(), vestigeSystem, new Callable<Void>() {
+            Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, null, applicationContext.getName(), vestigeSystem, new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
                     final Runnable runnable;

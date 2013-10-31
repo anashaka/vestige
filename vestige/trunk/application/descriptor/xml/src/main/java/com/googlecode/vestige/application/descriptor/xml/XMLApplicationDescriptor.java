@@ -203,6 +203,11 @@ public class XMLApplicationDescriptor implements ApplicationDescriptor {
         throw new ApplicationException("missing child");
     }
 
+    public boolean isInstallerPrivateSystem() throws ApplicationException {
+        Installer installer = application.getInstaller();
+        return installer.isPrivateSystem();
+    }
+
     public boolean isLauncherPrivateSystem() throws ApplicationException {
         Launcher launcher = application.getLauncher();
         return launcher.isPrivateSystem();
@@ -275,6 +280,11 @@ public class XMLApplicationDescriptor implements ApplicationDescriptor {
         } catch (Exception e) {
             throw new ApplicationException("Unable to resolve", e);
         }
+    }
+
+    @Override
+    public Set<Permission> getInstallerPermissions() throws ApplicationException {
+        return permissions;
     }
 
     @Override
