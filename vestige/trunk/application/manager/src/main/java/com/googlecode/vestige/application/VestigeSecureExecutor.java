@@ -25,8 +25,10 @@ import java.security.AccessController;
 import java.security.Permission;
 import java.security.Permissions;
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.Callable;
@@ -92,7 +94,7 @@ public class VestigeSecureExecutor {
         threadGroupDestroyer.start();
     }
 
-    public <E> Thread execute(final Set<Permission> additionnalPermissions, final String name, final PublicVestigeSystem appVestigeSystem, final Callable<E> callable,
+    public <E> Thread execute(final Set<Permission> additionnalPermissions, final List<ThreadGroup> threadGroups,  final String name, final PublicVestigeSystem appVestigeSystem, final Callable<E> callable,
             final PublicVestigeSystem handlerVestigeSystem, final FutureDoneHandler<E> done) {
         final ThreadGroup threadGroup = new ThreadGroup(name);
         FutureTask<E> futureTask = new FutureTask<E>(new Callable<E>() {
@@ -104,7 +106,14 @@ public class VestigeSecureExecutor {
                         appVestigeSystem.setCurrentSystem();
                     }
                     if (vestigeSecurityManager != null) {
-                        vestigeSecurityManager.setThreadGroup(threadGroup);
+                        if (threadGroups != null) {
+                            List<ThreadGroup> accessibleThreadGroups = new ArrayList<ThreadGroup>(threadGroups.size() + 1);
+                            accessibleThreadGroups.addAll(threadGroups);
+                            accessibleThreadGroups.add(threadGroup);
+                            vestigeSecurityManager.setThreadGroups(accessibleThreadGroups);
+                        } else {
+                            vestigeSecurityManager.setThreadGroups(Collections.singletonList(threadGroup));
+                        }
                         Permissions permissions = new Permissions();
                         // getResource for system jar
                         for (Permission permission : systemResourcePermissions) {
@@ -136,7 +145,7 @@ public class VestigeSecureExecutor {
                 } finally {
                     if (vestigeSecurityManager != null) {
                         vestigePolicy.unsetPermissionCollection();
-                        vestigeSecurityManager.unsetThreadGroup();
+                        vestigeSecurityManager.unsetThreadGroups();
                     }
                     handlerVestigeSystem.setCurrentSystem();
                 }

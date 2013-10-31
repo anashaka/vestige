@@ -123,19 +123,29 @@ public class XMLApplicationDescriptorFactory implements ApplicationDescriptorFac
         List<MavenRepository> additionalRepositories = new ArrayList<MavenRepository>();
         DefaultDependencyModifier defaultDependencyModifier = new DefaultDependencyModifier();
         Config configurations = application.getConfigurations();
-        Set<Permission> permissionSet = new HashSet<Permission>();
+        Set<Permission> installerPermissionSet = new HashSet<Permission>();
+        Set<Permission> launcherPermissionSet = new HashSet<Permission>();
         if (configurations != null) {
             MavenConfig mavenConfig = configurations.getMavenConfig();
             if (mavenConfig != null) {
                 setMavenConfig(configurations.getMavenConfig(), defaultDependencyModifier, additionalRepositories);
             }
-            Permissions permissions = configurations.getPermissions();
+            Config.Permissions permissions = configurations.getPermissions();
             if (permissions != null) {
-                readPermissions(permissions, permissionSet);
+                readPermissions(permissions, installerPermissionSet);
+                readPermissions(permissions, launcherPermissionSet);
+                Permissions installerPerms = permissions.getInstaller();
+                if (installerPerms != null) {
+                    readPermissions(installerPerms, installerPermissionSet);
+                }
+                Permissions launcherPerms = permissions.getLauncher();
+                if (launcherPerms != null) {
+                    readPermissions(launcherPerms, launcherPermissionSet);
+                }
             }
         }
         return new XMLApplicationDescriptor(mavenArtifactResolver, repoName + "-" + appName + "-" + VersionUtils.toString(version), version, application, additionalRepositories,
-                defaultDependencyModifier, permissionSet);
+                defaultDependencyModifier, launcherPermissionSet);
     }
 
     public void readPermissions(final Permissions permissions, final Set<Permission> result) {

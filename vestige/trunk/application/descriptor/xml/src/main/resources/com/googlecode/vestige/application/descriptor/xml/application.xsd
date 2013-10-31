@@ -30,7 +30,18 @@
   <xs:complexType name="Config">
     <xs:all>
       <xs:element minOccurs="0" name="mavenConfig" type="MavenConfig" />
-      <xs:element minOccurs="0" name="permissions" type="Permissions" />
+      <xs:element minOccurs="0" name="permissions">
+        <xs:complexType>
+          <xs:complexContent>
+            <xs:extension base="Permissions">
+              <xs:sequence>
+                <xs:element name="installer" type="Permissions" minOccurs="0" />
+                <xs:element name="launcher" type="Permissions" minOccurs="0" />
+              </xs:sequence>
+            </xs:extension>
+          </xs:complexContent>
+        </xs:complexType>
+      </xs:element>
     </xs:all>
   </xs:complexType>
 
@@ -50,6 +61,7 @@
     </xs:choice>
     <xs:attribute name="supportedMigration" type="VersionRangeList" use="optional" />
     <xs:attribute name="uninterruptedMigration" type="VersionRangeList" use="optional" />
+    <xs:attribute name="privateSystem" type="xs:boolean" use="optional" default="false" />
   </xs:complexType>
 
   <xs:complexType name="Launcher">
