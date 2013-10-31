@@ -228,49 +228,44 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
             ClassLoaderConfiguration installerResolve = applicationContext.getInstallerResolve();
             int installerAttach = vestigePlatform.attach(installerResolve);
             try {
-                vestigePlatform.start(installerAttach);
-                try {
-                    final VestigeClassLoader<?> installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
+                final VestigeClassLoader<?> installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
 
-                    Set<Permission> additionnalPermissions = new HashSet<Permission>();
-                    additionnalPermissions.addAll(installerResolve.getPermissions());
-                    final File home = applicationContext.getHome();
-                    additionnalPermissions.add(new FilePermission(home.getPath(), "read,write"));
-                    additionnalPermissions.add(new FilePermission(home.getPath() + File.separator + "-", "read,write,delete"));
-                    additionnalPermissions.addAll(applicationContext.getInstallerPermissions());
-                    PublicVestigeSystem vestigeSystem;
-                    if (applicationContext.isInstallerPrivateSystem()) {
-                        vestigeSystem = rootVestigeSystem.createSubSystem();
-                    } else {
-                        vestigeSystem = rootVestigeSystem;
-                    }
-                    Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, null, applicationContext.getName() + "-installer", vestigeSystem, new Callable<Void>() {
-
-                        @Override
-                        public Void call() throws Exception {
-                            Method installerMethod = installerClassLoader.loadClass(applicationContext.getInstallerClassName()).getMethod("install", File.class, List.class);
-                            installerMethod.invoke(null, home, version);
-                            return null;
-                        }
-
-                    }, managerVestigeSystem, new FutureDoneHandler<Void>() {
-                        @Override
-                        public void futureDone(final Future<Void> future) {
-                            try {
-                                future.get();
-                            } catch (InterruptedException e) {
-                                LOGGER.error("Unexpected InterruptedException", e);
-                            } catch (ExecutionException e) {
-                                LOGGER.error("UninterruptedMigrate ended with exception", e.getCause());
-                            }
-                        }
-                    });
-                    thread.setContextClassLoader(installerClassLoader);
-                    thread.start();
-                    thread.join();
-                } finally {
-                    vestigePlatform.stop(installerAttach);
+                Set<Permission> additionnalPermissions = new HashSet<Permission>();
+                additionnalPermissions.addAll(installerResolve.getPermissions());
+                final File home = applicationContext.getHome();
+                additionnalPermissions.add(new FilePermission(home.getPath(), "read,write"));
+                additionnalPermissions.add(new FilePermission(home.getPath() + File.separator + "-", "read,write,delete"));
+                additionnalPermissions.addAll(applicationContext.getInstallerPermissions());
+                PublicVestigeSystem vestigeSystem;
+                if (applicationContext.isInstallerPrivateSystem()) {
+                    vestigeSystem = rootVestigeSystem.createSubSystem();
+                } else {
+                    vestigeSystem = rootVestigeSystem;
                 }
+                Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, null, applicationContext.getName() + "-installer", vestigeSystem, new Callable<Void>() {
+
+                    @Override
+                    public Void call() throws Exception {
+                        Method installerMethod = installerClassLoader.loadClass(applicationContext.getInstallerClassName()).getMethod("install", File.class, List.class);
+                        installerMethod.invoke(null, home, version);
+                        return null;
+                    }
+
+                }, managerVestigeSystem, new FutureDoneHandler<Void>() {
+                    @Override
+                    public void futureDone(final Future<Void> future) {
+                        try {
+                            future.get();
+                        } catch (InterruptedException e) {
+                            LOGGER.error("Unexpected InterruptedException", e);
+                        } catch (ExecutionException e) {
+                            LOGGER.error("UninterruptedMigrate ended with exception", e.getCause());
+                        }
+                    }
+                });
+                thread.setContextClassLoader(installerClassLoader);
+                thread.start();
+                thread.join();
             } finally {
                 vestigePlatform.detach(installerAttach);
             }
@@ -294,49 +289,44 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
             ClassLoaderConfiguration installerResolve = applicationContext.getInstallerResolve();
             int installerAttach = vestigePlatform.attach(installerResolve);
             try {
-                vestigePlatform.start(installerAttach);
-                try {
-                    final VestigeClassLoader<?> installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
+                final VestigeClassLoader<?> installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
 
-                    Set<Permission> additionnalPermissions = new HashSet<Permission>();
-                    additionnalPermissions.addAll(installerResolve.getPermissions());
-                    final File home = applicationContext.getHome();
-                    additionnalPermissions.add(new FilePermission(home.getPath(), "read,write"));
-                    additionnalPermissions.add(new FilePermission(home.getPath() + File.separator + "-", "read,write,delete"));
-                    additionnalPermissions.addAll(applicationContext.getInstallerPermissions());
-                    PublicVestigeSystem vestigeSystem;
-                    if (applicationContext.isInstallerPrivateSystem()) {
-                        vestigeSystem = rootVestigeSystem.createSubSystem();
-                    } else {
-                        vestigeSystem = rootVestigeSystem;
-                    }
-                    Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, null, applicationContext.getName() + "-installer", vestigeSystem, new Callable<Void>() {
-
-                        @Override
-                        public Void call() throws Exception {
-                            Method installerMethod = installerClassLoader.loadClass(applicationContext.getInstallerClassName()).getMethod("uninstall", File.class, List.class);
-                            installerMethod.invoke(null, home, version);
-                            return null;
-                        }
-
-                    }, managerVestigeSystem, new FutureDoneHandler<Void>() {
-                        @Override
-                        public void futureDone(final Future<Void> future) {
-                            try {
-                                future.get();
-                            } catch (InterruptedException e) {
-                                LOGGER.error("Unexpected InterruptedException", e);
-                            } catch (ExecutionException e) {
-                                LOGGER.error("Uninstall ended with exception", e.getCause());
-                            }
-                        }
-                    });
-                    thread.setContextClassLoader(installerClassLoader);
-                    thread.start();
-                    thread.join();
-                } finally {
-                    vestigePlatform.stop(installerAttach);
+                Set<Permission> additionnalPermissions = new HashSet<Permission>();
+                additionnalPermissions.addAll(installerResolve.getPermissions());
+                final File home = applicationContext.getHome();
+                additionnalPermissions.add(new FilePermission(home.getPath(), "read,write"));
+                additionnalPermissions.add(new FilePermission(home.getPath() + File.separator + "-", "read,write,delete"));
+                additionnalPermissions.addAll(applicationContext.getInstallerPermissions());
+                PublicVestigeSystem vestigeSystem;
+                if (applicationContext.isInstallerPrivateSystem()) {
+                    vestigeSystem = rootVestigeSystem.createSubSystem();
+                } else {
+                    vestigeSystem = rootVestigeSystem;
                 }
+                Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, null, applicationContext.getName() + "-installer", vestigeSystem, new Callable<Void>() {
+
+                    @Override
+                    public Void call() throws Exception {
+                        Method installerMethod = installerClassLoader.loadClass(applicationContext.getInstallerClassName()).getMethod("uninstall", File.class, List.class);
+                        installerMethod.invoke(null, home, version);
+                        return null;
+                    }
+
+                }, managerVestigeSystem, new FutureDoneHandler<Void>() {
+                    @Override
+                    public void futureDone(final Future<Void> future) {
+                        try {
+                            future.get();
+                        } catch (InterruptedException e) {
+                            LOGGER.error("Unexpected InterruptedException", e);
+                        } catch (ExecutionException e) {
+                            LOGGER.error("Uninstall ended with exception", e.getCause());
+                        }
+                    }
+                });
+                thread.setContextClassLoader(installerClassLoader);
+                thread.start();
+                thread.join();
             } finally {
                 vestigePlatform.detach(installerAttach);
             }
@@ -477,57 +467,53 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                 try {
                     int installerAttach = vestigePlatform.attach(installerResolve);
                     try {
-                        vestigePlatform.start(installerAttach);
-                        try {
-                            final VestigeClassLoader<?> installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
+                        final VestigeClassLoader<?> installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
 
-                            Set<Permission> additionnalPermissions = new HashSet<Permission>();
-                            additionnalPermissions.addAll(installerResolve.getPermissions());
-                            final File fromHome = fromApplicationContext.getHome();
-                            additionnalPermissions.add(new FilePermission(fromHome.getPath(), "read,write"));
-                            additionnalPermissions.add(new FilePermission(fromHome.getPath() + File.separator + "-", "read,write,delete"));
-                            final File toHome = toApplicationContext.getHome();
-                            additionnalPermissions.add(new FilePermission(toHome.getPath(), "read,write"));
-                            additionnalPermissions.add(new FilePermission(toHome.getPath() + File.separator + "-", "read,write,delete"));
-                            additionnalPermissions.addAll(fromApplicationContext.getResolve().getPermissions());
-                            additionnalPermissions.addAll(toApplicationContext.getResolve().getPermissions());
-                            additionnalPermissions.addAll(migratorApplicationContext.getInstallerPermissions());
-                            PublicVestigeSystem vestigeSystem;
-                            if (migratorApplicationContext.isInstallerPrivateSystem()) {
-                                vestigeSystem = rootVestigeSystem.createSubSystem();
-                            } else {
-                                vestigeSystem = rootVestigeSystem;
-                            }
-                            Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, Arrays.asList(fromApplicationContext.getThread().getThreadGroup(), toApplicationContext.getThread().getThreadGroup()), migratorApplicationContext.getName() + "-installer", vestigeSystem,
-                                    new Callable<Void>() {
-
-                                        @Override
-                                        public Void call() throws Exception {
-                                            Method installerMethod = installerClassLoader.loadClass(fromApplicationContext.getInstallerClassName()).getMethod(
-                                                    "uninterruptedMigrate", File.class, List.class, Object.class, File.class, List.class, Object.class, Runnable.class);
-                                            installerMethod.invoke(null, fromHome, fromVersion, runtimeApplicationContext.getRunnable(), toHome, toVersion,
-                                                    notNullToRuntimeApplicationContext.getRunnable(), notifyRunMutex);
-                                            return null;
-                                        }
-
-                                    }, managerVestigeSystem, new FutureDoneHandler<Void>() {
-                                        @Override
-                                        public void futureDone(final Future<Void> future) {
-                                            try {
-                                                future.get();
-                                            } catch (InterruptedException e) {
-                                                LOGGER.error("Unexpected InterruptedException", e);
-                                            } catch (ExecutionException e) {
-                                                LOGGER.error("UninterruptedMigrate ended with exception", e.getCause());
-                                            }
-                                        }
-                                    });
-                            thread.setContextClassLoader(installerClassLoader);
-                            thread.start();
-                            thread.join();
-                        } finally {
-                            vestigePlatform.stop(installerAttach);
+                        Set<Permission> additionnalPermissions = new HashSet<Permission>();
+                        additionnalPermissions.addAll(installerResolve.getPermissions());
+                        final File fromHome = fromApplicationContext.getHome();
+                        additionnalPermissions.add(new FilePermission(fromHome.getPath(), "read,write"));
+                        additionnalPermissions.add(new FilePermission(fromHome.getPath() + File.separator + "-", "read,write,delete"));
+                        final File toHome = toApplicationContext.getHome();
+                        additionnalPermissions.add(new FilePermission(toHome.getPath(), "read,write"));
+                        additionnalPermissions.add(new FilePermission(toHome.getPath() + File.separator + "-", "read,write,delete"));
+                        additionnalPermissions.addAll(fromApplicationContext.getResolve().getPermissions());
+                        additionnalPermissions.addAll(toApplicationContext.getResolve().getPermissions());
+                        additionnalPermissions.addAll(migratorApplicationContext.getInstallerPermissions());
+                        PublicVestigeSystem vestigeSystem;
+                        if (migratorApplicationContext.isInstallerPrivateSystem()) {
+                            vestigeSystem = rootVestigeSystem.createSubSystem();
+                        } else {
+                            vestigeSystem = rootVestigeSystem;
                         }
+                        Thread thread = vestigeSecureExecutor.execute(additionnalPermissions,
+                                Arrays.asList(fromApplicationContext.getThread().getThreadGroup(), toApplicationContext.getThread().getThreadGroup()),
+                                migratorApplicationContext.getName() + "-installer", vestigeSystem, new Callable<Void>() {
+
+                                    @Override
+                                    public Void call() throws Exception {
+                                        Method installerMethod = installerClassLoader.loadClass(fromApplicationContext.getInstallerClassName()).getMethod("uninterruptedMigrate",
+                                                File.class, List.class, Object.class, File.class, List.class, Object.class, Runnable.class);
+                                        installerMethod.invoke(null, fromHome, fromVersion, runtimeApplicationContext.getRunnable(), toHome, toVersion,
+                                                notNullToRuntimeApplicationContext.getRunnable(), notifyRunMutex);
+                                        return null;
+                                    }
+
+                                }, managerVestigeSystem, new FutureDoneHandler<Void>() {
+                                    @Override
+                                    public void futureDone(final Future<Void> future) {
+                                        try {
+                                            future.get();
+                                        } catch (InterruptedException e) {
+                                            LOGGER.error("Unexpected InterruptedException", e);
+                                        } catch (ExecutionException e) {
+                                            LOGGER.error("UninterruptedMigrate ended with exception", e.getCause());
+                                        }
+                                    }
+                                });
+                        thread.setContextClassLoader(installerClassLoader);
+                        thread.start();
+                        thread.join();
                     } finally {
                         vestigePlatform.detach(installerAttach);
                     }
@@ -544,54 +530,49 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
             try {
                 int installerAttach = vestigePlatform.attach(installerResolve);
                 try {
-                    vestigePlatform.start(installerAttach);
-                    try {
-                        final VestigeClassLoader<?> installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
+                    final VestigeClassLoader<?> installerClassLoader = vestigePlatform.getClassLoader(installerAttach);
 
-                        Set<Permission> additionnalPermissions = new HashSet<Permission>();
-                        additionnalPermissions.addAll(installerResolve.getPermissions());
-                        final File fromHome = fromApplicationContext.getHome();
-                        additionnalPermissions.add(new FilePermission(fromHome.getPath(), "read,write"));
-                        additionnalPermissions.add(new FilePermission(fromHome.getPath() + File.separator + "-", "read,write,delete"));
-                        final File toHome = toApplicationContext.getHome();
-                        additionnalPermissions.add(new FilePermission(toHome.getPath(), "read,write"));
-                        additionnalPermissions.add(new FilePermission(toHome.getPath() + File.separator + "-", "read,write,delete"));
-                        additionnalPermissions.addAll(migratorApplicationContext.getInstallerPermissions());
-                        PublicVestigeSystem vestigeSystem;
-                        if (migratorApplicationContext.isInstallerPrivateSystem()) {
-                            vestigeSystem = rootVestigeSystem.createSubSystem();
-                        } else {
-                            vestigeSystem = rootVestigeSystem;
-                        }
-                        Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, null, migratorApplicationContext.getName() + "-installer", vestigeSystem,
-                                new Callable<Void>() {
-
-                                    @Override
-                                    public Void call() throws Exception {
-                                        Method installerMethod = installerClassLoader.loadClass(fromApplicationContext.getInstallerClassName()).getMethod("migrate", File.class,
-                                                List.class, File.class, List.class);
-                                        installerMethod.invoke(null, fromHome, fromVersion, toHome, toVersion);
-                                        return null;
-                                    }
-
-                                }, managerVestigeSystem, new FutureDoneHandler<Void>() {
-                                    @Override
-                                    public void futureDone(final Future<Void> future) {
-                                        try {
-                                            future.get();
-                                        } catch (InterruptedException e) {
-                                            LOGGER.error("Unexpected InterruptedException", e);
-                                        } catch (ExecutionException e) {
-                                            LOGGER.error("Migrate ended with exception", e.getCause());
-                                        }
-                                    }
-                                });
-                        thread.setContextClassLoader(installerClassLoader);
-                        thread.start();
-                        thread.join();
-                    } finally {
-                        vestigePlatform.stop(installerAttach);
+                    Set<Permission> additionnalPermissions = new HashSet<Permission>();
+                    additionnalPermissions.addAll(installerResolve.getPermissions());
+                    final File fromHome = fromApplicationContext.getHome();
+                    additionnalPermissions.add(new FilePermission(fromHome.getPath(), "read,write"));
+                    additionnalPermissions.add(new FilePermission(fromHome.getPath() + File.separator + "-", "read,write,delete"));
+                    final File toHome = toApplicationContext.getHome();
+                    additionnalPermissions.add(new FilePermission(toHome.getPath(), "read,write"));
+                    additionnalPermissions.add(new FilePermission(toHome.getPath() + File.separator + "-", "read,write,delete"));
+                    additionnalPermissions.addAll(migratorApplicationContext.getInstallerPermissions());
+                    PublicVestigeSystem vestigeSystem;
+                    if (migratorApplicationContext.isInstallerPrivateSystem()) {
+                        vestigeSystem = rootVestigeSystem.createSubSystem();
+                    } else {
+                        vestigeSystem = rootVestigeSystem;
                     }
+                    Thread thread = vestigeSecureExecutor.execute(additionnalPermissions, null, migratorApplicationContext.getName() + "-installer", vestigeSystem,
+                            new Callable<Void>() {
+
+                                @Override
+                                public Void call() throws Exception {
+                                    Method installerMethod = installerClassLoader.loadClass(fromApplicationContext.getInstallerClassName()).getMethod("migrate", File.class,
+                                            List.class, File.class, List.class);
+                                    installerMethod.invoke(null, fromHome, fromVersion, toHome, toVersion);
+                                    return null;
+                                }
+
+                            }, managerVestigeSystem, new FutureDoneHandler<Void>() {
+                                @Override
+                                public void futureDone(final Future<Void> future) {
+                                    try {
+                                        future.get();
+                                    } catch (InterruptedException e) {
+                                        LOGGER.error("Unexpected InterruptedException", e);
+                                    } catch (ExecutionException e) {
+                                        LOGGER.error("Migrate ended with exception", e.getCause());
+                                    }
+                                }
+                            });
+                    thread.setContextClassLoader(installerClassLoader);
+                    thread.start();
+                    thread.join();
                 } finally {
                     vestigePlatform.detach(installerAttach);
                 }
@@ -745,7 +726,6 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                 vestigeSystem = previousRuntimeApplicationContext.getVestigeSystem();
                 classLoader = previousRuntimeApplicationContext.getClassLoader();
             }
-            vestigePlatform.start(attach);
 
             Set<Permission> additionnalPermissions = new HashSet<Permission>();
             additionnalPermissions.addAll(resolve.getPermissions());
@@ -794,7 +774,6 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
                     } catch (ExecutionException e) {
                         LOGGER.error("Application ended with exception", e.getCause());
                     }
-                    vestigePlatform.stop(attach);
                     vestigePlatform.detach(attach);
                     // allow inner start to run
                     if (constructorMutex != null) {
@@ -856,8 +835,8 @@ public class DefaultApplicationManager implements ApplicationManager, Serializab
         this.vestigeSecureExecutor.stop();
     }
 
-    public void powerOn(final VestigePlatform vestigePlatform, final PublicVestigeSystem vestigeSystem, final PublicVestigeSystem managerVestigeSystem, final PrivateVestigeSecurityManager vestigeSecurityManager,
-            final PrivateVestigePolicy vestigePolicy, final ApplicationDescriptorFactory applicationDescriptorFactory) {
+    public void powerOn(final VestigePlatform vestigePlatform, final PublicVestigeSystem vestigeSystem, final PublicVestigeSystem managerVestigeSystem,
+            final PrivateVestigeSecurityManager vestigeSecurityManager, final PrivateVestigePolicy vestigePolicy, final ApplicationDescriptorFactory applicationDescriptorFactory) {
         this.rootVestigeSystem = vestigeSystem;
         this.managerVestigeSystem = managerVestigeSystem;
         this.vestigeSecureExecutor = new VestigeSecureExecutor(vestigeSecurityManager, vestigePolicy);
