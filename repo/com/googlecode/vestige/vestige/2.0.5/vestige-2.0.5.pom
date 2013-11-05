@@ -115,6 +115,17 @@
     </pluginManagement>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>com.google.code.maven-svn-wagon</groupId>
+            <artifactId>maven-svn-wagon</artifactId>
+            <version>1.4</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+      <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <source>1.6</source>
@@ -131,13 +142,6 @@
         </configuration>
       </plugin>
     </plugins>
-    <extensions>
-      <extension>
-        <groupId>org.jvnet.wagon-svn</groupId>
-        <artifactId>wagon-svn</artifactId>
-        <version>1.12</version>
-      </extension>
-    </extensions>
   </build>
   <properties>
     <at>@</at>
