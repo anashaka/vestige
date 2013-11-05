@@ -20,7 +20,9 @@ package com.googlecode.vestige.jvm_enhancer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.ProxySelector;
+import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.logging.Level;
 
 import com.btr.proxy.util.Logger;
 import com.googlecode.vestige.core.StackedHandlerUtils;
@@ -61,15 +63,39 @@ public final class JVMEnhancer {
         }
     }
 
-    private static void setField(final Field field, final Object value) throws Exception {
-        Callable<Void> callable = new Callable<Void>() {
+    private static Object getField(final Field field) throws Exception {
+        Callable<Object> callable = new Callable<Object>() {
 
             @Override
-            public Void call() throws Exception {
+            public Object call() throws Exception {
                 if (!field.isAccessible()) {
                     field.setAccessible(true);
                     try {
-                    field.set(null, value);
+                        return field.get(null);
+                    } finally {
+                        field.setAccessible(false);
+                    }
+                } else {
+                    return field.get(null);
+                }
+            }
+        };
+        if (Modifier.isFinal(field.getModifiers())) {
+            return unsetFinalField(field, callable);
+        } else {
+            return callable.call();
+        }
+    }
+
+    private static void setField(final Field field, final Object value) throws Exception {
+        Callable<Object> callable = new Callable<Object>() {
+
+            @Override
+            public Object call() throws Exception {
+                if (!field.isAccessible()) {
+                    field.setAccessible(true);
+                    try {
+                        field.set(null, value);
                     } finally {
                         field.setAccessible(false);
                     }
@@ -86,7 +112,7 @@ public final class JVMEnhancer {
         }
     }
 
-    private static void unsetFinalField(final Field field, final Callable<Void> callable) throws Exception {
+    private static Object unsetFinalField(final Field field, final Callable<Object> callable) throws Exception {
         Field modifiersField = Field.class.getDeclaredField("modifiers");
         boolean accessible = modifiersField.isAccessible();
         if (!accessible) {
@@ -96,7 +122,7 @@ public final class JVMEnhancer {
             int modifiers = field.getModifiers();
             modifiersField.setInt(field, modifiers & ~Modifier.FINAL);
             try {
-                callable.call();
+                return callable.call();
             } finally {
                 modifiersField.setInt(field, modifiers);
             }
@@ -107,6 +133,7 @@ public final class JVMEnhancer {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public static void boot() throws InterruptedException {
         VestigeExecutor vestigeExecutor = new VestigeExecutor();
         Thread thread = vestigeExecutor.createWorker("bootstrap-sun-worker", true, 0);
@@ -163,7 +190,8 @@ public final class JVMEnhancer {
             // ignore
         }
         try {
-            // com.sun.jndi.ldap.LdapPoolManager may create thread (with the context
+            // com.sun.jndi.ldap.LdapPoolManager may create thread (with the
+            // context
             // classloader of parent thread)
             vestigeExecutor.classForName(systemClassLoader, "com.sun.jndi.ldap.LdapPoolManager");
         } catch (Exception e) {
@@ -173,6 +201,17 @@ public final class JVMEnhancer {
         try {
             Class<?> weakSoftCacheClass = Class.forName("com.googlecode.vestige.jvm_enhancer.WeakSoftCache");
             setField(Thread.class.getDeclaredField("subclassAudits"), weakSoftCacheClass.newInstance());
+        } catch (Exception e) {
+            // ignore
+        }
+
+        try {
+            // keep levels in static field
+            Field declaredField = Level.class.getDeclaredField("known");
+            List<Level> known = (List<Level>) getField(declaredField);
+            WeakArrayList<Level> weakArrayList = new WeakArrayList<Level>(Level.OFF);
+            weakArrayList.addAll(known);
+            setField(declaredField, weakArrayList);
         } catch (Exception e) {
             // ignore
         }

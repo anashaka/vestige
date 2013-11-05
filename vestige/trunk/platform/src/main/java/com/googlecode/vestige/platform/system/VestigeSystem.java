@@ -27,6 +27,7 @@ import java.net.URLStreamHandlerFactory;
 import java.security.Permission;
 import java.security.Policy;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Map;
@@ -34,6 +35,7 @@ import java.util.Properties;
 import java.util.Vector;
 import java.util.WeakHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
 
 import com.googlecode.vestige.platform.system.interceptor.VestigePolicy;
 
@@ -81,6 +83,8 @@ public final class VestigeSystem implements PublicVestigeSystem {
     private VestigePolicy blackListPolicy;
 
     private Object securityProviderList;
+
+    private ArrayList<Level> knownLevels;
 
     private void init(final VestigeSystemSecurityManager previousVestigeSecurityManager) {
         this.securityManager = new VestigeSystemSecurityManager(vestigeSystemHolder, this, previousVestigeSecurityManager);
@@ -209,6 +213,8 @@ public final class VestigeSystem implements PublicVestigeSystem {
         }
         // ProxySelector
         defaultProxySelector = previousSystem.defaultProxySelector;
+        // known level
+        knownLevels = (ArrayList<Level>) previousSystem.knownLevels.clone();
     }
 
     public void setWriteDrivers(final Vector<Object> writeDrivers) {
@@ -366,6 +372,14 @@ public final class VestigeSystem implements PublicVestigeSystem {
 
     public void setSecurityProviderList(final Object securityProviderList) {
         this.securityProviderList = securityProviderList;
+    }
+
+    public ArrayList<Level> getKnownLevels() {
+        return knownLevels;
+    }
+
+    public void setKnownLevels(final ArrayList<Level> knownLevels) {
+        this.knownLevels = knownLevels;
     }
 
 }

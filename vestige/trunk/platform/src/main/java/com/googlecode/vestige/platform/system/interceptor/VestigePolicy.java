@@ -17,12 +17,17 @@
 
 package com.googlecode.vestige.platform.system.interceptor;
 
+import java.security.AccessController;
 import java.security.CodeSource;
 import java.security.Permission;
 import java.security.PermissionCollection;
 import java.security.Policy;
+import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.security.Provider;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.googlecode.vestige.core.StackedHandler;
 
@@ -30,6 +35,8 @@ import com.googlecode.vestige.core.StackedHandler;
  * @author Gael Lalire
  */
 public abstract class VestigePolicy extends Policy implements StackedHandler<Policy> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(VestigePolicy.class);
 
     private Policy nextHandler;
 
@@ -69,6 +76,14 @@ public abstract class VestigePolicy extends Policy implements StackedHandler<Pol
         if (getCurrentPolicy().implies(domain, permission)) {
             return true;
         }
+        AccessController.doPrivileged(new PrivilegedAction<Void>() {
+
+            @Override
+            public Void run() {
+                LOGGER.warn("Permission {} refused for {}", permission, domain);
+                return null;
+            }
+        });
         return false;
     }
 
