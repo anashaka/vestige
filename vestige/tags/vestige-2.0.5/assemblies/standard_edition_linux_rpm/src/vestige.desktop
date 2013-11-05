@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=Vestige
-Exec=vestige_gtk_launcher.py
-Terminal=false
-Type=Application
-StartupNotify=true
-Icon=vestige
