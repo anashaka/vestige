@@ -27,6 +27,7 @@ import java.net.URLConnection;
 import java.security.Policy;
 import java.security.Security;
 import java.sql.DriverManager;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,6 +36,7 @@ import java.util.Vector;
 import java.util.WeakHashMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +48,7 @@ import com.googlecode.vestige.platform.logger.SLF4JLoggerFactoryAdapter;
 import com.googlecode.vestige.platform.logger.SLF4JPrintStream;
 import com.googlecode.vestige.platform.logger.SecureSLF4JLoggerFactoryAdapter;
 import com.googlecode.vestige.platform.system.interceptor.ProviderListThreadLocal;
+import com.googlecode.vestige.platform.system.interceptor.VestigeArrayList;
 import com.googlecode.vestige.platform.system.interceptor.VestigeCopyOnWriteArrayList;
 import com.googlecode.vestige.platform.system.interceptor.VestigeDriverVector;
 import com.googlecode.vestige.platform.system.interceptor.VestigeInputStream;
@@ -99,7 +102,8 @@ public class JVMVestigeSystemActionExecutor implements VestigeSystemActionExecut
                         return vestigeSystemHolder.getVestigeSystem().getCurrentPolicy();
                     }
                 };
-                vestigeSystem.setPolicy(vestigePolicy.getNextHandler());
+                // ignore previous policy
+                vestigeSystem.setPolicy(null);
                 Policy.setPolicy(vestigePolicy);
             }
         }
@@ -175,6 +179,24 @@ public class JVMVestigeSystemActionExecutor implements VestigeSystemActionExecut
             };
             vestigeSystem.setDefaultProxySelector(proxySelector.getNextHandler());
             ProxySelector.setDefault(proxySelector);
+        }
+
+        Map<String, StackedHandler<?>> levelFields = new HashMap<String, StackedHandler<?>>();
+        VestigeArrayList<Level> vestigeArrayList = new VestigeArrayList<Level>(null) {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public ArrayList<Level> getArrayList() {
+                return vestigeSystemHolder.getVestigeSystem().getKnownLevels();
+            }
+        };
+        levelFields.put("known", vestigeArrayList);
+        try {
+            installFields(Level.class, levelFields);
+            vestigeSystem.setKnownLevels(vestigeArrayList.getNextHandler());
+        } catch (Exception e) {
+            LOGGER.warn("Could not intercept Level.known", e);
+            levelFields = null;
         }
 
         Map<String, StackedHandler<?>> securityFields = new HashMap<String, StackedHandler<?>>();
@@ -343,6 +365,14 @@ public class JVMVestigeSystemActionExecutor implements VestigeSystemActionExecut
                     uninstallFields(Security.class, securityFields);
                 } catch (Exception e) {
                     LOGGER.warn("Could not release Security.properties interception", e);
+                }
+            }
+
+            if (levelFields != null) {
+                try {
+                    uninstallFields(Level.class, levelFields);
+                } catch (Exception e) {
+                    LOGGER.warn("Could not release Level.known interception", e);
                 }
             }
 
