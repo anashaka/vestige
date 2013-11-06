@@ -22,6 +22,8 @@ import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.SocketAddress;
 import java.net.URI;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Collections;
 import java.util.List;
 
@@ -58,8 +60,21 @@ public abstract class VestigeProxySelector extends ProxySelector implements Stac
     public void connectFailed(final URI uri, final SocketAddress sa, final IOException ioe) {
         ProxySelector proxySelector = getProxySelector();
         if (proxySelector == null) {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("connectFailed URI:{}, socketAddress:{}, IOException:{}", new Object[] {uri, sa, ioe});
+            if (System.getSecurityManager() == null) {
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("connectFailed URI:{}, socketAddress:{}, IOException:{}", new Object[] {uri, sa, ioe});
+                }
+            } else {
+                AccessController.doPrivileged(new PrivilegedAction<Void>() {
+
+                    @Override
+                    public Void run() {
+                        if (LOGGER.isTraceEnabled()) {
+                            LOGGER.trace("connectFailed URI:{}, socketAddress:{}, IOException:{}", new Object[] {uri, sa, ioe});
+                        }
+                        return null;
+                    }
+                });
             }
         } else {
             proxySelector.connectFailed(uri, sa, ioe);
