@@ -29,7 +29,9 @@ import java.security.Policy;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
@@ -85,6 +87,10 @@ public final class VestigeSystem implements PublicVestigeSystem {
     private Object securityProviderList;
 
     private ArrayList<Level> knownLevels;
+
+    private HashMap<String, List<Object>> nameToLevels;
+
+    private HashMap<Integer, List<Object>> intToLevels;
 
     private void init(final VestigeSystemSecurityManager previousVestigeSecurityManager) {
         this.securityManager = new VestigeSystemSecurityManager(vestigeSystemHolder, this, previousVestigeSecurityManager);
@@ -214,7 +220,15 @@ public final class VestigeSystem implements PublicVestigeSystem {
         // ProxySelector
         defaultProxySelector = previousSystem.defaultProxySelector;
         // known level
-        knownLevels = (ArrayList<Level>) previousSystem.knownLevels.clone();
+        if (previousSystem.knownLevels != null) {
+            knownLevels = (ArrayList<Level>) previousSystem.knownLevels.clone();
+        }
+        if (previousSystem.nameToLevels != null) {
+            nameToLevels = (HashMap<String, List<Object>>) previousSystem.nameToLevels.clone();
+        }
+        if (previousSystem.intToLevels != null) {
+            intToLevels = (HashMap<Integer, List<Object>>) previousSystem.intToLevels.clone();
+        }
     }
 
     public void setWriteDrivers(final Vector<Object> writeDrivers) {
@@ -380,6 +394,22 @@ public final class VestigeSystem implements PublicVestigeSystem {
 
     public void setKnownLevels(final ArrayList<Level> knownLevels) {
         this.knownLevels = knownLevels;
+    }
+
+    public void setNameToLevels(final HashMap<String, List<Object>> nameToLevels) {
+        this.nameToLevels = nameToLevels;
+    }
+
+    public void setIntToLevels(final HashMap<Integer, List<Object>> intToLevels) {
+        this.intToLevels = intToLevels;
+    }
+
+    public HashMap<String, List<Object>> getNameToLevels() {
+        return nameToLevels;
+    }
+
+    public HashMap<Integer, List<Object>> getIntToLevels() {
+        return intToLevels;
     }
 
 }

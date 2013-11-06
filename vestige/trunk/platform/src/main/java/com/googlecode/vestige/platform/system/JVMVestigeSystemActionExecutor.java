@@ -29,6 +29,7 @@ import java.security.Security;
 import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -51,6 +52,7 @@ import com.googlecode.vestige.platform.system.interceptor.ProviderListThreadLoca
 import com.googlecode.vestige.platform.system.interceptor.VestigeArrayList;
 import com.googlecode.vestige.platform.system.interceptor.VestigeCopyOnWriteArrayList;
 import com.googlecode.vestige.platform.system.interceptor.VestigeDriverVector;
+import com.googlecode.vestige.platform.system.interceptor.VestigeHashMap;
 import com.googlecode.vestige.platform.system.interceptor.VestigeInputStream;
 import com.googlecode.vestige.platform.system.interceptor.VestigePolicy;
 import com.googlecode.vestige.platform.system.interceptor.VestigePrintStream;
@@ -181,6 +183,7 @@ public class JVMVestigeSystemActionExecutor implements VestigeSystemActionExecut
             ProxySelector.setDefault(proxySelector);
         }
 
+        Class<?> levelClass = Level.class;
         Map<String, StackedHandler<?>> levelFields = new HashMap<String, StackedHandler<?>>();
         VestigeArrayList<Level> vestigeArrayList = new VestigeArrayList<Level>(null) {
             private static final long serialVersionUID = 1L;
@@ -192,8 +195,36 @@ public class JVMVestigeSystemActionExecutor implements VestigeSystemActionExecut
         };
         levelFields.put("known", vestigeArrayList);
         try {
-            installFields(Level.class, levelFields);
-            vestigeSystem.setKnownLevels(vestigeArrayList.getNextHandler());
+            try {
+                installFields(levelClass, levelFields);
+                vestigeSystem.setKnownLevels(vestigeArrayList.getNextHandler());
+            } catch (NoSuchFieldException e) {
+                LOGGER.trace("Missing field try another", e);
+                // JDK 7
+                levelClass = Class.forName("java.util.logging.Level$KnownLevel");
+                levelFields.clear();
+                VestigeHashMap<String, List<Object>> nameToLevels = new VestigeHashMap<String, List<Object>>(null) {
+                    private static final long serialVersionUID = -5445337197591144585L;
+
+                    @Override
+                    public HashMap<String, List<Object>> getHashMap() {
+                        return vestigeSystemHolder.getVestigeSystem().getNameToLevels();
+                    }
+                };
+                VestigeHashMap<Integer, List<Object>> intToLevels = new VestigeHashMap<Integer, List<Object>>(null) {
+                    private static final long serialVersionUID = 8660036849509335913L;
+
+                    @Override
+                    public HashMap<Integer, List<Object>> getHashMap() {
+                        return vestigeSystemHolder.getVestigeSystem().getIntToLevels();
+                    }
+                };
+                levelFields.put("nameToLevels", nameToLevels);
+                levelFields.put("intToLevels", intToLevels);
+                installFields(levelClass, levelFields);
+                vestigeSystem.setNameToLevels(nameToLevels.getNextHandler());
+                vestigeSystem.setIntToLevels(intToLevels.getNextHandler());
+            }
         } catch (Exception e) {
             LOGGER.warn("Could not intercept Level.known", e);
             levelFields = null;
@@ -370,7 +401,7 @@ public class JVMVestigeSystemActionExecutor implements VestigeSystemActionExecut
 
             if (levelFields != null) {
                 try {
-                    uninstallFields(Level.class, levelFields);
+                    uninstallFields(levelClass, levelFields);
                 } catch (Exception e) {
                     LOGGER.warn("Could not release Level.known interception", e);
                 }

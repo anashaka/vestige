@@ -17,10 +17,13 @@
 
 package com.googlecode.vestige.jvm_enhancer;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.ProxySelector;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 
@@ -207,11 +210,36 @@ public final class JVMEnhancer {
 
         try {
             // keep levels in static field
-            Field declaredField = Level.class.getDeclaredField("known");
-            List<Level> known = (List<Level>) getField(declaredField);
-            WeakArrayList<Level> weakArrayList = new WeakArrayList<Level>(Level.OFF);
-            weakArrayList.addAll(known);
-            setField(declaredField, weakArrayList);
+            try {
+                Field declaredField = Level.class.getDeclaredField("known");
+                List<Level> known = (List<Level>) getField(declaredField);
+                WeakArrayList<Level> weakArrayList = new WeakArrayList<Level>(Level.OFF);
+                weakArrayList.addAll(known);
+                setField(declaredField, weakArrayList);
+            } catch (NoSuchFieldException e) {
+                Class<?> forName = Class.forName("java.util.logging.Level$KnownLevel");
+                Field nameToLevelsField = forName.getDeclaredField("nameToLevels");
+                Field intToLevelsField = forName.getDeclaredField("intToLevels");
+                Field levelObjectField = forName.getDeclaredField("levelObject");
+                Constructor<?> constructor = forName.getDeclaredConstructor(Level.class);
+                levelObjectField.setAccessible(true);
+                constructor.setAccessible(true);
+
+                Map<String, List<Object>> initialNameToLevels = (Map<String, List<Object>>) getField(nameToLevelsField);
+                Map<String, List<Object>> nameToLevels = new WeakLevelMap<String>(levelObjectField, constructor);
+                for (Entry<String, List<Object>> entry : initialNameToLevels.entrySet()) {
+                    List<Object> list = nameToLevels.get(entry.getKey());
+                    list.addAll(entry.getValue());
+                }
+                Map<Integer, List<Object>> initialIntToLevels = (Map<Integer, List<Object>>) getField(intToLevelsField);
+                Map<Integer, List<Object>> intToLevels = new WeakLevelMap<Integer>(levelObjectField, constructor);
+                for (Entry<Integer, List<Object>> entry : initialIntToLevels.entrySet()) {
+                    List<Object> list = intToLevels.get(entry.getKey());
+                    list.addAll(entry.getValue());
+                }
+                setField(nameToLevelsField, nameToLevels);
+                setField(intToLevelsField, intToLevels);
+            }
         } catch (Exception e) {
             // ignore
         }
