@@ -24,6 +24,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
+import java.net.ProxySelector;
 import java.net.URL;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -66,6 +67,7 @@ import com.googlecode.vestige.platform.system.PrivateVestigePolicy;
 import com.googlecode.vestige.platform.system.PrivateVestigeSecurityManager;
 import com.googlecode.vestige.platform.system.PrivateWhiteListVestigePolicy;
 import com.googlecode.vestige.platform.system.PublicVestigeSystem;
+import com.googlecode.vestige.platform.system.SecureProxySelector;
 import com.googlecode.vestige.platform.system.VestigeSystemAction;
 import com.googlecode.vestige.resolver.maven.MavenArtifactResolver;
 
@@ -236,6 +238,12 @@ public class StandardEditionVestige implements VestigeSystemAction, Runnable {
             whiteListVestigePolicy.addSafeClassLoader(JoranConfigurator.class.getClassLoader());
             whiteListVestigePolicy.addSafeClassLoader(ConsoleTarget.class.getClassLoader());
             vestigeSystem.setWhiteListPolicy(whiteListVestigePolicy);
+
+            ProxySelector defaultProxySelector = vestigeSystem.getDefaultProxySelector();
+            if (defaultProxySelector != null) {
+                whiteListVestigePolicy.addSafeClassLoader(defaultProxySelector.getClass().getClassLoader());
+                vestigeSystem.setDefaultProxySelector(new SecureProxySelector(defaultProxySelector));
+            }
 
             vestigeSecurityManager = new PrivateVestigeSecurityManager();
             vestigeSystem.setSecurityManager(vestigeSecurityManager);
