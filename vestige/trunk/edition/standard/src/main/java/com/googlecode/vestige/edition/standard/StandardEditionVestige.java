@@ -60,6 +60,7 @@ import com.googlecode.vestige.edition.standard.schema.ObjectFactory;
 import com.googlecode.vestige.edition.standard.schema.SSH;
 import com.googlecode.vestige.edition.standard.schema.Settings;
 import com.googlecode.vestige.edition.standard.schema.Web;
+import com.googlecode.vestige.platform.AttachedVestigeClassLoader;
 import com.googlecode.vestige.platform.DefaultVestigePlatform;
 import com.googlecode.vestige.platform.VestigePlatform;
 import com.googlecode.vestige.platform.system.JVMVestigeSystemActionExecutor;
@@ -160,6 +161,13 @@ public class StandardEditionVestige implements VestigeSystemAction, Runnable {
         new JVMVestigeSystemActionExecutor(securityEnabled).execute(this);
     }
 
+    public void addAll(final AttachedVestigeClassLoader attachedVestigeClassLoader, final PrivateWhiteListVestigePolicy whiteListVestigePolicy) {
+        whiteListVestigePolicy.addSafeClassLoader(attachedVestigeClassLoader.getVestigeClassLoader());
+        for (AttachedVestigeClassLoader child : attachedVestigeClassLoader.getDependencies()) {
+            addAll(child, whiteListVestigePolicy);
+        }
+    }
+
     @Override
     public void vestigeSystemRun(final PublicVestigeSystem vestigeSystem) {
         // Vestige dependencies can modify system, so we run isolated
@@ -232,16 +240,16 @@ public class StandardEditionVestige implements VestigeSystemAction, Runnable {
             vestigeSystem.setPolicy(vestigePolicy);
 
             PrivateWhiteListVestigePolicy whiteListVestigePolicy = new PrivateWhiteListVestigePolicy();
-            // the launch class (before application code)
-            whiteListVestigePolicy.addSafeClassLoader(DefaultApplicationManager.class.getClassLoader());
-            // the log class (after application code)
-            whiteListVestigePolicy.addSafeClassLoader(JoranConfigurator.class.getClassLoader());
-            whiteListVestigePolicy.addSafeClassLoader(ConsoleTarget.class.getClassLoader());
+
+            // all classloader already loaded are considered safe (to be verified later)
+            for (Integer id : vestigePlatform.getAttachments()) {
+                addAll(vestigePlatform.getAttachedVestigeClassLoader(id), whiteListVestigePolicy);
+            }
+
             vestigeSystem.setWhiteListPolicy(whiteListVestigePolicy);
 
             ProxySelector defaultProxySelector = vestigeSystem.getDefaultProxySelector();
             if (defaultProxySelector != null) {
-                whiteListVestigePolicy.addSafeClassLoader(defaultProxySelector.getClass().getClassLoader());
                 vestigeSystem.setDefaultProxySelector(new SecureProxySelector(defaultProxySelector));
             }
 
