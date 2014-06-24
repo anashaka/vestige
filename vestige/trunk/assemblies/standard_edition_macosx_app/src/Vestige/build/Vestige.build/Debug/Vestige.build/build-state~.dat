@@ -1,557 +1,0 @@
-TVestige
-v7
-r0
-t387925814.479521
-cCheck dependencies
-cProcessInfoPlistFile /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Info.plist Vestige-Info.plist
-cCopyStringsFile /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/English.lproj/InfoPlist.strings English.lproj/InfoPlist.strings
-cCompileXIB /Users/gaellalire/Documents/Vestige/English.lproj/MainMenu.xib
-cCpResource build/Debug/Vestige.app/Contents/Resources/vestige.png vestige.png
-cCpResource build/Debug/Vestige.app/Contents/Resources/vestige.icns vestige.icns
-cCpResource build/Debug/Vestige.app/Contents/Resources/vestige_home vestige_home
-cProcessPCH /var/folders/XO/XOxyKFDiGCOmm45bjkMGSE+++TI/-Caches-/com.apple.Xcode.501/SharedPrecompiledHeaders/Vestige_Prefix-calfbnaincozljgpjidfeomdlxfh/Vestige_Prefix.pch.gch Vestige_Prefix.pch normal x86_64 objective-c com.apple.compilers.gcc.4_2
-cCompileC build/Vestige.build/Debug/Vestige.build/Objects-normal/x86_64/main.o /Users/gaellalire/Documents/Vestige/main.m normal x86_64 objective-c com.apple.compilers.gcc.4_2
-cCompileC build/Vestige.build/Debug/Vestige.build/Objects-normal/x86_64/VestigeAppDelegate.o /Users/gaellalire/Documents/Vestige/VestigeAppDelegate.m normal x86_64 objective-c com.apple.compilers.gcc.4_2
-cLd /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/MacOS/Vestige normal x86_64
-cTouch /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app
-
-N/Developer/SDKs/MacOSX10.6.sdk
-c000000004C5342BA00000000000000EE
-t1280524986
-s238
-
-N/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/Cocoa.framework/Headers/Cocoa.h
-c0000000040C4AA6800000000000001E5
-t1086630504
-s485
-
-N/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/Foundation.framework/Headers/Foundation.h
-c000000004C46BD4600000000000013E6
-t1279704390
-s5094
-
-N/System/Library/Frameworks/Cocoa.framework/Cocoa
-c000000004C9D79C1000000000000A5E0
-t1285388737
-s42464
-
-N/Users/gaellalire/Documents/Vestige/English.lproj/InfoPlist.strings
-c00000000516D7F9E000000000000002D
-t1366130590
-s45
-
-N/Users/gaellalire/Documents/Vestige/English.lproj/MainMenu.xib
-c00000000516E96B7000000000000765B
-t1366202039
-s30299
-
-N/Users/gaellalire/Documents/Vestige/VestigeAppDelegate.h
-c00000000516E965F00000000000001E5
-t1366201951
-s485
-i<Cocoa/Cocoa.h>
-
-N/Users/gaellalire/Documents/Vestige/VestigeAppDelegate.m
-c00000000516EE8B8000000000000053E
-t1366223032
-s1342
-i"VestigeAppDelegate.h"
-
-N/Users/gaellalire/Documents/Vestige/VestigeMenuController.h
-c00000000516DA59E0000000000000108
-t1366140318
-s264
-i<Foundation/Foundation.h>
-
-N/Users/gaellalire/Documents/Vestige/VestigeMenuController.m
-c00000000516DA68F0000000000000168
-t1366140559
-s360
-i"VestigeMenuController.h"
-
-N/Users/gaellalire/Documents/Vestige/Vestige_Prefix.pch
-c00000000516D7F9E0000000000000091
-t1366130590
-s145
-i<Cocoa/Cocoa.h>
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app
-t1366233014
-s102
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Info.plist
-t1366233010
-s978
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/MacOS/Vestige
-t1366233014
-s16368
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/PkgInfo
-t1366233010
-s8
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/English.lproj/InfoPlist.strings
-t1366233010
-s92
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/English.lproj/MainMenu.nib
-t1366233010
-s2802
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/README
-t1366223292
-s1197
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/authorized_keys
-t1366223292
-s0
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/home
-t1366152277
-s306
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/logback.xml
-t1366223292
-s818
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/settings.xml
-t1366223292
-s678
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/vestige
-t1366223292
-s1601
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/vestige-se.xml
-t1366223292
-s1246
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/vestige.icns
-t1366233010
-s67445
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/vestige.png
-t1366233010
-s1135
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/vestige_home
-t1366233010
-s306
-
-N/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/vestige_rsa
-t1366223292
-s1675
-
-N/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Objects-normal/x86_64/Vestige.LinkFileList
-c00000000516F0FB200000000000000E0
-t1366233010
-s224
-
-N/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Objects-normal/x86_64/VestigeAppDelegate.o
-t1366233014
-s31552
-
-N/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Objects-normal/x86_64/VestigeMenuController.o
-t1366152281
-s9416
-
-N/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Objects-normal/x86_64/main.o
-t1366233014
-s4984
-
-N/Users/gaellalire/Documents/Vestige/home
-c00000000516DC0C90000000000000154
-t1366147273
-s340
-
-N/Users/gaellalire/Documents/Vestige/home/README
-c000000005098204400000000000004AD
-t1352147012
-s1197
-
-N/Users/gaellalire/Documents/Vestige/home/logback.xml
-c0000000050DCC7D00000000000000332
-t1356646352
-s818
-
-N/Users/gaellalire/Documents/Vestige/home/m2/settings.xml
-c000000005097AAE600000000000002A6
-t1352116966
-s678
-
-N/Users/gaellalire/Documents/Vestige/home/m2/vestige-se.xml
-c0000000050DEFE1E00000000000004DE
-t1356791326
-s1246
-
-N/Users/gaellalire/Documents/Vestige/home/settings.xml
-c0000000050DEEC50000000000000016A
-t1356786768
-s362
-
-N/Users/gaellalire/Documents/Vestige/home/ssh/authorized_keys
-c0000000050981CEE0000000000000000
-t1352146158
-s0
-
-N/Users/gaellalire/Documents/Vestige/home/ssh/vestige_rsa
-c000000005096B49C000000000000068B
-t1352053916
-s1675
-
-N/Users/gaellalire/Documents/Vestige/home/vestige
-c0000000050DEFE2F0000000000000641
-t1356791343
-s1601
-
-N/Users/gaellalire/Documents/Vestige/main.m
-c00000000516D7F9E00000000000000F1
-t1366130590
-s241
-i<Cocoa/Cocoa.h>
-
-N/Users/gaellalire/Documents/Vestige/vestige.icns
-c00000000516EE10C0000000000010775
-t1366221068
-s67445
-
-N/Users/gaellalire/Documents/Vestige/vestige.png
-c00000000516EC5A2000000000000046F
-t1366214050
-s1135
-
-N/Users/gaellalire/Documents/Vestige/vestige_home
-c00000000516DC0C90000000000000154
-t1366147273
-s340
-
-N/Users/gaellalire/Documents/Vestige/vestige_home/README
-c000000005098204400000000000004AD
-t1352147012
-s1197
-
-N/Users/gaellalire/Documents/Vestige/vestige_home/logback.xml
-c0000000050DCC7D00000000000000332
-t1356646352
-s818
-
-N/Users/gaellalire/Documents/Vestige/vestige_home/m2/settings.xml
-c000000005097AAE600000000000002A6
-t1352116966
-s678
-
-N/Users/gaellalire/Documents/Vestige/vestige_home/m2/vestige-se.xml
-c0000000050DEFE1E00000000000004DE
-t1356791326
-s1246
-
-N/Users/gaellalire/Documents/Vestige/vestige_home/settings.xml
-c0000000050DEEC50000000000000016A
-t1356786768
-s362
-
-N/Users/gaellalire/Documents/Vestige/vestige_home/ssh/authorized_keys
-c0000000050981CEE0000000000000000
-t1352146158
-s0
-
-N/Users/gaellalire/Documents/Vestige/vestige_home/ssh/vestige_rsa
-c000000005096B49C000000000000068B
-t1352053916
-s1675
-
-N/Users/gaellalire/Documents/Vestige/vestige_home/vestige
-c0000000050DEFE2F0000000000000641
-t1356791343
-s1601
-
-N/var/folders/XO/XOxyKFDiGCOmm45bjkMGSE+++TI/-Caches-/com.apple.Xcode.501/SharedPrecompiledHeaders/Vestige_Prefix-calfbnaincozljgpjidfeomdlxfh/Vestige_Prefix.pch.gch
-t1366233013
-s54265616
-
-NVestige-Info.plist
-c00000000516EE74400000000000003FC
-t1366222660
-s1020
-
-CCheck dependencies
-r0
-lSLF07#2@18"Check dependencies387925810#387925810#0(0"0(0#1#0"3343187568374212096#0"0#
-
-CCompileC build/Vestige.build/Debug/Vestige.build/Objects-normal/x86_64/VestigeAppDelegate.o /Users/gaellalire/Documents/Vestige/VestigeAppDelegate.m normal x86_64 objective-c com.apple.compilers.gcc.4_2
-s387925813.960153
-e387925814.161216
-r1
-xCompileC
-xbuild/Vestige.build/Debug/Vestige.build/Objects-normal/x86_64/VestigeAppDelegate.o
-x/Users/gaellalire/Documents/Vestige/VestigeAppDelegate.m
-xnormal
-xx86_64
-xobjective-c
-xcom.apple.compilers.gcc.4_2
-lSLF07#2@64"Compile /Users/gaellalire/Documents/Vestige/VestigeAppDelegate.m387925813#387925814#0(0"0(0#0#56"/Users/gaellalire/Documents/Vestige/VestigeAppDelegate.m8608479360#1445"    cd /Users/gaellalire/Documents/Vestige    setenv LANG en_US.US-ASCII    /Developer/usr/bin/gcc-4.2 -x objective-c -arch x86_64 -fmessage-length=0 -pipe -std=gnu99 -Wno-trigraphs -fpascal-strings -fasm-blocks -O0 -Wreturn-type -Wunused-variable -isysroot /Developer/SDKs/MacOSX10.6.sdk -mfix-and-continue -mmacosx-version-min=10.6 -gdwarf-2 -iquote /Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Vestige-generated-files.hmap -I/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Vestige-own-target-headers.hmap -I/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Vestige-all-target-headers.hmap -iquote /Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Vestige-project-headers.hmap -F/Users/gaellalire/Documents/Vestige/build/Debug -I/Users/gaellalire/Documents/Vestige/build/Debug/include -I/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/DerivedSources/x86_64 -I/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/DerivedSources -include /var/folders/XO/XOxyKFDiGCOmm45bjkMGSE+++TI/-Caches-/com.apple.Xcode.501/SharedPrecompiledHeaders/Vestige_Prefix-calfbnaincozljgpjidfeomdlxfh/Vestige_Prefix.pch -c /Users/gaellalire/Documents/Vestige/VestigeAppDelegate.m -o /Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Objects-normal/x86_64/VestigeAppDelegate.o0#
-
-CCompileC build/Vestige.build/Debug/Vestige.build/Objects-normal/x86_64/VestigeMenuController.o /Users/gaellalire/Documents/Vestige/VestigeMenuController.m normal x86_64 objective-c com.apple.compilers.gcc.4_2
-s387845081.472399
-e387845081.613713
-r1
-xCompileC
-xbuild/Vestige.build/Debug/Vestige.build/Objects-normal/x86_64/VestigeMenuController.o
-x/Users/gaellalire/Documents/Vestige/VestigeMenuController.m
-xnormal
-xx86_64
-xobjective-c
-xcom.apple.compilers.gcc.4_2
-lSLF07#2@67"Compile /Users/gaellalire/Documents/Vestige/VestigeMenuController.m387845081#387845081#0(0"0(0#0#59"/Users/gaellalire/Documents/Vestige/VestigeMenuController.m8625163968#1451"    cd /Users/gaellalire/Documents/Vestige    setenv LANG en_US.US-ASCII    /Developer/usr/bin/gcc-4.2 -x objective-c -arch x86_64 -fmessage-length=0 -pipe -std=gnu99 -Wno-trigraphs -fpascal-strings -fasm-blocks -O0 -Wreturn-type -Wunused-variable -isysroot /Developer/SDKs/MacOSX10.6.sdk -mfix-and-continue -mmacosx-version-min=10.6 -gdwarf-2 -iquote /Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Vestige-generated-files.hmap -I/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Vestige-own-target-headers.hmap -I/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Vestige-all-target-headers.hmap -iquote /Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Vestige-project-headers.hmap -F/Users/gaellalire/Documents/Vestige/build/Debug -I/Users/gaellalire/Documents/Vestige/build/Debug/include -I/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/DerivedSources/x86_64 -I/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/DerivedSources -include /var/folders/XO/XOxyKFDiGCOmm45bjkMGSE+++TI/-Caches-/com.apple.Xcode.501/SharedPrecompiledHeaders/Vestige_Prefix-calfbnaincozljgpjidfeomdlxfh/Vestige_Prefix.pch -c /Users/gaellalire/Documents/Vestige/VestigeMenuController.m -o /Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Objects-normal/x86_64/VestigeMenuController.o0#
-
-CCompileC build/Vestige.build/Debug/Vestige.build/Objects-normal/x86_64/main.o /Users/gaellalire/Documents/Vestige/main.m normal x86_64 objective-c com.apple.compilers.gcc.4_2
-s387925813.959171
-e387925814.137312
-r1
-xCompileC
-xbuild/Vestige.build/Debug/Vestige.build/Objects-normal/x86_64/main.o
-x/Users/gaellalire/Documents/Vestige/main.m
-xnormal
-xx86_64
-xobjective-c
-xcom.apple.compilers.gcc.4_2
-lSLF07#2@50"Compile /Users/gaellalire/Documents/Vestige/main.m387925813#387925814#0(0"0(0#0#42"/Users/gaellalire/Documents/Vestige/main.m8599897472#1417"    cd /Users/gaellalire/Documents/Vestige    setenv LANG en_US.US-ASCII    /Developer/usr/bin/gcc-4.2 -x objective-c -arch x86_64 -fmessage-length=0 -pipe -std=gnu99 -Wno-trigraphs -fpascal-strings -fasm-blocks -O0 -Wreturn-type -Wunused-variable -isysroot /Developer/SDKs/MacOSX10.6.sdk -mfix-and-continue -mmacosx-version-min=10.6 -gdwarf-2 -iquote /Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Vestige-generated-files.hmap -I/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Vestige-own-target-headers.hmap -I/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Vestige-all-target-headers.hmap -iquote /Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Vestige-project-headers.hmap -F/Users/gaellalire/Documents/Vestige/build/Debug -I/Users/gaellalire/Documents/Vestige/build/Debug/include -I/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/DerivedSources/x86_64 -I/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/DerivedSources -include /var/folders/XO/XOxyKFDiGCOmm45bjkMGSE+++TI/-Caches-/com.apple.Xcode.501/SharedPrecompiledHeaders/Vestige_Prefix-calfbnaincozljgpjidfeomdlxfh/Vestige_Prefix.pch -c /Users/gaellalire/Documents/Vestige/main.m -o /Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Objects-normal/x86_64/main.o0#
-
-CCompileXIB /Users/gaellalire/Documents/Vestige/English.lproj/MainMenu.xib
-s387925810.129433
-e387925810.402173
-r1
-xCompileXIB
-x/Users/gaellalire/Documents/Vestige/English.lproj/MainMenu.xib
-lSLF07#2@37"CompileXIB English.lproj/MainMenu.xib387925810#387925810#0(0"0(0#0#62"/Users/gaellalire/Documents/Vestige/English.lproj/MainMenu.xib8604940512#355"    cd /Users/gaellalire/Documents/Vestige    /Developer/usr/bin/ibtool --errors --warnings --notices --output-format human-readable-text --compile /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/English.lproj/MainMenu.nib /Users/gaellalire/Documents/Vestige/English.lproj/MainMenu.xib --sdk /Developer/SDKs/MacOSX10.6.sdk0#
-
-CCopyStringsFile /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/English.lproj/InfoPlist.strings English.lproj/InfoPlist.strings
-s387925810.128145
-e387925810.187734
-r1
-xCopyStringsFile
-x/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/English.lproj/InfoPlist.strings
-xEnglish.lproj/InfoPlist.strings
-lSLF07#2@36"Copy English.lproj/InfoPlist.strings387925810#387925810#0(0"0(0#0#67"/Users/gaellalire/Documents/Vestige/English.lproj/InfoPlist.strings8605000032#359"    cd /Users/gaellalire/Documents/Vestige    setenv ICONV /usr/bin/iconv    /Developer/Library/Xcode/Plug-ins/CoreBuildTasks.xcplugin/Contents/Resources/copystrings --validate --inputencoding utf-8 --outputencoding UTF-16 English.lproj/InfoPlist.strings --outdir /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources/English.lproj0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/README home/README
-s387840115.561318
-e387840115.588016
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/README
-xhome/README
-lSLF07#2@16"Copy home/README387840115#387840115#0(0"0(0#0#47"/Users/gaellalire/Documents/Vestige/home/README8615803616#318"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/home/README /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/README vestige_home/README
-s387916092.300286
-e387916092.369257
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/README
-xvestige_home/README
-lSLF07#2@24"Copy vestige_home/README387916092#387916092#0(0"0(0#0#55"/Users/gaellalire/Documents/Vestige/vestige_home/README8611774688#326"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/vestige_home/README /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/authorized_keys home/ssh/authorized_keys
-s387840115.562310
-e387840115.593208
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/authorized_keys
-xhome/ssh/authorized_keys
-lSLF07#2@29"Copy home/ssh/authorized_keys387840115#387840115#0(0"0(0#0#60"/Users/gaellalire/Documents/Vestige/home/ssh/authorized_keys8611274016#331"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/home/ssh/authorized_keys /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/authorized_keys vestige_home/ssh/authorized_keys
-s387916092.300821
-e387916092.310249
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/authorized_keys
-xvestige_home/ssh/authorized_keys
-lSLF07#2@37"Copy vestige_home/ssh/authorized_keys387916092#387916092#0(0"0(0#0#68"/Users/gaellalire/Documents/Vestige/vestige_home/ssh/authorized_keys8611697920#339"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/vestige_home/ssh/authorized_keys /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/home home
-s387845077.302564
-e387845077.387641
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/home
-xhome
-lSLF07#2@9"Copy home387845077#387845077#0(0"0(0#0#40"/Users/gaellalire/Documents/Vestige/home8625411392#311"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/home /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/logback.xml home/logback.xml
-s387840115.555463
-e387840115.594139
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/logback.xml
-xhome/logback.xml
-lSLF07#2@21"Copy home/logback.xml387840115#387840115#0(0"0(0#0#52"/Users/gaellalire/Documents/Vestige/home/logback.xml31244010180771952#323"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/home/logback.xml /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/logback.xml vestige_home/logback.xml
-s387916092.297934
-e387916092.377480
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/logback.xml
-xvestige_home/logback.xml
-lSLF07#2@29"Copy vestige_home/logback.xml387916092#387916092#0(0"0(0#0#60"/Users/gaellalire/Documents/Vestige/vestige_home/logback.xml8612225632#331"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/vestige_home/logback.xml /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/settings.xml home/m2/settings.xml
-s387844702.671013
-e387844702.679928
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/settings.xml
-xhome/m2/settings.xml
-lSLF07#2@25"Copy home/m2/settings.xml387844702#387844702#0(0"0(0#0#56"/Users/gaellalire/Documents/Vestige/home/m2/settings.xml8605797952#327"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/home/m2/settings.xml /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/settings.xml home/settings.xml
-s387844740.580042
-e387844740.591001
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/settings.xml
-xhome/settings.xml
-lSLF07#2@22"Copy home/settings.xml387844740#387844740#0(0"0(0#0#53"/Users/gaellalire/Documents/Vestige/home/settings.xml8617552800#324"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/home/settings.xml /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/settings.xml vestige_home/m2/settings.xml
-s387916092.298588
-e387916092.376928
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/settings.xml
-xvestige_home/m2/settings.xml
-lSLF07#2@33"Copy vestige_home/m2/settings.xml387916092#387916092#0(0"0(0#0#64"/Users/gaellalire/Documents/Vestige/vestige_home/m2/settings.xml8612202304#335"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/vestige_home/m2/settings.xml /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/settings.xml vestige_home/settings.xml
-s387916092.299153
-e387916092.347811
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/settings.xml
-xvestige_home/settings.xml
-lSLF07#2@30"Copy vestige_home/settings.xml387916092#387916092#0(0"0(0#0#61"/Users/gaellalire/Documents/Vestige/vestige_home/settings.xml8612090880#332"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/vestige_home/settings.xml /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/vestige home/vestige
-s387840115.565576
-e387840115.591709
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/vestige
-xhome/vestige
-lSLF07#2@17"Copy home/vestige387840115#387840115#0(0"0(0#0#48"/Users/gaellalire/Documents/Vestige/home/vestige8606993600#319"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/home/vestige /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/vestige vestige_home/vestige
-s387916092.303334
-e387916092.334945
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/vestige
-xvestige_home/vestige
-lSLF07#2@25"Copy vestige_home/vestige387916092#387916092#0(0"0(0#0#56"/Users/gaellalire/Documents/Vestige/vestige_home/vestige8611353376#327"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/vestige_home/vestige /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/vestige-se.xml home/m2/vestige-se.xml
-s387840115.560140
-e387840115.593016
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/vestige-se.xml
-xhome/m2/vestige-se.xml
-lSLF07#2@27"Copy home/m2/vestige-se.xml387840115#387840115#0(0"0(0#0#58"/Users/gaellalire/Documents/Vestige/home/m2/vestige-se.xml8616415104#329"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/home/m2/vestige-se.xml /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/vestige-se.xml vestige_home/m2/vestige-se.xml
-s387916092.299690
-e387916092.383687
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/vestige-se.xml
-xvestige_home/m2/vestige-se.xml
-lSLF07#2@35"Copy vestige_home/m2/vestige-se.xml387916092#387916092#0(0"0(0#0#66"/Users/gaellalire/Documents/Vestige/vestige_home/m2/vestige-se.xml8611829920#337"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/vestige_home/m2/vestige-se.xml /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/vestige.icns vestige.icns
-s387925810.188560
-e387925810.198907
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/vestige.icns
-xvestige.icns
-lSLF07#2@17"Copy vestige.icns387925810#387925810#0(0"0(0#0#48"/Users/gaellalire/Documents/Vestige/vestige.icns8604707712#319"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/vestige.icns /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/vestige.png vestige.png
-s387925810.187830
-e387925810.197115
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/vestige.png
-xvestige.png
-lSLF07#2@16"Copy vestige.png387925810#387925810#0(0"0(0#0#47"/Users/gaellalire/Documents/Vestige/vestige.png8604799904#318"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/vestige.png /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/vestige_home vestige_home
-s387925810.189180
-e387925810.256971
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/vestige_home
-xvestige_home
-lSLF07#2@17"Copy vestige_home387925810#387925810#0(0"0(0#0#48"/Users/gaellalire/Documents/Vestige/vestige_home8604699424#319"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/vestige_home /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/vestige_rsa home/ssh/vestige_rsa
-s387840115.563939
-e387840115.592433
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/vestige_rsa
-xhome/ssh/vestige_rsa
-lSLF07#2@25"Copy home/ssh/vestige_rsa387840115#387840115#0(0"0(0#0#56"/Users/gaellalire/Documents/Vestige/home/ssh/vestige_rsa8608647296#327"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/home/ssh/vestige_rsa /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CCpResource build/Debug/Vestige.app/Contents/Resources/vestige_rsa vestige_home/ssh/vestige_rsa
-s387916092.301512
-e387916092.347215
-r1
-xCpResource
-xbuild/Debug/Vestige.app/Contents/Resources/vestige_rsa
-xvestige_home/ssh/vestige_rsa
-lSLF07#2@33"Copy vestige_home/ssh/vestige_rsa387916092#387916092#0(0"0(0#0#64"/Users/gaellalire/Documents/Vestige/vestige_home/ssh/vestige_rsa8611558496#335"    cd /Users/gaellalire/Documents/Vestige    /Developer/Library/PrivateFrameworks/DevToolsCore.framework/Resources/pbxcp -exclude .DS_Store -exclude CVS -exclude .svn -resolve-src-symlinks /Users/gaellalire/Documents/Vestige/vestige_home/ssh/vestige_rsa /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Resources0#
-
-CLd /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/MacOS/Vestige normal x86_64
-s387925814.161314
-e387925814.474770
-r1
-xLd
-x/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/MacOS/Vestige
-xnormal
-xx86_64
-lSLF07#2@87"Link /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/MacOS/Vestige387925814#387925814#0(0"0(0#0#0"8606840032#527"    cd /Users/gaellalire/Documents/Vestige    setenv MACOSX_DEPLOYMENT_TARGET 10.6    /Developer/usr/bin/gcc-4.2 -arch x86_64 -isysroot /Developer/SDKs/MacOSX10.6.sdk -L/Users/gaellalire/Documents/Vestige/build/Debug -F/Users/gaellalire/Documents/Vestige/build/Debug -filelist /Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Objects-normal/x86_64/Vestige.LinkFileList -mmacosx-version-min=10.6 -framework Cocoa -o /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/MacOS/Vestige0#
-
-CProcessInfoPlistFile /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Info.plist Vestige-Info.plist
-s387925810.122280
-e387925810.128056
-r1
-xProcessInfoPlistFile
-x/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Info.plist
-xVestige-Info.plist
-lSLF07#2@26"Process Vestige-Info.plist387925810#387925810#0(0"0(0#0#54"/Users/gaellalire/Documents/Vestige/Vestige-Info.plist28429415036289140#301"    cd /Users/gaellalire/Documents/Vestige    builtin-infoPlistUtility Vestige-Info.plist -genpkginfo /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/PkgInfo -expandbuildsettings -platform macosx -o /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app/Contents/Info.plist0#
-
-CProcessPCH /var/folders/XO/XOxyKFDiGCOmm45bjkMGSE+++TI/-Caches-/com.apple.Xcode.501/SharedPrecompiledHeaders/Vestige_Prefix-calfbnaincozljgpjidfeomdlxfh/Vestige_Prefix.pch.gch Vestige_Prefix.pch normal x86_64 objective-c com.apple.compilers.gcc.4_2
-s387925810.402380
-e387925813.958944
-r1
-xProcessPCH
-x/var/folders/XO/XOxyKFDiGCOmm45bjkMGSE+++TI/-Caches-/com.apple.Xcode.501/SharedPrecompiledHeaders/Vestige_Prefix-calfbnaincozljgpjidfeomdlxfh/Vestige_Prefix.pch.gch
-xVestige_Prefix.pch
-xnormal
-xx86_64
-xobjective-c
-xcom.apple.compilers.gcc.4_2
-lSLF07#2@29"Precompile Vestige_Prefix.pch387925810#387925813#0(0"0(0#0#54"/Users/gaellalire/Documents/Vestige/Vestige_Prefix.pch8599150144#1326"    cd /Users/gaellalire/Documents/Vestige    setenv LANG en_US.US-ASCII    /Developer/usr/bin/gcc-4.2 -x objective-c-header -arch x86_64 -fmessage-length=0 -pipe -std=gnu99 -Wno-trigraphs -fpascal-strings -fasm-blocks -O0 -Wreturn-type -Wunused-variable -isysroot /Developer/SDKs/MacOSX10.6.sdk -mfix-and-continue -mmacosx-version-min=10.6 -gdwarf-2 -iquote /Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Vestige-generated-files.hmap -I/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Vestige-own-target-headers.hmap -I/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Vestige-all-target-headers.hmap -iquote /Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/Vestige-project-headers.hmap -F/Users/gaellalire/Documents/Vestige/build/Debug -I/Users/gaellalire/Documents/Vestige/build/Debug/include -I/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/DerivedSources/x86_64 -I/Users/gaellalire/Documents/Vestige/build/Vestige.build/Debug/Vestige.build/DerivedSources -c /Users/gaellalire/Documents/Vestige/Vestige_Prefix.pch -o /var/folders/XO/XOxyKFDiGCOmm45bjkMGSE+++TI/-Caches-/com.apple.Xcode.501/SharedPrecompiledHeaders/Vestige_Prefix-calfbnaincozljgpjidfeomdlxfh/Vestige_Prefix.pch.gch0#
-
-CTouch /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app
-s387925814.474869
-e387925814.479475
-r1
-xTouch
-x/Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app
-lSLF07#2@65"Touch /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app387925814#387925814#0(0"0(0#0#0"8605310272#125"    cd /Users/gaellalire/Documents/Vestige    /usr/bin/touch -c /Users/gaellalire/Documents/Vestige/build/Debug/Vestige.app0#
-

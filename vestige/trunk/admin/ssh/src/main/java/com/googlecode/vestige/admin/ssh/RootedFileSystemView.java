@@ -76,4 +76,9 @@ public class RootedFileSystemView extends NativeFileSystemView {
         return new RootedSshFile(this, userFileName, fileObj, userName);
     }
 
+    @Override
+    public NativeSshFile createNativeSshFile(final String name, final File file, final String userName) {
+        return new RootedSshFile(this, name, file, userName);
+    }
+
 }

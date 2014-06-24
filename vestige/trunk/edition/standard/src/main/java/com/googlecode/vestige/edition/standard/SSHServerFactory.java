@@ -26,6 +26,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.sshd.SshServer;
 import org.apache.sshd.common.KeyPairProvider;
 import org.apache.sshd.common.NamedFactory;
+import org.apache.sshd.common.io.mina.MinaServiceFactoryFactory;
 import org.apache.sshd.common.keyprovider.FileKeyPairProvider;
 import org.apache.sshd.server.Command;
 import org.apache.sshd.server.CommandFactory;
@@ -90,6 +91,7 @@ public class SSHServerFactory implements Callable<SshServer> {
         KeyPairProvider keyPairProvider = new FileKeyPairProvider(new String[] {privateKey.getPath()});
         SshServer sshServer = SshServer.setUpDefaultServer();
         sshServer.setFileSystemFactory(new RootedFileSystemFactory(appHomeFile, "vestige"));
+        sshServer.setIoServiceFactoryFactory(new MinaServiceFactoryFactory());
         String host = bind.getHost();
         sshServer.setHost(host);
         sshServer.setPort(bind.getPort());
