@@ -20,10 +20,10 @@ Vestige.pkg:
 	cp -r src/hicolor target/vestige_deb/usr/share/icons/
 	chmod +x target/vestige_deb/usr/bin/*
 	-find target \( -name .svn -o -name .DS_Store \) -exec rm -rf {} \;
-	-ssh -p 2223 root@localhost rm -rf '~/target'
-	scp -r -P 2223 target root@localhost:.
-	ssh -p 2223 root@localhost dpkg -b target/vestige_deb/ target/vestige_$(VESTIGE_VERSION)_all.deb
-	scp -P 2223 root@localhost:target/vestige_$(VESTIGE_VERSION)_all.deb target/vestige_$(VESTIGE_VERSION)_all.deb 
+	-ssh debbuilder rm -rf '~/target'
+	scp -r target debbuilder:.
+	ssh debbuilder dpkg -b target/vestige_deb/ target/vestige_$(VESTIGE_VERSION)_all.deb
+	scp debbuilder:target/vestige_$(VESTIGE_VERSION)_all.deb target/vestige_$(VESTIGE_VERSION)_all.deb 
 
 clean:
 	$(RM) -r target

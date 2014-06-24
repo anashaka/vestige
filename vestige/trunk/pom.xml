@@ -152,6 +152,7 @@
     <jetty.version>8.1.11.v20130520</jetty.version>
     <milton.version>2.5.0.1</milton.version>
     <javax-servlet.version>3.0.0.v201112011016</javax-servlet.version>
+    <bouncycastle.version>1.50</bouncycastle.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -235,13 +236,23 @@
         <artifactId>json-smart</artifactId>
         <version>1.1.1</version>
       </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpg-jdk15on</artifactId>
+        <version>${bouncycastle.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpkix-jdk15on</artifactId>
+        <version>${bouncycastle.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <repositories>
-    <repository>
-      <id>ettrema-repo</id>
-      <url>http://milton.io/maven</url>
-    </repository>
+    <!-- <repository> -->
+    <!-- <id>ettrema-repo</id> -->
+    <!-- <url>http://milton.io/maven</url> -->
+    <!-- </repository> -->
     <repository>
       <id>googlecode</id>
       <url>http://vestige.googlecode.com/svn/repo</url>
